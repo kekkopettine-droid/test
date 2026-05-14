@@ -1,0 +1,182 @@
+*, ::before, ::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#1a1a1a;
+  overflow:hidden;
+  font-family:'Segoe UI', 'Arial', sans-serif;
+  cursor:crosshair;
+  user-select:none;
+}
+
+#threeCanvas {
+  position:fixed; top:0; left:0;
+  width:100vw; height:100vh;
+  z-index:1; display:block;
+}
+
+/* ── SCANLINES (Linee orizzontali in sovrimpressione per l'effetto schermo) ── */
+#scanlines {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:9; pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* ── VIGNETTE ── */
+#vignette {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:7; pointer-events:none;
+  background:radial-gradient(ellipse 110% 90% at 50% 55%,
+    transparent 35%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* ── HUD PANELS (Ridisegnati per integrarsi col vetro curvo) ── */
+.panel {
+  width: 480px;
+  /* Sfondo quasi del tutto trasparente, si affida al vetro 3D dietro di sé */
+  background: linear-gradient(180deg, rgba(0, 255, 255, 0.05) 0%, rgba(0, 50, 100, 0.25) 50%, rgba(0, 255, 255, 0.05) 100%);
+  
+  /* Texture a griglia sottile CSS per far sembrare il pannello olografico */
+  background-image: 
+    linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent);
+  background-size: 20px 20px;
+  
+  border: none;
+  border-top: 1px solid rgba(0, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.4);
+  padding: 38px;
+  position: relative;
+  
+  box-shadow: inset 0 0 40px rgba(0, 200, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  
+  pointer-events: auto;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Le righe luminose sopra e sotto il pannello */
+.panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: #00ffff;
+    box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+.panel::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0; height: 1px;
+    background: #00ffff;
+    box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.panel:hover {
+  box-shadow: inset 0 0 60px rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.8);
+}
+.panel:hover::before, .panel:hover::after {
+  opacity: 1;
+}
+
+.panel.detail-panel {
+  cursor: default;
+}
+.panel.detail-panel:hover {
+  box-shadow: inset 0 0 40px rgba(0, 200, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.4);
+}
+.panel.detail-panel:hover::before, .panel.detail-panel:hover::after {
+  opacity: 0.5;
+}
+
+.panel-header {
+  display:flex; align-items:flex-start; gap:14px;
+}
+.panel-header svg { filter:drop-shadow(0 0 8px #00ffff); flex-shrink:0; margin-top:2px; transform: scale(1.2); transform-origin: top left; }
+.header-text {
+  color:#ccffff; font-size:18px; font-weight:600;
+  line-height:1.4;
+  letter-spacing:.08em; text-transform:uppercase;
+  text-shadow:0 0 10px rgba(0,255,255,0.6);
+}
+
+.panel-text {
+  color:rgba(200,240,255,0.8);
+  font-size:15px; line-height:1.7; letter-spacing:.02em;
+  text-shadow: 0 0 4px rgba(0, 150, 255, 0.3);
+}
+
+/* ── ABSTERGO LOGO ── */
+.abstergo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+}
+
+/* ── LOADING FLASH ── */
+#boot {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  z-index:99; background:#01080f;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px;
+  animation:bootFade 1.2s ease-out 0.6s forwards;
+}
+#boot .boot-logo {
+  color:#00ffff; font-size:22px; font-weight:700;
+  letter-spacing:.5em; text-transform:uppercase;
+  text-shadow:0 0 30px rgba(0,255,255,1);
+  animation:bootGlow 0.4s ease-in-out 3 alternate;
+}
+#boot .boot-bar {
+  width:220px; height:2px; background:rgba(0,255,255,0.15);
+  border-radius:2px; overflow:hidden;
+}
+#boot .boot-fill {
+  height:100%; width:0%; background:#00ffff;
+  box-shadow:0 0 15px #00ffff;
+  animation:bootLoad 0.9s ease-out 0.1s forwards;
+}
+@keyframes bootFade { to { opacity:0; pointer-events:none; } }
+@keyframes bootGlow { from{opacity:0.3;} to{opacity:1;} }
+@keyframes bootLoad { to { width:100%; } }
+
+/* ── CLASSI DI UTILITA' PER LE SCHERMATE (SPA) ── */
+.hidden-panel {
+  display: none !important;
+}
+
+/* Bottone back */
+.btn-back {
+  background: rgba(0, 100, 200, 0.2);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  color: #ccffff;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  font-family: inherit;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s;
+  align-self: flex-start;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2) inset;
+}
+.btn-back:hover {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5) inset, 0 0 10px rgba(0, 255, 255, 0.4);
+  color: #ffffff;
+}
