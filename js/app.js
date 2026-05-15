@@ -167,9 +167,11 @@
   gridGroup.position.set(0, 0, 5); // Spostato un po' più vicino
   scene.add(gridGroup);
 
-  // IL VETRO
+  // IL VETRO (Arco molto ampio per coprire i lati vuoti)
   const glassHeight = 22; 
-  const screenGlassGeo = new THREE.CylinderGeometry(gridRadius, gridRadius, glassHeight, 64, 1, true);
+  const arcLength = Math.PI * 1.5; // 270 gradi per coprire tutto il campo visivo
+  const cylThetaStart = -Math.PI - (arcLength / 2); // Centrato esattamente dietro (su -Z)
+  const screenGlassGeo = new THREE.CylinderGeometry(gridRadius, gridRadius, glassHeight, 64, 1, true, cylThetaStart, arcLength);
   
   // Creazione dinamica di una texture sfumata (Gradient) per il vetro
   const canvasGrad = document.createElement('canvas');
@@ -198,7 +200,7 @@
   gridGroup.add(new THREE.Mesh(screenGlassGeo, screenGlassMat));
 
   // CORNICI METALLICHE SPESSE (Sopra e Sotto il vetro)
-  const bezelGeo = new THREE.CylinderGeometry(gridRadius + 0.2, gridRadius + 0.2, 1.5, 64, 1, true);
+  const bezelGeo = new THREE.CylinderGeometry(gridRadius + 0.2, gridRadius + 0.2, 1.5, 64, 1, true, cylThetaStart, arcLength);
   const bezelMat = new THREE.MeshStandardMaterial({ 
     color: 0x11161a, 
     metalness: 0.9, 
@@ -215,39 +217,55 @@
   bottomBezel.position.y = -(glassHeight / 2) - 0.75;
   gridGroup.add(bottomBezel);
 
-  // STRISCE LUMINOSE CIANO (Come nell'immagine alla base del vetro)
+  // STRISCE LUMINOSE CIANO (Alla base e in cima al vetro)
   const glowMat = new THREE.MeshBasicMaterial({ 
     color: 0x00ffff, 
     transparent: true, 
-    opacity: 0.9, 
+    opacity: 0, // Partono spente, si accendono alla fine
     side: THREE.BackSide,
     blending: THREE.AdditiveBlending
   });
 
-  const bottomGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true), glowMat);
+  const bottomGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), glowMat);
   bottomGlow.position.y = -(glassHeight / 2) + 0.15;
   gridGroup.add(bottomGlow);
 
-  const bottomGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true), glowMat);
+  const bottomGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), glowMat);
   bottomGlowLine.position.y = -(glassHeight / 2) + 0.8;
   gridGroup.add(bottomGlowLine);
 
-  // GRIGLIA SOTTILE SUL VETRO
+  const topGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  topGlow.position.y = (glassHeight / 2) - 0.15;
+  gridGroup.add(topGlow);
+
+  const topGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  topGlowLine.position.y = (glassHeight / 2) - 0.8;
+  gridGroup.add(topGlowLine);
+
+  // GRIGLIA SOTTILE SUL VETRO (Tracciata solo sull'arco)
   const gridMatHoriz = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
   const gridMatVert = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending });
 
+  const thetaCenter = Math.PI * 1.5;
+  const panelArcStart = thetaCenter - (arcLength / 2);
+
   // Linee orizzontali
   for (let y = -10.5; y <= 10.5; y += 1.5) {
-    const geo = new THREE.TorusGeometry(gridRadius, 0.015, 3, 64);
-    const line = new THREE.Mesh(geo, gridMatHoriz);
-    line.rotation.x = Math.PI / 2;
-    line.position.y = y;
+    const points = [];
+    const segments = 64;
+    for(let i=0; i<=segments; i++){
+      const a = panelArcStart + (i/segments)*arcLength;
+      points.push(new THREE.Vector3(Math.cos(a)*gridRadius, y, Math.sin(a)*gridRadius));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(geo, gridMatHoriz);
     gridGroup.add(line);
   }
 
   // Linee verticali
-  for (let i = 0; i < 120; i++) {
-    const a = (i / 120) * Math.PI * 2;
+  const numVertLines = 40;
+  for (let i = 0; i <= numVertLines; i++) {
+    const a = panelArcStart + (i / numVertLines) * arcLength;
     const points = [
       new THREE.Vector3(Math.cos(a) * gridRadius, -11, Math.sin(a) * gridRadius),
       new THREE.Vector3(Math.cos(a) * gridRadius,  11, Math.sin(a) * gridRadius)
@@ -258,7 +276,6 @@
   /* ══════════════════════════════════════════════
      CSS3D PANELS (Anchored to the Grid)
   ══════════════════════════════════════════════ */
-  const thetaCenter = Math.PI * 1.5;
   const spread = 0.42;
   const panelRadiusCSS = 24.8; // Appena dentro il vetro
 
@@ -326,12 +343,14 @@
   
   // Impostazioni iniziali: la struttura in vetro è già al centro, ma ruotata per nascondere le schede a destra
   gridGroup.position.set(0, 0, 5); 
-  gridGroup.rotation.y = -Math.PI / 1.2; 
+  gridGroup.rotation.y = -Math.PI / 1.1; 
   
   // Impostiamo l'opacità HTML a zero per iniziare
   logoEl.style.opacity = "0";
   panelL.style.opacity = "0";
   panelR.style.opacity = "0";
+
+  let ledProgress = 0;
 
   function animate(){
     requestAnimationFrame(animate);
@@ -350,20 +369,29 @@
       const ease = 1 - Math.pow(1 - bootProgress, 4);
       
       // Effetto meccanismo che scorre: rotazione da destra verso sinistra
-      gridGroup.rotation.y = (-Math.PI / 1.2) * (1 - ease);
+      gridGroup.rotation.y = (-Math.PI / 1.1) * (1 - ease);
 
       // Comparsa graduale (fade in) dell'intero display olografico
       const fadeEase = ease; // L'opacità segue la curva di ease
       
       screenGlassMat.opacity = fadeEase;
       bezelMat.opacity = fadeEase;
-      glowMat.opacity = 0.9 * fadeEase;
+      // I LED (glowMat) restano spenti finché lo scorrimento non finisce
       gridMatHoriz.opacity = 0.15 * fadeEase;
       gridMatVert.opacity = 0.08 * fadeEase;
 
       logoEl.style.opacity = fadeEase;
       panelL.style.opacity = fadeEase;
       panelR.style.opacity = fadeEase;
+    } else {
+      // Quando il meccanismo ha finito di scorrere, si accendono i LED
+      if (ledProgress < 1) {
+        ledProgress += 0.05; // Si accendono rapidamente
+        if (ledProgress > 1) ledProgress = 1;
+        
+        // Effetto accensione (power-up)
+        glowMat.opacity = 0.9 * ledProgress;
+      }
     }
 
     eMouse.x += (rawMouse.x - eMouse.x) * EASE;
