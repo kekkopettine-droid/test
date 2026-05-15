@@ -67,12 +67,6 @@
   wall.position.set(0, 0, -35);
   bgGroup.add(wall);
 
-  // Griglia architettonica stampata sul muro (simula pannelli metallici)
-  const wallGrid = new THREE.GridHelper(400, 80, 0x111111, 0x111111);
-  wallGrid.rotation.x = Math.PI / 2;
-  wallGrid.position.set(0, 0, -34.8);
-  bgGroup.add(wallGrid);
-
   // Travi orizzontali principali
   const topBeam = new THREE.Mesh(new THREE.BoxGeometry(400, 6, 2), metalMat);
   topBeam.position.set(0, 15, -30);
@@ -193,11 +187,23 @@
 
   const screenGlassMat = new THREE.MeshBasicMaterial({ 
     map: glassTex,
-    transparent: true, 
+    transparent: true,
+    opacity: 1,
     side: THREE.BackSide,
-    depthWrite: false // Evita problemi visivi con gli elementi dietro
+    depthWrite: false
   });
   gridGroup.add(new THREE.Mesh(screenGlassGeo, screenGlassMat));
+
+  // Overlay luminoso ciano: parte spento, si attiva dopo il boot per simulare l'accensione
+  const glassActivatedMat = new THREE.MeshBasicMaterial({
+    color: 0x004466,
+    transparent: true,
+    opacity: 0,
+    side: THREE.BackSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  gridGroup.add(new THREE.Mesh(screenGlassGeo, glassActivatedMat));
 
   // CORNICI METALLICHE SPESSE (Sopra e Sotto il vetro)
   const bezelGeo = new THREE.CylinderGeometry(gridRadius + 0.2, gridRadius + 0.2, 1.5, 64, 1, true, cylThetaStart, arcLength);
@@ -206,7 +212,8 @@
     metalness: 0.9, 
     roughness: 0.4, 
     side: THREE.BackSide,
-    transparent: true
+    transparent: true,
+    opacity: 1
   });
   
   const topBezel = new THREE.Mesh(bezelGeo, bezelMat);
@@ -221,15 +228,17 @@
   const bottomGlowMat = new THREE.MeshBasicMaterial({ 
     color: 0x00ffff, 
     transparent: true, 
-    opacity: 0, // Parte spento, si accende alla fine
-    side: THREE.BackSide,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    depthTest: false,
     blending: THREE.AdditiveBlending
   });
   const topGlowMat = new THREE.MeshBasicMaterial({ 
     color: 0x00ffff, 
     transparent: true, 
-    opacity: 0, // Parte spento, si accende alla fine
-    side: THREE.BackSide,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    depthTest: false,
     blending: THREE.AdditiveBlending
   });
 
@@ -279,6 +288,53 @@
     ];
     gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMatVert));
   }
+
+  /* ── DETTAGLI STRUTTURALI: LED INDICATORI AI BORDI DELL'ARCO ── */
+  const postLedMats = [];
+
+  for (const angle of [cylThetaStart, cylThetaStart + arcLength]) {
+    const px = Math.cos(angle) * (gridRadius + 0.15);
+    const pz = Math.sin(angle) * (gridRadius + 0.15);
+
+    // Piccolo LED ciano all'endpoint dell'arco
+    const pLedMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, depthTest: false, blending: THREE.AdditiveBlending });
+    const pLed = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), pLedMat);
+    pLed.position.set(px, glassHeight / 2 + 0.5, pz);
+    gridGroup.add(pLed);
+    postLedMats.push(pLedMat);
+  }
+
+  /* ── LUCI LAMPEGGIANTI SUI BEZELS ── */
+  const blinkLeds = [];
+  const blinkPositions = [0.1, 0.3, 0.5, 0.7, 0.9]; // Posizioni lungo l'arco
+  for (let bi = 0; bi < blinkPositions.length; bi++) {
+    const a = panelArcStart + blinkPositions[bi] * arcLength;
+    const isWarning = bi === 2; // Al centro metti uno rosso/arancio
+    const bMat = new THREE.MeshBasicMaterial({
+      color: isWarning ? 0xff6600 : 0x00ffff,
+      transparent: true, opacity: 0, depthTest: false
+    });
+    for (const fy of [glassHeight / 2 + 0.75, -(glassHeight / 2) - 0.75]) {
+      const bLed = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bMat.clone());
+      bLed.position.set(Math.cos(a) * (gridRadius + 0.25), fy, Math.sin(a) * (gridRadius + 0.25));
+      bLed.userData.blinkOffset = Math.random() * Math.PI * 2;
+      bLed.userData.blinkSpeed  = 0.6 + Math.random() * 2.5;
+      gridGroup.add(bLed);
+      blinkLeds.push(bLed);
+    }
+  }
+
+  /* ── ONDA DI SCANSIONE OLOGRAFICA ── */
+  const scanMat = new THREE.MeshBasicMaterial({
+    color: 0x00ffff, transparent: true, opacity: 0,
+    side: THREE.DoubleSide, depthTest: false,
+    blending: THREE.AdditiveBlending
+  });
+  const scanRing = new THREE.Mesh(
+    new THREE.CylinderGeometry(gridRadius + 0.01, gridRadius + 0.01, 0.08, 64, 1, true, cylThetaStart, arcLength),
+    scanMat
+  );
+  gridGroup.add(scanRing);
 
   /* ══════════════════════════════════════════════
      CSS3D PANELS (Anchored to the Grid)
@@ -348,71 +404,79 @@
   let bootProgress = 0;
   let hasBooted = false;
   
-  // Impostazioni iniziali: la struttura in vetro è già al centro, ma ruotata per nascondere le schede a destra
+  // Il display parte ruotato di 180° attorno all'asse Y e ruota fino al centro
   gridGroup.position.set(0, 0, 5); 
-  gridGroup.rotation.y = -Math.PI / 1.1; 
+  gridGroup.rotation.y = -Math.PI * 1.5;
   
-  // Impostiamo l'opacità HTML a zero per iniziare
+  // Impostiamo l'opacità HTML a zero per iniziare e disabilitiamo i click
   logoEl.style.opacity = "0";
   panelL.style.opacity = "0";
   panelR.style.opacity = "0";
+  panelL.style.pointerEvents = "none";
+  panelR.style.pointerEvents = "none";
 
   let ledProgress = 0;
+  let panelProgress = 0;
 
   function animate(){
     requestAnimationFrame(animate);
 
-    // --- ANIMUS BOOT ANIMATION ---
+    // --- ANIMUS BOOT ANIMATION: rotazione pura, nessuna dissolvenza ---
     if (bootProgress < 1) {
-      bootProgress += 0.0015; // Movimento rallentato
+      bootProgress += 0.004; // Velocità aumentata
       if (bootProgress >= 1) {
         bootProgress = 1;
+        // Imposta opacità finali dei materiali 3D alla fine della rotazione
+        screenGlassMat.opacity = 1;
+        bezelMat.opacity = 1;
+        gridMatHoriz.opacity = 0.15;
+        gridMatVert.opacity = 0.08;
         if (!hasBooted) {
           hasBooted = true;
+          eMouse.set(0, 0);
         }
       }
       
-      // Quartic ease out per un arrivo morbido
       const ease = 1 - Math.pow(1 - bootProgress, 4);
       
-      // Effetto meccanismo che scorre: rotazione da destra verso sinistra
-      gridGroup.rotation.y = (-Math.PI / 1.1) * (1 - ease);
+      // Rotazione pura: il display gira da destra verso il centro
+      gridGroup.rotation.y = (-Math.PI * 1.5) * (1 - ease);
 
-      // Comparsa graduale (fade in) dell'intero display olografico
-      const fadeEase = ease; // L'opacità segue la curva di ease
-      
-      screenGlassMat.opacity = fadeEase;
-      bezelMat.opacity = fadeEase;
-      // I LED (glowMat) restano spenti finché lo scorrimento non finisce
-      gridMatHoriz.opacity = 0.15 * fadeEase;
-      gridMatVert.opacity = 0.08 * fadeEase;
-
-      logoEl.style.opacity = fadeEase;
-      panelL.style.opacity = fadeEase;
-      panelR.style.opacity = fadeEase;
-    } else {
-      // Quando il meccanismo ha finito di scorrere, si accendono i LED
-      if (ledProgress < 1) {
-        ledProgress += 0.05;
-        if (ledProgress >= 1) {
-          ledProgress = 1;
-          // Opacity fissa finale: non verrà più toccata
-          bottomGlowMat.opacity = 0.9;
-          topGlowMat.opacity = 0.9;
-        } else {
-          // Effetto accensione (power-up)
-          bottomGlowMat.opacity = 0.9 * ledProgress;
-          topGlowMat.opacity = 0.9 * ledProgress;
-        }
+      // I materiali 3D sono visibili per tutta la rotazione
+      screenGlassMat.opacity = 1;
+      bezelMat.opacity = 1;
+      gridMatHoriz.opacity = 0.15;
+      gridMatVert.opacity = 0.08;
+      // Logo e schede restano invisibili durante la rotazione
+      logoEl.style.opacity = 0;
+      panelL.style.opacity = 0;
+      panelR.style.opacity = 0;
+    } else if (ledProgress < 1) {
+      ledProgress += 0.1; // LED si accendono molto più velocemente
+      if (ledProgress >= 1) {
+        ledProgress = 1;
+        bottomGlowMat.opacity = 0.9;
+        topGlowMat.opacity = 0.9;
+      } else {
+        bottomGlowMat.opacity = 0.9 * ledProgress;
+        topGlowMat.opacity = 0.9 * ledProgress;
       }
     }
 
-    eMouse.x += (rawMouse.x - eMouse.x) * EASE;
-    eMouse.y += (rawMouse.y - eMouse.y) * EASE;
+    // Aggiornamento eMouse solo dopo il boot, così non accumula durante l'animazione
+    if (hasBooted) {
+      eMouse.x += (rawMouse.x - eMouse.x) * EASE;
+      eMouse.y += (rawMouse.y - eMouse.y) * EASE;
+    }
 
     camera.position.set(0, 0, 18);
-    // Movimento della camera ristretto per far sembrare il vetro più grande
-    camera.lookAt(eMouse.x * 10, eMouse.y * 5, 0);
+    if (hasBooted) {
+      // Movimento della camera attivo solo dopo il completamento dell'animazione
+      camera.lookAt(eMouse.x * 10, eMouse.y * 5, 0);
+    } else {
+      // Durante il boot la visuale rimane fissa al centro
+      camera.lookAt(0, 0, 0);
+    }
 
     // Animazione fluida dell'ingrandimento in 3D
     const targetScaleL = hoverL ? 0.037 : 0.035;
@@ -423,7 +487,44 @@
 
     renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
-  }
+
+    // ── ANIMAZIONI POST-BOOT ──
+    if (hasBooted) {
+      const now = Date.now() * 0.001;
+
+      // LED agli endpoint: fade-in rapido, poi fissi
+      postLedMats.forEach(m => { m.opacity = Math.min(0.9, m.opacity + 0.02); });
+
+      // Lampeggio LED sul bezel
+      blinkLeds.forEach(led => {
+        const v = Math.pow(Math.max(0, Math.sin(now * led.userData.blinkSpeed + led.userData.blinkOffset)), 4);
+        led.material.opacity = v * 0.95;
+      });
+
+      // Onda di scansione verticale sul vetro (ciclo lento)
+      scanRing.position.y = Math.sin(now * 0.35) * (glassHeight / 2 - 0.5);
+      scanMat.opacity = 0.18 + 0.1 * Math.cos(now * 0.7);
+
+      // Schede e logo: compaiono dopo che i LED sono completamente accesi
+      if (ledProgress >= 1 && panelProgress < 1) {
+        panelProgress = Math.min(1, panelProgress + 0.06); // Più veloce
+        const pe = 1 - Math.pow(1 - panelProgress, 3);
+        logoEl.style.opacity = pe;
+        panelL.style.opacity = pe;
+        panelR.style.opacity = pe;
+        // Abilita i click solo quando le schede sono completamente visibili
+        if (panelProgress >= 1) {
+          panelL.style.pointerEvents = "auto";
+          panelR.style.pointerEvents = "auto";
+        }
+      }
+
+      // Glass activation: il vetro si illumina progressivamente dopo che le schede sono apparse
+      if (panelProgress >= 1) {
+        glassActivatedMat.opacity = Math.min(0.45, glassActivatedMat.opacity + 0.006);
+      }
+    }   // fine if (hasBooted)
+  }     // fine function animate()
 
   /* ══════════════════════════════════════════
      PROCESS LOGO IMAGE
