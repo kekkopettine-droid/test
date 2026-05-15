@@ -159,6 +159,7 @@
   const gridRadius = 25;
   const gridGroup = new THREE.Group();
   gridGroup.position.set(0, 0, 5); // Spostato un po' più vicino
+  gridGroup.rotation.y = -Math.PI * 1.5; // Parte da destra, fuori campo
   scene.add(gridGroup);
 
   // IL VETRO (Arco molto ampio per coprire i lati vuoti)
@@ -403,11 +404,7 @@
   ══════════════════════════════════════════ */
   let bootProgress = 0;
   let hasBooted = false;
-  
-  // Il display parte ruotato di 180° attorno all'asse Y e ruota fino al centro
-  gridGroup.position.set(0, 0, 5); 
-  gridGroup.rotation.y = -Math.PI * 1.5;
-  
+
   // Impostiamo l'opacità HTML a zero per iniziare e disabilitiamo i click
   logoEl.style.opacity = "0";
   panelL.style.opacity = "0";
