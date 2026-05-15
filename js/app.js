@@ -218,27 +218,34 @@
   gridGroup.add(bottomBezel);
 
   // STRISCE LUMINOSE CIANO (Alla base e in cima al vetro)
-  const glowMat = new THREE.MeshBasicMaterial({ 
+  const bottomGlowMat = new THREE.MeshBasicMaterial({ 
     color: 0x00ffff, 
     transparent: true, 
-    opacity: 0, // Partono spente, si accendono alla fine
+    opacity: 0, // Parte spento, si accende alla fine
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending
+  });
+  const topGlowMat = new THREE.MeshBasicMaterial({ 
+    color: 0x00ffff, 
+    transparent: true, 
+    opacity: 0, // Parte spento, si accende alla fine
     side: THREE.BackSide,
     blending: THREE.AdditiveBlending
   });
 
-  const bottomGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  const bottomGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), bottomGlowMat);
   bottomGlow.position.y = -(glassHeight / 2) + 0.15;
   gridGroup.add(bottomGlow);
 
-  const bottomGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  const bottomGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), bottomGlowMat);
   bottomGlowLine.position.y = -(glassHeight / 2) + 0.8;
   gridGroup.add(bottomGlowLine);
 
-  const topGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  const topGlow = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.05, gridRadius + 0.05, 0.3, 64, 1, true, cylThetaStart, arcLength), topGlowMat);
   topGlow.position.y = (glassHeight / 2) - 0.15;
   gridGroup.add(topGlow);
 
-  const topGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), glowMat);
+  const topGlowLine = new THREE.Mesh(new THREE.CylinderGeometry(gridRadius + 0.08, gridRadius + 0.08, 0.08, 64, 1, true, cylThetaStart, arcLength), topGlowMat);
   topGlowLine.position.y = (glassHeight / 2) - 0.8;
   gridGroup.add(topGlowLine);
 
@@ -386,11 +393,17 @@
     } else {
       // Quando il meccanismo ha finito di scorrere, si accendono i LED
       if (ledProgress < 1) {
-        ledProgress += 0.05; // Si accendono rapidamente
-        if (ledProgress > 1) ledProgress = 1;
-        
-        // Effetto accensione (power-up)
-        glowMat.opacity = 0.9 * ledProgress;
+        ledProgress += 0.05;
+        if (ledProgress >= 1) {
+          ledProgress = 1;
+          // Opacity fissa finale: non verrà più toccata
+          bottomGlowMat.opacity = 0.9;
+          topGlowMat.opacity = 0.9;
+        } else {
+          // Effetto accensione (power-up)
+          bottomGlowMat.opacity = 0.9 * ledProgress;
+          topGlowMat.opacity = 0.9 * ledProgress;
+        }
       }
     }
 
