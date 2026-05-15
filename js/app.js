@@ -203,7 +203,8 @@
     color: 0x11161a, 
     metalness: 0.9, 
     roughness: 0.4, 
-    side: THREE.BackSide 
+    side: THREE.BackSide,
+    transparent: true
   });
   
   const topBezel = new THREE.Mesh(bezelGeo, bezelMat);
@@ -296,6 +297,16 @@
   cssObjDetail.lookAt(0, -1, 0);
   gridGroup.add(cssObjDetail);
 
+  // HOVER STATES PER INGRANDIMENTO FLUIDO IN 3D
+  let hoverL = false;
+  let hoverR = false;
+
+  panelL.addEventListener('mouseenter', () => hoverL = true);
+  panelL.addEventListener('mouseleave', () => hoverL = false);
+
+  panelR.addEventListener('mouseenter', () => hoverR = true);
+  panelR.addEventListener('mouseleave', () => hoverR = false);
+
 
   /* ══════════════════════════════════════════
      RESIZE
@@ -313,38 +324,46 @@
   let bootProgress = 0;
   let hasBooted = false;
   
-  // Impostazioni iniziali fuori schermo (a destra e ruotato)
-  gridGroup.position.set(150, 0, 20); 
-  gridGroup.rotation.y = Math.PI / 2;
+  // Impostazioni iniziali: la struttura in vetro è già al centro, ma ruotata per nascondere le schede a destra
+  gridGroup.position.set(0, 0, 5); 
+  gridGroup.rotation.y = -Math.PI / 1.2; 
   
-  // Nasconde le schede UI inizialmente
-  panelL.classList.add('boot-hide');
-  panelR.classList.add('boot-hide');
-  panelDetail.classList.add('boot-hide');
+  // Impostiamo l'opacità HTML a zero per iniziare
+  logoEl.style.opacity = "0";
+  panelL.style.opacity = "0";
+  panelR.style.opacity = "0";
 
   function animate(){
     requestAnimationFrame(animate);
 
     // --- ANIMUS BOOT ANIMATION ---
     if (bootProgress < 1) {
-      bootProgress += 0.004; // Velocità animazione molto più lenta (circa 4 secondi)
+      bootProgress += 0.0015; // Movimento rallentato
       if (bootProgress >= 1) {
         bootProgress = 1;
         if (!hasBooted) {
           hasBooted = true;
-          // Mostra l'interfaccia dopo lo slide
-          panelL.classList.remove('boot-hide');
-          panelR.classList.remove('boot-hide');
-          panelDetail.classList.remove('boot-hide');
         }
       }
       
-      // Quartic ease out per un arrivo morbido ma veloce all'inizio
+      // Quartic ease out per un arrivo morbido
       const ease = 1 - Math.pow(1 - bootProgress, 4);
       
-      gridGroup.position.x = 150 * (1 - ease);
-      gridGroup.position.z = 5 + 15 * (1 - ease); // arriva a 5
-      gridGroup.rotation.y = (Math.PI / 2) * (1 - ease);
+      // Effetto meccanismo che scorre: rotazione da destra verso sinistra
+      gridGroup.rotation.y = (-Math.PI / 1.2) * (1 - ease);
+
+      // Comparsa graduale (fade in) dell'intero display olografico
+      const fadeEase = ease; // L'opacità segue la curva di ease
+      
+      screenGlassMat.opacity = fadeEase;
+      bezelMat.opacity = fadeEase;
+      glowMat.opacity = 0.9 * fadeEase;
+      gridMatHoriz.opacity = 0.15 * fadeEase;
+      gridMatVert.opacity = 0.08 * fadeEase;
+
+      logoEl.style.opacity = fadeEase;
+      panelL.style.opacity = fadeEase;
+      panelR.style.opacity = fadeEase;
     }
 
     eMouse.x += (rawMouse.x - eMouse.x) * EASE;
@@ -353,6 +372,13 @@
     camera.position.set(0, 0, 18);
     // Movimento della camera ristretto per far sembrare il vetro più grande
     camera.lookAt(eMouse.x * 10, eMouse.y * 5, 0);
+
+    // Animazione fluida dell'ingrandimento in 3D
+    const targetScaleL = hoverL ? 0.037 : 0.035;
+    cssObjL.scale.lerp(new THREE.Vector3(targetScaleL, targetScaleL, targetScaleL), 0.15);
+
+    const targetScaleR = hoverR ? 0.037 : 0.035;
+    cssObjR.scale.lerp(new THREE.Vector3(targetScaleR, targetScaleR, targetScaleR), 0.15);
 
     renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
@@ -364,7 +390,7 @@
   function processLogo() {
     const img = new Image();
     img.crossOrigin = "Anonymous";
-    img.src = 'assets/abstergo_logo.png?v=' + new Date().getTime(); 
+    img.src = 'image/abstergo_logo.png?v=' + new Date().getTime(); 
     img.onload = () => {
       const cvs = document.createElement('canvas');
       cvs.width = img.width;
