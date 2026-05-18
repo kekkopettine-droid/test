@@ -411,11 +411,11 @@
   gridGroup.add(dnaGroup);
 
   // Materiali DNA bianchi olografici
-  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matRung        = new THREE.LineBasicMaterial({ color: 0xeeeeff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
+  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 6 });
+  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
+  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 6 });
+  const matRung        = new THREE.LineBasicMaterial({ color: 0xeeeeff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
   const matSph1        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
   const matSph2        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
 
@@ -446,7 +446,8 @@
 
   // 5 geni specifici interattivi (1 per ogni antenato)
   const NUM_SECTIONS = 5;
-  const specialGeneIndices = [5, 16, 27, 38, 49];
+  // Raggruppiamo i geni più verso il centro per farli rientrare nel FOV visibile della telecamera
+  const specialGeneIndices = [15, 21, 27, 33, 39];
   const specialGenes = specialGeneIndices.map(i => [sphArr1[i], sphArr2[i]]);
 
   // Diamo un colore azzurro ai 5 geni selezionabili per renderli evidenti
@@ -466,18 +467,22 @@
 
   const dnaLabelEls = [];
   for (let s = 0; s < NUM_SECTIONS; s++) {
-    const phi = panelArcStart + ((s + 0.5) / NUM_SECTIONS) * arcLength;
+    // Calcoliamo l'angolo phi esattamente in base all'indice del gene speciale
+    const t = specialGeneIndices[s] / NUM_RUNGS;
+    const phi = panelArcStart + t * arcLength;
     const el  = document.createElement('div');
     el.className = 'dna-label';
-    el.innerHTML = `<span class="dna-label-year">${sectionData[s].year}</span><span class="dna-label-name">${sectionData[s].name}</span>`;
+    el.innerHTML = `<span class="dna-label-year">${sectionData[s].year}</span>`;
     el.style.opacity = '0';
     el.style.pointerEvents = 'none';
     document.getElementById('hud-container').appendChild(el);
     dnaLabelEls.push(el);
     const cssLbl = new THREE.CSS3DObject(el);
-    cssLbl.position.set(Math.cos(phi) * r_dna, DNA_RAD + 2.0, Math.sin(phi) * r_dna);
+    // Alterniamo le posizioni: gli indici dispari (s=1 -> 1600, s=3 -> 1800) in basso, gli altri in alto
+    const yOffset = (s % 2 === 0) ? (DNA_RAD + 2.0) : -(DNA_RAD + 2.0);
+    cssLbl.position.set(Math.cos(phi) * r_dna, yOffset, Math.sin(phi) * r_dna);
     cssLbl.scale.set(0.022, 0.022, 0.022);
-    cssLbl.lookAt(0, DNA_RAD + 2.0, 0);
+    cssLbl.lookAt(0, yOffset, 0);
     gridGroup.add(cssLbl);
   }
 
@@ -691,6 +696,15 @@
               hoveredGene = s;
               break;
             }
+          }
+        }
+        
+        // Aggiorna la classe CSS delle etichette per l'animazione della data
+        for (let s = 0; s < NUM_SECTIONS; s++) {
+          if (s === hoveredGene) {
+            dnaLabelEls[s].classList.add('hovered');
+          } else {
+            dnaLabelEls[s].classList.remove('hovered');
           }
         }
         
