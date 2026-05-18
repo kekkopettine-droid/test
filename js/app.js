@@ -343,13 +343,14 @@
   const spread = 0.42;
   const panelRadiusCSS = 24.8; // Appena dentro il vetro
 
-  // 1) LOGO
+  // 1) LOGO - centrato sopra le due schede
   const logoEl = document.getElementById('abstergoLogo');
   const cssLogo = new THREE.CSS3DObject(logoEl);
-  const thetaLogo = thetaCenter - 0.55;
-  cssLogo.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 5.5, Math.sin(thetaLogo) * panelRadiusCSS);
-  cssLogo.scale.set(0.03, 0.03, 0.03);
-  cssLogo.lookAt(0, 5.5, 0); 
+  // Usa thetaCenter per stare esattamente al centro del display
+  const thetaLogo = thetaCenter - 0.5;
+  cssLogo.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 8.0, Math.sin(thetaLogo) * panelRadiusCSS);
+  cssLogo.scale.set(0.020, 0.020, 0.020);
+  cssLogo.lookAt(0, 8.0, 0);
   gridGroup.add(cssLogo);
 
   // 2) PANNELLO SINISTRO
@@ -373,10 +374,19 @@
   // 4) PANNELLO DETTAGLIO
   const panelDetail = document.getElementById('panelDetail');
   const cssObjDetail = new THREE.CSS3DObject(panelDetail);
+  // Spostato alla sua posizione originale
   cssObjDetail.position.set(Math.cos(thetaCenter) * panelRadiusCSS, -1, Math.sin(thetaCenter) * panelRadiusCSS);
   cssObjDetail.scale.set(0.035, 0.035, 0.035);
   cssObjDetail.lookAt(0, -1, 0);
   gridGroup.add(cssObjDetail);
+
+  // FLOATING TIMELINE SENZA SCHEDA GIGANTE
+  const floatingTimeline = document.getElementById('floatingTimeline');
+  const cssObjFloating = new THREE.CSS3DObject(floatingTimeline);
+  cssObjFloating.position.set(Math.cos(thetaCenter) * 13, -1, Math.sin(thetaCenter) * 13);
+  cssObjFloating.scale.set(0.015, 0.015, 0.015);
+  cssObjFloating.lookAt(0, -1, 0);
+  gridGroup.add(cssObjFloating);
 
   // HOVER STATES PER INGRANDIMENTO FLUIDO IN 3D
   let hoverL = false;
@@ -388,6 +398,151 @@
   panelR.addEventListener('mouseenter', () => hoverR = true);
   panelR.addEventListener('mouseleave', () => hoverR = false);
 
+
+  /* ══════════════════════════════════════════════
+     DNA 3D MODEL
+  ══════════════════════════════════════════════ */
+  const DNA_TURNS = 6;
+  const DNA_RAD   = 1.1;
+  const r_dna     = panelRadiusCSS - 0.8;
+
+  const dnaGroup = new THREE.Group();
+  dnaGroup.visible = false;
+  gridGroup.add(dnaGroup);
+
+  // Materiali DNA bianchi olografici
+  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matRung        = new THREE.LineBasicMaterial({ color: 0xeeeeff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSph1        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSph2        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
+
+  // Geometrie aggiornabili ogni frame
+  const STRAND_SEGS = 400;
+  const NUM_RUNGS   = DNA_TURNS * 9;
+  const arr1     = new Float32Array((STRAND_SEGS + 1) * 3);
+  const arr2     = new Float32Array((STRAND_SEGS + 1) * 3);
+  const arrRungs = new Float32Array((NUM_RUNGS  + 1) * 6);
+
+  const geo1 = new THREE.BufferGeometry(); geo1.setAttribute('position', new THREE.BufferAttribute(arr1, 3));
+  const geo2 = new THREE.BufferGeometry(); geo2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
+  dnaGroup.add(new THREE.Line(geo1, matStrand1));
+  dnaGroup.add(new THREE.Line(geo1, matStrand1Glow));
+  dnaGroup.add(new THREE.Line(geo2, matStrand2));
+  dnaGroup.add(new THREE.Line(geo2, matStrand2Glow));
+
+  const geoRungs = new THREE.BufferGeometry(); geoRungs.setAttribute('position', new THREE.BufferAttribute(arrRungs, 3));
+  dnaGroup.add(new THREE.LineSegments(geoRungs, matRung));
+
+  // Sfere nucleotide
+  const gSph = new THREE.SphereGeometry(0.30, 10, 10);
+  const sphArr1 = [], sphArr2 = [];
+  for (let i = 0; i <= NUM_RUNGS; i++) {
+    const s1 = new THREE.Mesh(gSph, matSph1); dnaGroup.add(s1); sphArr1.push(s1);
+    const s2 = new THREE.Mesh(gSph, matSph2); dnaGroup.add(s2); sphArr2.push(s2);
+  }
+
+  // 5 geni specifici interattivi (1 per ogni antenato)
+  const NUM_SECTIONS = 5;
+  const specialGeneIndices = [5, 16, 27, 38, 49];
+  const specialGenes = specialGeneIndices.map(i => [sphArr1[i], sphArr2[i]]);
+
+  // Diamo un colore azzurro ai 5 geni selezionabili per renderli evidenti
+  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, blending: THREE.AdditiveBlending, depthWrite: false });
+  specialGenes.forEach(pair => {
+    pair[0].material = matSphSpecial;
+    pair[1].material = matSphSpecial;
+  });
+
+  const sectionData = [
+    { year: '1500', name: 'Ezio Auditore' },
+    { year: '1600', name: 'Edward Kenway' },
+    { year: '1700', name: 'Connor Kenway' },
+    { year: '1800', name: 'Arno Dorian'   },
+    { year: '1900', name: 'Jacob Frye'    },
+  ];
+
+  const dnaLabelEls = [];
+  for (let s = 0; s < NUM_SECTIONS; s++) {
+    const phi = panelArcStart + ((s + 0.5) / NUM_SECTIONS) * arcLength;
+    const el  = document.createElement('div');
+    el.className = 'dna-label';
+    el.innerHTML = `<span class="dna-label-year">${sectionData[s].year}</span><span class="dna-label-name">${sectionData[s].name}</span>`;
+    el.style.opacity = '0';
+    el.style.pointerEvents = 'none';
+    document.getElementById('hud-container').appendChild(el);
+    dnaLabelEls.push(el);
+    const cssLbl = new THREE.CSS3DObject(el);
+    cssLbl.position.set(Math.cos(phi) * r_dna, DNA_RAD + 2.0, Math.sin(phi) * r_dna);
+    cssLbl.scale.set(0.022, 0.022, 0.022);
+    cssLbl.lookAt(0, DNA_RAD + 2.0, 0);
+    gridGroup.add(cssLbl);
+  }
+
+  // Raycasting hover sui geni
+  const dnaRaycaster   = new THREE.Raycaster();
+  const dnaMouse       = new THREE.Vector2();
+  const allDnaSpheres  = [...sphArr1, ...sphArr2];
+  window.addEventListener('mousemove', e => {
+    dnaMouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+    dnaMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // Aggiorna posizioni con la fase corrente (effetto "spiedo")
+  function updateDNA(phase) {
+    for (let i = 0; i <= STRAND_SEGS; i++) {
+      const t  = i / STRAND_SEGS;
+      const phi = panelArcStart + t * arcLength;
+      const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
+      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const rX = Math.cos(phi),         rZ = Math.sin(phi);
+      const rO = Math.cos(ha) * DNA_RAD, vO = Math.sin(ha) * DNA_RAD;
+      arr1[i*3]=cx+rX*rO; arr1[i*3+1]=vO;  arr1[i*3+2]=cz+rZ*rO;
+      arr2[i*3]=cx-rX*rO; arr2[i*3+1]=-vO; arr2[i*3+2]=cz-rZ*rO;
+    }
+    geo1.attributes.position.needsUpdate = true;
+    geo2.attributes.position.needsUpdate = true;
+    for (let i = 0; i <= NUM_RUNGS; i++) {
+      const t  = i / NUM_RUNGS;
+      const phi = panelArcStart + t * arcLength;
+      const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
+      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const rX = Math.cos(phi),         rZ = Math.sin(phi);
+      const rO = Math.cos(ha) * DNA_RAD, vO = Math.sin(ha) * DNA_RAD;
+      const ri = i * 6;
+      arrRungs[ri]=cx+rX*rO; arrRungs[ri+1]=vO;  arrRungs[ri+2]=cz+rZ*rO;
+      arrRungs[ri+3]=cx-rX*rO; arrRungs[ri+4]=-vO; arrRungs[ri+5]=cz-rZ*rO;
+      sphArr1[i].position.set(cx+rX*rO, vO,  cz+rZ*rO);
+      sphArr2[i].position.set(cx-rX*rO, -vO, cz-rZ*rO);
+    }
+    geoRungs.attributes.position.needsUpdate = true;
+  }
+
+  let dnaPhase = 0;
+  updateDNA(0);
+
+  const dnaBackArrow = document.getElementById('dnaBackArrow');
+
+  function showDNAView() {
+    panelL.classList.add('hidden-panel');
+    panelR.classList.add('hidden-panel');
+    dnaGroup.visible           = true;
+    dnaBackArrow.style.display = 'block';
+    dnaLabelEls.forEach(el => { el.style.opacity = '1'; });
+  }
+
+  function hideDNAView() {
+    dnaGroup.visible           = false;
+    dnaBackArrow.style.display = 'none';
+    dnaLabelEls.forEach(el => { el.style.opacity = '0'; });
+    allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
+    panelL.classList.remove('hidden-panel');
+    panelR.classList.remove('hidden-panel');
+  }
+
+  dnaBackArrow.addEventListener('click', () => hideDNAView());
 
   /* ══════════════════════════════════════════
      RESIZE
@@ -520,52 +675,52 @@
       if (panelProgress >= 1) {
         glassActivatedMat.opacity = Math.min(0.45, glassActivatedMat.opacity + 0.006);
       }
+
+      // Rotazione DNA "spiedo" + hover sui 5 geni
+      if (dnaGroup.visible) {
+        dnaRaycaster.setFromCamera(dnaMouse, camera);
+        const hits = dnaRaycaster.intersectObjects(allDnaSpheres);
+        
+        let isHoveringDNA = hits.length > 0;
+        let hoveredGene = -1;
+        
+        if (isHoveringDNA) {
+          const hit = hits[0].object;
+          for (let s = 0; s < NUM_SECTIONS; s++) {
+            if (specialGenes[s].includes(hit)) {
+              hoveredGene = s;
+              break;
+            }
+          }
+        }
+        
+        // Se non siamo su un gene specifico, il DNA continua a ruotare
+        if (hoveredGene === -1) {
+          dnaPhase += 0.025;
+        }
+        updateDNA(dnaPhase);
+
+        const tempScale = new THREE.Vector3();
+        for (let i = 0; i <= NUM_RUNGS; i++) {
+          const s = specialGeneIndices.indexOf(i);
+          let targetScale = 1.0;
+          
+          // Solo il singolo gene su cui è posizionato il cursore si ingrandisce
+          if (s !== -1 && hoveredGene === s) {
+             targetScale = 2.8; 
+          }
+          
+          tempScale.set(targetScale, targetScale, targetScale);
+          sphArr1[i].scale.lerp(tempScale, 0.15);
+          sphArr2[i].scale.lerp(tempScale, 0.15);
+        }
+      }
+
     }   // fine if (hasBooted)
   }     // fine function animate()
 
-  /* ══════════════════════════════════════════
-     PROCESS LOGO IMAGE
-  ══════════════════════════════════════════ */
-  function processLogo() {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = 'image/abstergo_logo.png?v=' + new Date().getTime(); 
-    img.onload = () => {
-      const cvs = document.createElement('canvas');
-      cvs.width = img.width;
-      cvs.height = img.height;
-      const ctx = cvs.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-      const data = imgData.data;
+  /* Logo ora gestito come SVG inline nell'HTML, processLogo() non più necessario */
 
-      for (let i = 0; i < data.length; i += 4) {
-        let r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-        if (a < 50) continue;
-        if (r > 150 && g > 150 && b > 150) {
-          data[i+3] = 0; 
-          continue;
-        }
-        if (r < 150 && g < 150 && b < 150) {
-          data[i] = 0; 
-          data[i+1] = 221; 
-          data[i+2] = 255; 
-        }
-      }
-      ctx.putImageData(imgData, 0, 0);
-
-      const finalImg = document.createElement('img');
-      finalImg.src = cvs.toDataURL();
-      finalImg.style.width = '100%';
-      finalImg.style.height = 'auto';
-      finalImg.style.filter = 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.8))'; // Glow più intenso
-
-      const container = document.getElementById('abstergoLogo');
-      container.innerHTML = '';
-      container.appendChild(finalImg);
-    };
-  }
-  processLogo();
 
   /* ══════════════════════════════════════════
      LOGICA SPA: CAMBIO SCHERMATA
@@ -588,17 +743,40 @@
   }
 
   panelL.addEventListener('click', () => {
-    showDetailView(
-      "SEQUENZA DNA - SOGGETTO 17",
-      "Analisi del corredo genetico in corso... <br><br>Soggetto identificato: Desmond Miles.<br>Antenati rilevati: Altaïr Ibn-La'Ahad, Ezio Auditore da Firenze, Ratonhnhaké:ton.<br><br>Sincronizzazione dei ricordi genotipici pronta per l'estrazione. Il sistema sta stabilizzando i ricordi per evitare il collasso neurale."
-    );
+    showDNAView();
   });
 
   panelR.addEventListener('click', () => {
-    showDetailView(
-      "SIMULAZIONE STORICA",
-      "Inizializzazione ambiente virtuale... <br><br>Epoca selezionata: Rinascimento Italiano (1476).<br>Luogo: Firenze, Repubblica Fiorentina.<br><br>Avvertenza: Mantenere la sincronizzazione seguendo le memorie dell'antenato. Deviazioni significative causeranno la desincronizzazione."
-    );
+    panelL.classList.add('hidden-panel');
+    panelR.classList.add('hidden-panel');
+    
+    // Mostra il floatingTimeline al posto del panelDetail
+    floatingTimeline.classList.remove('hidden-panel');
+
+    const nodes = document.querySelectorAll('#floatingTimeline .timeline-node');
+    const infoBox = document.getElementById('floating-timeline-info');
+    
+    const storicData = {
+      '1500': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rinascimento<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Ezio Auditore<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Sincronizzazione stabile.`,
+      '1600': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Età d'Oro della Pirateria<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Edward Kenway<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Condizioni navali attive.`,
+      '1700': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Americana<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Connor Kenway<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Frammenti di memoria instabili.`,
+      '1800': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Francese<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Arno Dorian<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Anomalie temporali (Helix).`,
+      '1900': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Industriale<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Jacob Frye<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Interferenza Templare elevata.`
+    };
+
+    nodes.forEach(node => {
+      node.addEventListener('click', () => {
+        nodes.forEach(n => n.classList.remove('active'));
+        node.classList.add('active');
+        const year = node.getAttribute('data-year');
+        infoBox.innerHTML = storicData[year];
+      });
+    });
+  });
+
+  document.getElementById('btn-back-floating').addEventListener('click', () => {
+    floatingTimeline.classList.add('hidden-panel');
+    showCardsView();
   });
 
   document.getElementById('btn-back').addEventListener('click', () => {

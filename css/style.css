@@ -120,10 +120,61 @@ body {
 
 /* ── ABSTERGO LOGO ── */
 .abstergo-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 400px;
+  width: 900px;
+  pointer-events: none;
+}
+
+.dna-back-arrow {
+  display: none;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 1.5px solid rgba(0, 255, 255, 0.55);
+  color: #00ffff;
+  font-size: 36px;
+  line-height: 1;
+  padding: 10px 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.15) inset;
+  transition: all 0.2s;
+}
+.dna-back-arrow:hover {
+  background: rgba(0, 255, 255, 0.12);
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5) inset, 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
+/* ── DNA SEZIONE LABELS ── */
+.dna-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.dna-label-year {
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 14px rgba(255,255,255,0.9), 0 0 30px rgba(100,180,255,0.6);
+}
+.dna-label-name {
+  color: rgba(180, 220, 255, 0.85);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(100, 200, 255, 0.7);
 }
 
 /* ── LOADING FLASH ── */
@@ -180,4 +231,93 @@ body {
   border-color: #00ffff;
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.5) inset, 0 0 10px rgba(0, 255, 255, 0.4);
   color: #ffffff;
+}
+
+/* ── TIMELINE GLOBALE ANIMUS ── */
+.global-timeline {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  padding: 30px 10vw;
+  background: linear-gradient(to top, rgba(0, 30, 40, 0.95) 0%, rgba(0, 30, 40, 0) 100%);
+  z-index: 1000;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: auto; /* Permette l'interazione */
+  display: flex;
+  flex-direction: column;
+}
+.global-timeline.hidden-panel {
+  opacity: 0;
+  transform: translateY(50px);
+  pointer-events: none;
+}
+.timeline-container {
+  position: relative;
+  margin: 15px -10px; /* Margine per allargarsi un po' ma restando nella scheda */
+  width: auto;
+}
+.timeline-line {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  z-index: 1;
+}
+.timeline-nodes {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 15px; /* Spazio per non far sbordare il primo e ultimo pallino */
+}
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.node-dot {
+  width: 16px;
+  height: 16px;
+  background: #001a22;
+  border: 2px solid #00ffff;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  box-shadow: 0 0 10px #00ffff, inset 0 0 5px #00ffff;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.timeline-node:hover .node-dot, .timeline-node.active .node-dot {
+  background: #00ffff;
+  transform: scale(1.4);
+  box-shadow: 0 0 20px #00ffff, 0 0 10px #ffffff;
+}
+.node-label {
+  color: rgba(200, 255, 255, 0.5);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  transition: all 0.3s ease;
+}
+.timeline-node:hover .node-label, .timeline-node.active .node-label {
+  color: #ffffff;
+  text-shadow: 0 0 10px #00ffff;
+}
+.timeline-info {
+  margin-top: 15px;
+  min-height: 60px;
+  font-size: 15px;
+  color: rgba(200, 240, 255, 0.9);
+  line-height: 1.6;
+  padding: 15px 30px;
+  background: rgba(0, 50, 90, 0.4);
+  border-left: 3px solid #00ffff;
+  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+  text-shadow: 0 0 4px rgba(0, 150, 255, 0.3);
+  text-align: center;
 }

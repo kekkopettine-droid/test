@@ -27,7 +27,31 @@
 <div id="hud-container">
   
   <div class="abstergo-container" id="abstergoLogo">
-    <!-- L'immagine viene caricata dal JS -->
+    <!-- Freccia indietro (visibile solo nella vista DNA) -->
+    <button id="dnaBackArrow" class="dna-back-arrow">&#9664;</button>
+    <!-- Logo SVG inline: nessuna dipendenza da file immagine -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="660" height="175"
+         style="filter: drop-shadow(0 0 12px rgba(0,255,255,0.85));">
+      <!-- Triangolo geometrico stile Abstergo -->
+      <!-- Faccia sinistra scura -->
+      <polygon points="10,82 48,18 86,82" fill="rgba(0,200,240,0.5)" />
+      <!-- Faccia destra chiara -->
+      <polygon points="48,18 86,82 72,82 55,48" fill="rgba(0,255,255,0.9)" />
+      <!-- Triangolino interno in basso a sinistra -->
+      <polygon points="24,82 48,40 60,82" fill="rgba(0,180,220,0.7)" />
+      <!-- Triangolino superiore centrale -->
+      <polygon points="48,18 62,46 48,54 34,46" fill="rgba(0,230,255,0.6)" />
+      <!-- Linea separatrice verticale -->
+      <line x1="102" y1="15" x2="102" y2="80" stroke="rgba(0,255,255,0.5)" stroke-width="1.5"/>
+      <!-- Testo ABSTERGO -->
+      <text x="116" y="52" font-family="'Segoe UI', Arial, sans-serif"
+            font-size="32" font-weight="700" letter-spacing="1"
+            fill="#00ffff">Abstergo</text>
+      <!-- Testo Industries -->
+      <text x="117" y="74" font-family="'Segoe UI', Arial, sans-serif"
+            font-size="18" font-weight="400" letter-spacing="2"
+            fill="rgba(0,220,255,0.75)">Industries</text>
+    </svg>
   </div>
 
   <!-- PANNELLO 1: SINISTRA -->
@@ -80,6 +104,27 @@
       Contenuto caricato dinamicamente...
     </div>
     <button id="btn-back" class="btn-back">INDIETRO</button>
+  </div>
+
+  <!-- FLOATING TIMELINE -->
+  <div id="floatingTimeline" class="hidden-panel" style="width: 2500px; text-align: center; font-family: 'Rajdhani', sans-serif;">
+    <div style="margin-bottom: 40px; color: rgba(200,240,255,0.8); font-size: 36px; text-transform: uppercase; letter-spacing: 0.2em;">
+      Archivio Genetico... Seleziona un'epoca:
+    </div>
+    <div class="timeline-container" style="margin: 60px 0;">
+      <div class="timeline-line" style="top: 20px;"></div>
+      <div class="timeline-nodes" style="padding: 0 40px;">
+        <div class="timeline-node" data-year="1500"><div class="node-dot" style="width:36px; height:36px;"></div><div class="node-label" style="font-size:40px; margin-top:20px;">1500</div></div>
+        <div class="timeline-node" data-year="1600"><div class="node-dot" style="width:36px; height:36px;"></div><div class="node-label" style="font-size:40px; margin-top:20px;">1600</div></div>
+        <div class="timeline-node" data-year="1700"><div class="node-dot" style="width:36px; height:36px;"></div><div class="node-label" style="font-size:40px; margin-top:20px;">1700</div></div>
+        <div class="timeline-node" data-year="1800"><div class="node-dot" style="width:36px; height:36px;"></div><div class="node-label" style="font-size:40px; margin-top:20px;">1800</div></div>
+        <div class="timeline-node" data-year="1900"><div class="node-dot" style="width:36px; height:36px;"></div><div class="node-label" style="font-size:40px; margin-top:20px;">1900</div></div>
+      </div>
+    </div>
+    <div id="floating-timeline-info" style="color: rgba(200,255,255,1); font-size: 32px; margin-top: 60px; min-height: 100px; text-shadow: 0 0 20px rgba(0,255,255,0.8); line-height: 1.8;">
+      In attesa di selezione del frammento di memoria...
+    </div>
+    <button id="btn-back-floating" class="btn-back" style="margin-top: 60px; display: inline-block; padding: 20px 40px; font-size: 24px;">INDIETRO</button>
   </div>
 
 </div>
