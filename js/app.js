@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  var memoryBlocks = [];
+
   /* ══════════════════════════════════════════════
      RENDERER & SCENE
   ══════════════════════════════════════════════ */
@@ -325,6 +327,42 @@
     }
   }
 
+  /* ── FRAMMENTI DI MEMORIA ANIMUS (PARTICELLE FLUTTUANTI) ── */
+  const animusParticleCount = 80;
+  const animusParticlesGeo = new THREE.BufferGeometry();
+  const animusPositions = new Float32Array(animusParticleCount * 3);
+  const animusSpeeds = [];
+
+  for (let i = 0; i < animusParticleCount; i++) {
+    const angle = panelArcStart + Math.random() * arcLength;
+    // Leggermente staccati dal vetro (tra gridRadius - 2 e gridRadius + 1)
+    const radius = gridRadius - 2.0 + Math.random() * 3.0;
+    animusPositions[i * 3] = Math.cos(angle) * radius;
+    animusPositions[i * 3 + 1] = (Math.random() - 0.5) * glassHeight;
+    animusPositions[i * 3 + 2] = Math.sin(angle) * radius;
+
+    animusSpeeds.push({
+      y: 0.015 + Math.random() * 0.035,
+      angleSpeed: (Math.random() - 0.5) * 0.001,
+      angle: angle,
+      radius: radius
+    });
+  }
+
+  animusParticlesGeo.setAttribute('position', new THREE.BufferAttribute(animusPositions, 3));
+  
+  animusParticlesMat = new THREE.PointsMaterial({
+    color: 0x00ffff,
+    size: 0.12,
+    transparent: true,
+    opacity: 0.05, // Partono quasi invisibili, fanno fade-in post-boot
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  
+  animusParticles = new THREE.Points(animusParticlesGeo, animusParticlesMat);
+  gridGroup.add(animusParticles);
+
   /* ── ONDA DI SCANSIONE OLOGRAFICA ── */
   const scanMat = new THREE.MeshBasicMaterial({
     color: 0x00ffff, transparent: true, opacity: 0,
@@ -347,11 +385,103 @@
   const logoEl = document.getElementById('abstergoLogo');
   const cssLogo = new THREE.CSS3DObject(logoEl);
   // Usa thetaCenter per stare esattamente al centro del display
-  const thetaLogo = thetaCenter - 0.5;
+  const thetaLogo = thetaCenter - 0.7;
   cssLogo.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 8.0, Math.sin(thetaLogo) * panelRadiusCSS);
-  cssLogo.scale.set(0.020, 0.020, 0.020);
+  cssLogo.scale.set(0.013, 0.013, 0.013);
   cssLogo.lookAt(0, 8.0, 0);
   gridGroup.add(cssLogo);
+
+  // 1b) TECH HALO DIETRO IL LOGO (Cerchi concentrici rotanti in stile Animus)
+  const haloGroup = new THREE.Group();
+  const haloRadius = panelRadiusCSS + 0.05;
+  haloGroup.position.set(Math.cos(thetaLogo) * haloRadius, 8.0, Math.sin(thetaLogo) * haloRadius);
+  haloGroup.lookAt(0, 8.0, 0);
+  gridGroup.add(haloGroup);
+
+  const ringMat = new THREE.LineBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const outerRingPoints = [];
+  const outerSegs = 64;
+  for (let i = 0; i <= outerSegs; i++) {
+    const a = (i / outerSegs) * Math.PI * 2;
+    outerRingPoints.push(new THREE.Vector3(Math.cos(a) * 1.5, Math.sin(a) * 1.5, 0));
+  }
+  const outerRingGeo = new THREE.BufferGeometry().setFromPoints(outerRingPoints);
+  outerRing = new THREE.LineLoop(outerRingGeo, ringMat);
+  haloGroup.add(outerRing);
+
+  const innerRingGeo = new THREE.BufferGeometry();
+  const innerPoints = [];
+  const innerSegs = 36;
+  const radiusInner = 1.15;
+  for (let i = 0; i < innerSegs; i++) {
+    if (i % 2 === 0) {
+      const a1 = (i / innerSegs) * Math.PI * 2;
+      const a2 = ((i + 0.8) / innerSegs) * Math.PI * 2;
+      innerPoints.push(new THREE.Vector3(Math.cos(a1) * radiusInner, Math.sin(a1) * radiusInner, 0));
+      innerPoints.push(new THREE.Vector3(Math.cos(a2) * radiusInner, Math.sin(a2) * radiusInner, 0));
+    }
+  }
+  innerRingGeo.setFromPoints(innerPoints);
+  innerRing = new THREE.LineSegments(innerRingGeo, ringMat);
+  haloGroup.add(innerRing);
+
+  const crossMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.25 });
+  const crossGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-0.2, 0, 0), new THREE.Vector3(0.2, 0, 0),
+    new THREE.Vector3(0, -0.2, 0), new THREE.Vector3(0, 0.2, 0)
+  ]);
+  const cross1 = new THREE.LineSegments(crossGeo, crossMat);
+  cross1.position.set(-1.5, 0, 0);
+  haloGroup.add(cross1);
+  const cross2 = new THREE.LineSegments(crossGeo, crossMat);
+  cross2.position.set(1.5, 0, 0);
+  haloGroup.add(cross2);
+
+  /* ── LINEE BIANCHE ORIZZONTALI SCORREVOLI (ANIMUS DATA SWEEPS) ── */
+  sweepMat = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const sweepLength = Math.PI * (25 / 180); // Lunghezza 25 gradi
+  const sweepPoints = [];
+  const sweepSegs = 16;
+  for (let i = 0; i <= sweepSegs; i++) {
+    const a = (i / sweepSegs) * sweepLength;
+    // Disposti leggermente davanti al vetro (+0.08) per contrasto
+    sweepPoints.push(new THREE.Vector3(Math.cos(a) * (gridRadius + 0.08), 0, Math.sin(a) * (gridRadius + 0.08)));
+  }
+
+  const topSweep1Geo = new THREE.BufferGeometry().setFromPoints(sweepPoints);
+  const topSweep2Geo = new THREE.BufferGeometry().setFromPoints(sweepPoints);
+  const bottomSweep1Geo = new THREE.BufferGeometry().setFromPoints(sweepPoints);
+  const bottomSweep2Geo = new THREE.BufferGeometry().setFromPoints(sweepPoints);
+
+  topSweep1 = new THREE.Line(topSweep1Geo, sweepMat);
+  topSweep1.position.y = glassHeight / 2 - 0.5;
+  gridGroup.add(topSweep1);
+
+  topSweep2 = new THREE.Line(topSweep2Geo, sweepMat);
+  topSweep2.position.y = glassHeight / 2 - 0.7;
+  gridGroup.add(topSweep2);
+
+  bottomSweep1 = new THREE.Line(bottomSweep1Geo, sweepMat);
+  bottomSweep1.position.y = -glassHeight / 2 + 0.5;
+  gridGroup.add(bottomSweep1);
+
+  bottomSweep2 = new THREE.Line(bottomSweep2Geo, sweepMat);
+  bottomSweep2.position.y = -glassHeight / 2 + 0.7;
+  gridGroup.add(bottomSweep2);
 
   // 2) PANNELLO SINISTRO
   const panelL = document.getElementById('panelL');
@@ -380,13 +510,351 @@
   cssObjDetail.lookAt(0, -1, 0);
   gridGroup.add(cssObjDetail);
 
-  // FLOATING TIMELINE SENZA SCHEDA GIGANTE
-  const floatingTimeline = document.getElementById('floatingTimeline');
-  const cssObjFloating = new THREE.CSS3DObject(floatingTimeline);
-  cssObjFloating.position.set(Math.cos(thetaCenter) * 13, -1, Math.sin(thetaCenter) * 13);
-  cssObjFloating.scale.set(0.015, 0.015, 0.015);
-  cssObjFloating.lookAt(0, -1, 0);
-  gridGroup.add(cssObjFloating);
+  /* ── PARTICOLARI GEOMETRICI DELL'HUD IN STILE ANIMUS (TOP, BOTTOM, LATI) ── */
+  
+  // A) RULER TICKS (Piccoli trattini di scala in cima e in fondo al display curvo)
+  const rulerTicks = new THREE.Group();
+  gridGroup.add(rulerTicks);
+
+  const tickMat = new THREE.LineBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.22,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const numTicks = 60;
+  const tickYSize = 0.3;
+  for (let i = 0; i <= numTicks; i++) {
+    const angle = panelArcStart + (i / numTicks) * arcLength;
+    const cx = Math.cos(angle) * (gridRadius + 0.05);
+    const cz = Math.sin(angle) * (gridRadius + 0.05);
+
+    // Tick in cima (top edge ruler)
+    const topTick = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, glassHeight / 2 - 0.2, cz),
+        new THREE.Vector3(cx, glassHeight / 2 - 0.2 - tickYSize, cz)
+      ]),
+      tickMat
+    );
+    rulerTicks.add(topTick);
+
+    // Tick in fondo (bottom edge ruler)
+    const bottomTick = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, -glassHeight / 2 + 0.2, cz),
+        new THREE.Vector3(cx, -glassHeight / 2 + 0.2 + tickYSize, cz)
+      ]),
+      tickMat
+    );
+    rulerTicks.add(bottomTick);
+  }
+
+  // B) STAFFE DI DELIMITAZIONE CORNER (Ai lati estremi del display)
+  const bracketMat = new THREE.LineBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  for (const angle of [cylThetaStart, cylThetaStart + arcLength]) {
+    const isLeft = angle === cylThetaStart;
+    const cx = Math.cos(angle) * (gridRadius + 0.05);
+    const cz = Math.sin(angle) * (gridRadius + 0.05);
+
+    // Linea verticale laterale di delimitazione
+    const vertBracket = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, -glassHeight / 2 + 1.2, cz),
+        new THREE.Vector3(cx, glassHeight / 2 - 1.2, cz)
+      ]),
+      bracketMat
+    );
+    gridGroup.add(vertBracket);
+
+    // Angoli/Trattini orizzontali che puntano verso l'interno dell'arco
+    const dir = isLeft ? 1 : -1;
+    const insideAngle = angle + dir * 0.035; // 0.035 radianti all'interno
+    const icx = Math.cos(insideAngle) * (gridRadius + 0.05);
+    const icz = Math.sin(insideAngle) * (gridRadius + 0.05);
+
+    const topCap = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, glassHeight / 2 - 1.2, cz),
+        new THREE.Vector3(icx, glassHeight / 2 - 1.2, icz)
+      ]),
+      bracketMat
+    );
+    gridGroup.add(topCap);
+
+    const bottomCap = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, -glassHeight / 2 + 1.2, cz),
+        new THREE.Vector3(icx, -glassHeight / 2 + 1.2, icz)
+      ]),
+      bracketMat
+    );
+    gridGroup.add(bottomCap);
+  }
+
+  // C) BLOCCHI DI MEMORIA IMPILATI (Memory block indicators che pulsano)
+  const blockMat = new THREE.MeshBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.15,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+
+  const blockCount = 6;
+  const blockHeight = 0.5;
+  const blockWidth = 0.15;
+  const blockSpacing = 0.2;
+
+  for (const angle of [cylThetaStart + 0.12, cylThetaStart + arcLength - 0.12]) {
+    const cx = Math.cos(angle) * (gridRadius + 0.05);
+    const cz = Math.sin(angle) * (gridRadius + 0.05);
+
+    for (let j = 0; j < blockCount; j++) {
+      const blockGeo = new THREE.PlaneGeometry(blockWidth, blockHeight);
+      const block = new THREE.Mesh(blockGeo, blockMat.clone());
+      block.position.set(cx, -glassHeight / 4 + j * (blockHeight + blockSpacing), cz);
+      block.lookAt(0, block.position.y, 0);
+      block.userData.pulseOffset = Math.random() * Math.PI * 2;
+      block.userData.pulseSpeed = 1.2 + Math.random() * 2.0;
+      gridGroup.add(block);
+      memoryBlocks.push(block);
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     CURVED HOLOGRAPHIC TIMELINE (scheda destra)
+  ══════════════════════════════════════════════ */
+  const TL_R = 16;
+  const TL_Y = 0;
+  // L'arco totale del display va da 135° a 405°(=45°).
+  // La camera (FOV 50°) vede solo da ~205° a ~335°: i nodi vengono posizionati
+  // in questo intervallo così risultano tutti visibili.
+  const TL_ARC_START = Math.PI * (205 / 180);
+  const TL_ARC_LEN   = Math.PI * (130 / 180);
+
+  // Tubo spesso (linea olografica) — usa TubeGeometry per avere spessore reale
+  (function() {
+    const pts = [];
+    for (let i = 0; i <= 100; i++) {
+      const phi = panelArcStart + (i / 100) * arcLength;
+      pts.push(new THREE.Vector3(Math.cos(phi) * TL_R, TL_Y, Math.sin(phi) * TL_R));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const tubeGeo = new THREE.TubeGeometry(curve, 200, 0.07, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    tlArcLine = new THREE.Mesh(tubeGeo, tubeMat);
+    tlArcLine.visible = false;
+    gridGroup.add(tlArcLine);
+    const glowGeo = new THREE.TubeGeometry(curve, 200, 0.18, 8, false);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    glowMesh.visible = false;
+    gridGroup.add(glowMesh);
+    tlArcLine.userData.glow = glowMesh;
+  })();
+
+  // Dati storici per ciascun nodo (5 personaggi AC)
+  const tlNodeData = [
+    { year: '1500', info: '<b style="color:#00ffff">EPOCA:</b> Rinascimento<br><b style="color:#00ffff">SOGGETTO:</b> Ezio Auditore<br><b style="color:#00ffff">STATO:</b> Sincronizzazione stabile.' },
+    { year: '1600', info: '<b style="color:#00ffff">EPOCA:</b> Età d\'Oro della Pirateria<br><b style="color:#00ffff">SOGGETTO:</b> Edward Kenway<br><b style="color:#00ffff">STATO:</b> Condizioni navali attive.' },
+    { year: '1700', info: '<b style="color:#00ffff">EPOCA:</b> Rivoluzione Americana<br><b style="color:#00ffff">SOGGETTO:</b> Connor Kenway<br><b style="color:#00ffff">STATO:</b> Frammenti di memoria instabili.' },
+    { year: '1800', info: '<b style="color:#00ffff">EPOCA:</b> Rivoluzione Francese<br><b style="color:#00ffff">SOGGETTO:</b> Arno Dorian<br><b style="color:#00ffff">STATO:</b> Anomalie temporali (Helix).' },
+    { year: '1900', info: '<b style="color:#00ffff">EPOCA:</b> Rivoluzione Industriale<br><b style="color:#00ffff">SOGGETTO:</b> Jacob Frye<br><b style="color:#00ffff">STATO:</b> Interferenza Templare elevata.' },
+  ];
+
+  // Nodi alternati: dispari sopra la linea, pari sotto — per non ammassare le date
+  const tlNodeOffsets = [2.8, -2.8, 2.8, -2.8, 2.8];
+
+  // Tick verticali ai 5 nodi (WebGL) — si estendono dalla linea verso il nodo
+  tlTickObjs = [];
+  for (let s = 0; s < 5; s++) {
+    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
+    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const yNode = TL_Y + tlNodeOffsets[s];
+    const tk    = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(cx, TL_Y, cz),
+        new THREE.Vector3(cx, yNode, cz)
+      ]),
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending })
+    );
+    tk.visible = false;
+    gridGroup.add(tk);
+    tlTickObjs.push(tk);
+  }
+
+  // 5 nodi CSS3D alternati sopra/sotto la linea
+  tlNodeEls  = [];
+  tlNodeCsss = [];
+  for (let s = 0; s < 5; s++) {
+    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
+    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const yNode = TL_Y + tlNodeOffsets[s];
+    const el    = document.createElement('div');
+    el.className = 'tl-node-item';
+    el.dataset.idx = s;
+    el.innerHTML = `<div class="tl-node-dot"></div><div class="tl-node-year">${tlNodeData[s].year}</div>`;
+    el.style.opacity = '0';
+    el.style.pointerEvents = 'none';
+    document.getElementById('hud-container').appendChild(el);
+    tlNodeEls.push(el);
+    const cssN = new THREE.CSS3DObject(el);
+    cssN.position.set(cx, yNode, cz);
+    cssN.scale.set(0.018, 0.018, 0.018);
+    cssN.lookAt(0, yNode, 0);
+    gridGroup.add(cssN);
+    tlNodeCsss.push(cssN);
+  }
+
+  // Info box CSS3D (centro display)
+  tlInfoEl = document.createElement('div');
+  tlInfoEl.style.cssText = 'text-align:center;min-width:650px;pointer-events:none;';
+  tlInfoEl.style.opacity = '0';
+  document.getElementById('hud-container').appendChild(tlInfoEl);
+  const tlInfoCss = new THREE.CSS3DObject(tlInfoEl);
+  tlInfoCss.position.set(Math.cos(thetaCenter) * TL_R, TL_Y - 3.5, Math.sin(thetaCenter) * TL_R);
+  tlInfoCss.scale.set(0.012, 0.012, 0.012);
+  tlInfoCss.lookAt(0, TL_Y - 3.5, 0);
+  gridGroup.add(tlInfoCss);
+
+  // Bottone indietro CSS3D
+  tlBackEl = document.createElement('div');
+  tlBackEl.className = 'btn-back';
+  tlBackEl.textContent = 'INDIETRO';
+  tlBackEl.style.opacity = '0';
+  tlBackEl.style.pointerEvents = 'none';
+  document.getElementById('hud-container').appendChild(tlBackEl);
+  const tlBackCss = new THREE.CSS3DObject(tlBackEl);
+  tlBackCss.position.set(Math.cos(thetaCenter) * TL_R, TL_Y - 6.0, Math.sin(thetaCenter) * TL_R);
+  tlBackCss.scale.set(0.016, 0.016, 0.016);
+  tlBackCss.lookAt(0, TL_Y - 6.0, 0);
+  gridGroup.add(tlBackCss);
+
+  // Mini DNA WebGL sopra/sotto ogni pallino della timeline
+  tlDnaGroups = [];
+  tlDnaHovers = new Array(5).fill(false);
+  for (let s = 0; s < 5; s++) {
+    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
+    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const yNode = TL_Y + tlNodeOffsets[s];
+    const yDna  = yNode + (tlNodeOffsets[s] > 0 ? 1.8 : -1.8);
+
+    const mg = new THREE.Group();
+    mg.position.set(cx, yDna, cz);
+    mg.scale.setScalar(2.0);
+    mg.visible = false;
+
+    // Elica orizzontale ispirata al modello Animus: curve ciano/bianco ad alto contrasto
+    const MTURNS = 3, MSEGS = 120, MRAD = 0.4, MH = 2.2;
+    const mPts1 = [], mPts2 = [], mRungPts = [];
+    for (let i = 0; i <= MSEGS; i++) {
+      const t = i / MSEGS, a = t * Math.PI * 2 * MTURNS;
+      const x = (t - 0.5) * MH;
+      mPts1.push(new THREE.Vector3(x,  Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
+      mPts2.push(new THREE.Vector3(x, -Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
+    }
+    const MRINGS = MTURNS * 7;
+    for (let i = 0; i <= MRINGS; i++) {
+      const t = i / MRINGS, a = t * Math.PI * 2 * MTURNS;
+      const x = (t - 0.5) * MH;
+      mRungPts.push(new THREE.Vector3(x,  Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
+      mRungPts.push(new THREE.Vector3(x, -Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
+    }
+
+    // Materiali olografici
+    const mMat1 = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+    const mMat2 = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+    const mRMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.50, blending: THREE.AdditiveBlending, depthWrite: false });
+
+    mg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(mPts1), mMat1));
+    mg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(mPts2), mMat2));
+    mg.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(mRungPts), mRMat));
+
+    // Aggiungiamo microscopici ottaedri wireframe lungo i filamenti (nodi nucleotidici olografici)
+    const minioctGeo = new THREE.OctahedronGeometry(0.045, 0);
+    const minioctMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    
+    // Mettiamo 8 nodi su ciascuna catena a distanze regolari
+    const numNodes = 8;
+    for (let n = 0; n <= numNodes; n++) {
+      const idx = Math.floor((n / numNodes) * MSEGS);
+      
+      const s1 = new THREE.Mesh(minioctGeo, minioctMat);
+      s1.position.copy(mPts1[idx]);
+      mg.add(s1);
+
+      const s2 = new THREE.Mesh(minioctGeo, minioctMat);
+      s2.position.copy(mPts2[idx]);
+      mg.add(s2);
+    }
+
+    // Bounding box olegrafico (faint scanner box)
+    const boxGeo = new THREE.BoxGeometry(2.4, 1.0, 0.5);
+    const boxMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
+    const scannerBox = new THREE.Mesh(boxGeo, boxMat);
+    mg.add(scannerBox);
+    mg.userData.scannerBox = scannerBox;
+
+    gridGroup.add(mg);
+    tlDnaGroups.push(mg);
+  }
+
+  // Click + hover sui nodi
+  tlNodeEls.forEach((el, s) => {
+    el.addEventListener('mouseenter', () => { tlDnaHovers[s] = true; });
+    el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
+    el.addEventListener('click', () => {
+      hideTimelineView();
+      selectedDnaGene = s;
+      showDNAView();
+    });
+  });
+
+  function showTimelineView() {
+    panelL.classList.add('hidden-panel');
+    panelR.classList.add('hidden-panel');
+    tlArcLine.visible = true;
+    if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
+    tlTickObjs.forEach(t => { t.visible = true; });
+    tlNodeEls.forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; });
+    tlInfoEl.style.opacity = '1';
+    tlInfoEl.innerHTML = '<div style="color:rgba(140,215,255,0.65);font-size:20px;letter-spacing:0.12em;text-transform:uppercase">Seleziona un frammento di memoria</div>';
+    tlBackEl.style.opacity = '1';
+    tlBackEl.style.pointerEvents = 'auto';
+    tlDnaGroups.forEach(g => { g.visible = true; });
+  }
+
+  function hideTimelineView() {
+    tlArcLine.visible = false;
+    if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
+    tlTickObjs.forEach(t => { t.visible = false; });
+    tlNodeEls.forEach(el => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; el.classList.remove('active'); });
+    tlInfoEl.style.opacity = '0';
+    tlBackEl.style.opacity = '0';
+    tlBackEl.style.pointerEvents = 'none';
+    tlDnaGroups.forEach((g, s) => { g.visible = false; tlDnaHovers[s] = false; });
+    panelL.classList.remove('hidden-panel');
+    panelR.classList.remove('hidden-panel');
+  }
+
+  tlBackEl.addEventListener('click', () => hideTimelineView());
+
+  // Dichiarazioni anticipate (usate sopra negli IIFE)
+  var tlArcLine, tlTickObjs, tlNodeEls, tlNodeCsss, tlInfoEl, tlBackEl, tlDnaGroups, tlDnaHovers;
+  var outerRing, innerRing, animusParticles, animusParticlesMat;
+  var topSweep1, topSweep2, bottomSweep1, bottomSweep2, sweepMat;
+  var memoryBlocks;
 
   // HOVER STATES PER INGRANDIMENTO FLUIDO IN 3D
   let hoverL = false;
@@ -404,23 +872,25 @@
   ══════════════════════════════════════════════ */
   const DNA_TURNS = 6;
   const DNA_RAD   = 1.1;
-  const r_dna     = panelRadiusCSS - 0.8;
+  const r_dna     = 18;
 
   const dnaGroup = new THREE.Group();
   dnaGroup.visible = false;
   gridGroup.add(dnaGroup);
 
-  // Materiali DNA bianchi olografici
-  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
-  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 6 });
-  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
-  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 6 });
-  const matRung        = new THREE.LineBasicMaterial({ color: 0xeeeeff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
-  const matSph1        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matSph2        = new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false });
+  // Materiali DNA olografici
+  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.90, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 2 });
+  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 5 });
+  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.90, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 2 });
+  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 5 });
+  const matRung        = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.50, blending: THREE.AdditiveBlending, depthWrite: false });
+  
+  // Ottaedri wireframe bianchi per i nodi standard (stile pixel/data vettoriale)
+  const matSph1        = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.70, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSph2        = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.70, blending: THREE.AdditiveBlending, depthWrite: false });
 
   // Geometrie aggiornabili ogni frame
-  const STRAND_SEGS = 400;
+  const STRAND_SEGS = 200;
   const NUM_RUNGS   = DNA_TURNS * 9;
   const arr1     = new Float32Array((STRAND_SEGS + 1) * 3);
   const arr2     = new Float32Array((STRAND_SEGS + 1) * 3);
@@ -436,8 +906,8 @@
   const geoRungs = new THREE.BufferGeometry(); geoRungs.setAttribute('position', new THREE.BufferAttribute(arrRungs, 3));
   dnaGroup.add(new THREE.LineSegments(geoRungs, matRung));
 
-  // Sfere nucleotide
-  const gSph = new THREE.SphereGeometry(0.30, 10, 10);
+  // Ottaedri olografici (diamanti pixelati al posto di sfere biologiche pesanti)
+  const gSph = new THREE.OctahedronGeometry(0.08, 0);
   const sphArr1 = [], sphArr2 = [];
   for (let i = 0; i <= NUM_RUNGS; i++) {
     const s1 = new THREE.Mesh(gSph, matSph1); dnaGroup.add(s1); sphArr1.push(s1);
@@ -446,16 +916,109 @@
 
   // 5 geni specifici interattivi (1 per ogni antenato)
   const NUM_SECTIONS = 5;
-  // Raggruppiamo i geni più verso il centro per farli rientrare nel FOV visibile della telecamera
   const specialGeneIndices = [15, 21, 27, 33, 39];
   const specialGenes = specialGeneIndices.map(i => [sphArr1[i], sphArr2[i]]);
 
-  // Diamo un colore azzurro ai 5 geni selezionabili per renderli evidenti
-  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, blending: THREE.AdditiveBlending, depthWrite: false });
+  // Diamo un colore azzurro olografico emettitore ai 5 geni selezionabili per spiccare
+  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: false, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  
+  // Hitbox invisibili per facilitare la selezione col mouse (calibrata)
+  const hitBoxes = [];
+  const hitBoxGeo = new THREE.SphereGeometry(0.85, 8, 8);
+  const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+
   specialGenes.forEach(pair => {
     pair[0].material = matSphSpecial;
     pair[1].material = matSphSpecial;
+
+    const hb1 = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+    pair[0].add(hb1);
+    hitBoxes.push(hb1);
+
+    const hb2 = new THREE.Mesh(hitBoxGeo, hitBoxMat);
+    pair[1].add(hb2);
+    hitBoxes.push(hb2);
   });
+
+  // Aggiungiamo i 5 reticoli HUD rotanti a forma di diamante per evidenziare i geni
+  const reticleArr1 = [], reticleArr2 = [];
+  const reticleGeo = new THREE.RingGeometry(0.24, 0.28, 4, 1);
+  for (let s = 0; s < NUM_SECTIONS; s++) {
+    const rMat1 = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const r1 = new THREE.Mesh(reticleGeo, rMat1);
+    dnaGroup.add(r1);
+    reticleArr1.push(r1);
+
+    const rMat2 = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const r2 = new THREE.Mesh(reticleGeo, rMat2);
+    dnaGroup.add(r2);
+    reticleArr2.push(r2);
+  }
+
+  // Flusso particellare olografico sulle eliche (stream di pixel dati)
+  const partCount = 80;
+  const partGeo1 = new THREE.BufferGeometry();
+  const partGeo2 = new THREE.BufferGeometry();
+  const arrParts1 = new Float32Array(partCount * 3);
+  const arrParts2 = new Float32Array(partCount * 3);
+  partGeo1.setAttribute('position', new THREE.BufferAttribute(arrParts1, 3));
+  partGeo2.setAttribute('position', new THREE.BufferAttribute(arrParts2, 3));
+  
+  const partMat = new THREE.PointsMaterial({
+    color: 0x00ffff,
+    size: 0.16,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const partSys1 = new THREE.Points(partGeo1, partMat); dnaGroup.add(partSys1);
+  const partSys2 = new THREE.Points(partGeo2, partMat); dnaGroup.add(partSys2);
+
+  // Gabbia di contenimento cilindrica olografica curva
+  const cagePts = [];
+  const numVerticals = 8;
+  const steps = 40;
+  for (let i = 0; i < steps; i++) {
+    const t1 = i / steps;
+    const t2 = (i + 1) / steps;
+    const phi1 = panelArcStart + t1 * arcLength;
+    const phi2 = panelArcStart + t2 * arcLength;
+    
+    // Anello superiore
+    cagePts.push(new THREE.Vector3(Math.cos(phi1) * r_dna, 1.5, Math.sin(phi1) * r_dna));
+    cagePts.push(new THREE.Vector3(Math.cos(phi2) * r_dna, 1.5, Math.sin(phi2) * r_dna));
+    
+    // Anello inferiore
+    cagePts.push(new THREE.Vector3(Math.cos(phi1) * r_dna, -1.5, Math.sin(phi1) * r_dna));
+    cagePts.push(new THREE.Vector3(Math.cos(phi2) * r_dna, -1.5, Math.sin(phi2) * r_dna));
+  }
+  for (let i = 0; i <= numVerticals; i++) {
+    const t = i / numVerticals;
+    const phi = panelArcStart + t * arcLength;
+    const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+    // Linee verticali della gabbia
+    cagePts.push(new THREE.Vector3(cx, 1.5, cz));
+    cagePts.push(new THREE.Vector3(cx, -1.5, cz));
+  }
+  const cageGeo = new THREE.BufferGeometry().setFromPoints(cagePts);
+  const cageMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
+  const cageLine = new THREE.LineSegments(cageGeo, cageMat);
+  dnaGroup.add(cageLine);
+
+  // Linea di scansione laser olografica (curva che sale e scende)
+  const sweepPts = [];
+  const dnaSweepSegs = 60;
+  for (let i = 0; i <= dnaSweepSegs; i++) {
+    const t = i / dnaSweepSegs;
+    const phi = panelArcStart + t * arcLength;
+    sweepPts.push(new THREE.Vector3(Math.cos(phi) * r_dna, 0, Math.sin(phi) * r_dna));
+  }
+  const sweepLineGeo = new THREE.BufferGeometry().setFromPoints(sweepPts);
+  const matSweepLine = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
+  const sweepLine = new THREE.Line(sweepLineGeo, matSweepLine);
+  dnaGroup.add(sweepLine);
+
 
   const sectionData = [
     { year: '1500', name: 'Ezio Auditore' },
@@ -472,7 +1035,16 @@
     const phi = panelArcStart + t * arcLength;
     const el  = document.createElement('div');
     el.className = 'dna-label';
-    el.innerHTML = `<span class="dna-label-year">${sectionData[s].year}</span>`;
+    el.innerHTML = `
+      <div class="dna-label-card">
+        <div class="dna-label-header">
+          <span class="dna-label-dot"></span>
+          <span class="dna-label-tag">GENE_0${s+1}</span>
+        </div>
+        <div class="dna-label-year">${sectionData[s].year}</div>
+        <div class="dna-label-status">[ DECODED LINK ]</div>
+      </div>
+    `;
     el.style.opacity = '0';
     el.style.pointerEvents = 'none';
     document.getElementById('hud-container').appendChild(el);
@@ -502,52 +1074,91 @@
       const phi = panelArcStart + t * arcLength;
       const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
       const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-      const rX = Math.cos(phi),         rZ = Math.sin(phi);
-      const rO = Math.cos(ha) * DNA_RAD, vO = Math.sin(ha) * DNA_RAD;
-      arr1[i*3]=cx+rX*rO; arr1[i*3+1]=vO;  arr1[i*3+2]=cz+rZ*rO;
-      arr2[i*3]=cx-rX*rO; arr2[i*3+1]=-vO; arr2[i*3+2]=cz-rZ*rO;
+      const vO = Math.sin(ha) * DNA_RAD;
+      arr1[i*3]=cx; arr1[i*3+1]=vO;  arr1[i*3+2]=cz;
+      arr2[i*3]=cx; arr2[i*3+1]=-vO; arr2[i*3+2]=cz;
     }
     geo1.attributes.position.needsUpdate = true;
     geo2.attributes.position.needsUpdate = true;
+
     for (let i = 0; i <= NUM_RUNGS; i++) {
       const t  = i / NUM_RUNGS;
       const phi = panelArcStart + t * arcLength;
       const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
       const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-      const rX = Math.cos(phi),         rZ = Math.sin(phi);
-      const rO = Math.cos(ha) * DNA_RAD, vO = Math.sin(ha) * DNA_RAD;
+      const vO = Math.sin(ha) * DNA_RAD;
       const ri = i * 6;
-      arrRungs[ri]=cx+rX*rO; arrRungs[ri+1]=vO;  arrRungs[ri+2]=cz+rZ*rO;
-      arrRungs[ri+3]=cx-rX*rO; arrRungs[ri+4]=-vO; arrRungs[ri+5]=cz-rZ*rO;
-      sphArr1[i].position.set(cx+rX*rO, vO,  cz+rZ*rO);
-      sphArr2[i].position.set(cx-rX*rO, -vO, cz-rZ*rO);
+      arrRungs[ri]=cx; arrRungs[ri+1]=vO;  arrRungs[ri+2]=cz;
+      arrRungs[ri+3]=cx; arrRungs[ri+4]=-vO; arrRungs[ri+5]=cz;
+      sphArr1[i].position.set(cx, vO,  cz);
+      sphArr2[i].position.set(cx, -vO, cz);
     }
     geoRungs.attributes.position.needsUpdate = true;
+
+    // Riposiziona i 5 reticoli HUD rotanti esattamente sui 5 geni speciali
+    for (let s = 0; s < NUM_SECTIONS; s++) {
+      const idx = specialGeneIndices[s];
+      reticleArr1[s].position.copy(sphArr1[idx].position);
+      reticleArr2[s].position.copy(sphArr2[idx].position);
+    }
+
+    // Particelle di dati olografici fluenti lungo i due filamenti dell'elica
+    const flowTime = Date.now() * 0.0012;
+    for (let i = 0; i < partCount; i++) {
+      const t = ((i / partCount) + flowTime) % 1.0;
+      const phi = panelArcStart + t * arcLength;
+      const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
+      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const vO = Math.sin(ha) * DNA_RAD;
+      
+      arrParts1[i * 3] = cx; arrParts1[i * 3 + 1] = vO; arrParts1[i * 3 + 2] = cz;
+      arrParts2[i * 3] = cx; arrParts2[i * 3 + 1] = -vO; arrParts2[i * 3 + 2] = cz;
+    }
+    partGeo1.attributes.position.needsUpdate = true;
+    partGeo2.attributes.position.needsUpdate = true;
   }
 
   let dnaPhase = 0;
+  let selectedDnaGene = -1; // -1 = nessuno; 0-4 = sezione selezionata dalla timeline
   updateDNA(0);
 
   const dnaBackArrow = document.getElementById('dnaBackArrow');
+  const dnaInstructions = document.getElementById('dnaInstructions');
 
   function showDNAView() {
     panelL.classList.add('hidden-panel');
     panelR.classList.add('hidden-panel');
     dnaGroup.visible           = true;
     dnaBackArrow.style.display = 'block';
-    dnaLabelEls.forEach(el => { el.style.opacity = '1'; });
+    dnaInstructions.style.display = 'block';
+    dnaLabelEls.forEach(el => { 
+      el.style.opacity = ''; // Rimuovi inline
+      el.classList.add('visible'); 
+    });
   }
 
   function hideDNAView() {
     dnaGroup.visible           = false;
     dnaBackArrow.style.display = 'none';
-    dnaLabelEls.forEach(el => { el.style.opacity = '0'; });
+    dnaInstructions.style.display = 'none';
+    dnaLabelEls.forEach(el => { 
+      el.classList.remove('visible'); 
+    });
     allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
+    selectedDnaGene = -1;
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
   }
 
-  dnaBackArrow.addEventListener('click', () => hideDNAView());
+  // Se il DNA è stato aperto dalla timeline, freccia indietro → torna alla timeline
+  dnaBackArrow.addEventListener('click', () => {
+    if (selectedDnaGene !== -1) {
+      hideDNAView();
+      showTimelineView();
+    } else {
+      hideDNAView();
+    }
+  });
 
   /* ══════════════════════════════════════════
      RESIZE
@@ -658,6 +1269,63 @@
         led.material.opacity = v * 0.95;
       });
 
+      // Dissolvenza particelle Animus post-boot (effetto comparsa)
+      if (animusParticlesMat && animusParticlesMat.opacity < 0.65) {
+        animusParticlesMat.opacity += 0.005;
+      }
+
+      // Animazione delle particelle Animus (salita lenta con oscillazione sinusoidale)
+      if (animusParticles) {
+        const animPos = animusParticles.geometry.attributes.position.array;
+        for (let i = 0; i < animusParticleCount; i++) {
+          // Fai salire la particella
+          animPos[i * 3 + 1] += animusSpeeds[i].y;
+          
+          // Oscilla leggermente sull'arco
+          animusSpeeds[i].angle += animusSpeeds[i].angleSpeed;
+          animPos[i * 3] = Math.cos(animusSpeeds[i].angle) * animusSpeeds[i].radius;
+          animPos[i * 3 + 2] = Math.sin(animusSpeeds[i].angle) * animusSpeeds[i].radius;
+
+          // Se esce dal display (sopra), resetta in basso con nuovi valori random
+          if (animPos[i * 3 + 1] > glassHeight / 2) {
+            animPos[i * 3 + 1] = -glassHeight / 2;
+            animusSpeeds[i].angle = panelArcStart + Math.random() * arcLength;
+            animusSpeeds[i].radius = gridRadius - 2.0 + Math.random() * 3.0;
+          }
+        }
+        animusParticles.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // Rotazione tech rings dietro il logo
+      if (outerRing && innerRing) {
+        outerRing.rotation.z += 0.003;
+        innerRing.rotation.z -= 0.005;
+      }
+
+      // Animazione delle linee orizzontali bianche (sweeps)
+      if (topSweep1 && topSweep2 && bottomSweep1 && bottomSweep2) {
+        // Sopra girano verso destra
+        topSweep1.rotation.y += 0.005;
+        topSweep2.rotation.y += 0.003;
+        
+        // Sotto girano verso sinistra
+        bottomSweep1.rotation.y -= 0.004;
+        bottomSweep2.rotation.y -= 0.0025;
+
+        // Facciamo pulsare impercettibilmente la loro opacità
+        if (sweepMat) {
+          sweepMat.opacity = 0.3 + 0.15 * Math.sin(now * 3.5);
+        }
+      }
+
+      // Animazione dei blocchi di memoria Animus
+      if (memoryBlocks) {
+        memoryBlocks.forEach(block => {
+          const pulse = 0.08 + 0.17 * Math.pow(Math.max(0, Math.sin(now * block.userData.pulseSpeed + block.userData.pulseOffset)), 3);
+          block.material.opacity = pulse;
+        });
+      }
+
       // Onda di scansione verticale sul vetro (ciclo lento)
       scanRing.position.y = Math.sin(now * 0.35) * (glassHeight / 2 - 0.5);
       scanMat.opacity = 0.18 + 0.1 * Math.cos(now * 0.7);
@@ -684,50 +1352,120 @@
       // Rotazione DNA "spiedo" + hover sui 5 geni
       if (dnaGroup.visible) {
         dnaRaycaster.setFromCamera(dnaMouse, camera);
-        const hits = dnaRaycaster.intersectObjects(allDnaSpheres);
+        const hits = dnaRaycaster.intersectObjects(hitBoxes);
         
         let isHoveringDNA = hits.length > 0;
         let hoveredGene = -1;
         
         if (isHoveringDNA) {
           const hit = hits[0].object;
+          const parentNode = hit.parent; // hitBox è figlio del gene
           for (let s = 0; s < NUM_SECTIONS; s++) {
-            if (specialGenes[s].includes(hit)) {
+            if (specialGenes[s].includes(parentNode)) {
               hoveredGene = s;
               break;
             }
           }
         }
         
-        // Aggiorna la classe CSS delle etichette per l'animazione della data
+        // Aggiorna le etichette: evidenzia gene hovered o gene selezionato dalla timeline
         for (let s = 0; s < NUM_SECTIONS; s++) {
-          if (s === hoveredGene) {
+          if (s === hoveredGene || s === selectedDnaGene) {
             dnaLabelEls[s].classList.add('hovered');
           } else {
             dnaLabelEls[s].classList.remove('hovered');
           }
         }
-        
-        // Se non siamo su un gene specifico, il DNA continua a ruotare
-        if (hoveredGene === -1) {
+
+        // Il DNA si ferma se c'è un gene selezionato o in hover
+        if (hoveredGene === -1 && selectedDnaGene === -1) {
           dnaPhase += 0.025;
         }
         updateDNA(dnaPhase);
 
+        // Animazione dei nodi nucleotidici (ottaedri wireframe)
         const tempScale = new THREE.Vector3();
         for (let i = 0; i <= NUM_RUNGS; i++) {
           const s = specialGeneIndices.indexOf(i);
-          let targetScale = 1.0;
+          let targetScale = 0.8; // Geni normali più piccoli
           
-          // Solo il singolo gene su cui è posizionato il cursore si ingrandisce
-          if (s !== -1 && hoveredGene === s) {
-             targetScale = 2.8; 
+          if (s !== -1) {
+            // È un gene speciale selezionabile (spicca dal resto)
+            targetScale = 1.4;
+            
+            // Ingrandimento moderato se ci passo il cursore o lo seleziono
+            if (hoveredGene === s || selectedDnaGene === s) {
+               targetScale = 2.4;
+            }
           }
           
           tempScale.set(targetScale, targetScale, targetScale);
           sphArr1[i].scale.lerp(tempScale, 0.15);
           sphArr2[i].scale.lerp(tempScale, 0.15);
         }
+
+        // Animazione dei 5 reticoli HUD a diamante (rotazione, scala e pulsazione)
+        const tempRScale = new THREE.Vector3();
+        for (let s = 0; s < NUM_SECTIONS; s++) {
+          const isTarget = (hoveredGene === s || selectedDnaGene === s);
+          
+          // Scala
+          const targetRScaleVal = isTarget ? 2.2 : 1.0;
+          tempRScale.set(targetRScaleVal, targetRScaleVal, targetRScaleVal);
+          reticleArr1[s].scale.lerp(tempRScale, 0.15);
+          reticleArr2[s].scale.lerp(tempRScale, 0.15);
+
+          // Pulsazione opacità
+          const targetOpacity = isTarget ? (0.6 + 0.4 * Math.sin(now * 12.0)) : 0.4;
+          reticleArr1[s].material.opacity = targetOpacity;
+          reticleArr2[s].material.opacity = targetOpacity;
+
+          // Rotazione local Z + billboarding
+          const spinSpeed = isTarget ? 4.0 : 0.8;
+          const spinAngle = now * spinSpeed;
+          reticleArr1[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), spinAngle));
+          reticleArr2[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -spinAngle)); // rotazione inversa
+        }
+
+        // Animazione scorrimento sweep laser (curva di scansione Y)
+        if (sweepLine && matSweepLine) {
+          sweepLine.position.y = Math.sin(now * 2.5) * 1.5;
+          matSweepLine.opacity = 0.5 + 0.3 * Math.cos(now * 5.0);
+        }
+
+        // Effetto glitch/jitter di desincronizzazione Animus su dnaGroup
+        if (Math.random() < 0.015) {
+          dnaGroup.position.set(
+            (Math.random() - 0.5) * 0.25,
+            (Math.random() - 0.5) * 0.08,
+            (Math.random() - 0.5) * 0.25
+          );
+        } else {
+          dnaGroup.position.lerp(new THREE.Vector3(0, 0, 0), 0.25);
+        }
+      }
+
+      // Mini DNA sulla timeline: rotazione continua + ingrandimento su hover
+      if (tlDnaGroups && tlArcLine && tlArcLine.visible) {
+        const tV = new THREE.Vector3();
+        tlDnaGroups.forEach((g, s) => {
+          g.rotation.x += 0.008;
+          const ts = tlDnaHovers[s] ? 4.0 : 2.0;
+          tV.set(ts, ts, ts);
+          g.scale.lerp(tV, 0.1);
+
+          // Animazione bounding box olegrafico
+          if (g.userData.scannerBox) {
+            const baseOpacity = tlDnaHovers[s] ? 0.45 : 0.12;
+            const baseScale = tlDnaHovers[s] ? 1.12 : 1.0;
+            // Pulsazione sinusoidale delicata
+            const pulse = baseOpacity + 0.06 * Math.sin(now * 5.0);
+            g.userData.scannerBox.material.opacity = pulse;
+            g.userData.scannerBox.scale.setScalar(baseScale);
+            // Rotazione lieve inversa per scompigliare
+            g.userData.scannerBox.rotation.y = now * 0.05;
+          }
+        });
       }
 
     }   // fine if (hasBooted)
@@ -760,38 +1498,9 @@
     showDNAView();
   });
 
-  panelR.addEventListener('click', () => {
-    panelL.classList.add('hidden-panel');
-    panelR.classList.add('hidden-panel');
-    
-    // Mostra il floatingTimeline al posto del panelDetail
-    floatingTimeline.classList.remove('hidden-panel');
+  panelR.addEventListener('click', () => { showTimelineView(); });
 
-    const nodes = document.querySelectorAll('#floatingTimeline .timeline-node');
-    const infoBox = document.getElementById('floating-timeline-info');
-    
-    const storicData = {
-      '1500': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rinascimento<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Ezio Auditore<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Sincronizzazione stabile.`,
-      '1600': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Età d'Oro della Pirateria<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Edward Kenway<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Condizioni navali attive.`,
-      '1700': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Americana<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Connor Kenway<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Frammenti di memoria instabili.`,
-      '1800': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Francese<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Arno Dorian<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Anomalie temporali (Helix).`,
-      '1900': `<span style="color:#00ffff; font-weight:bold;">EPOCA:</span> Rivoluzione Industriale<br><span style="color:#00ffff; font-weight:bold;">SOGGETTO:</span> Jacob Frye<br><span style="color:#00ffff; font-weight:bold;">STATO:</span> Interferenza Templare elevata.`
-    };
-
-    nodes.forEach(node => {
-      node.addEventListener('click', () => {
-        nodes.forEach(n => n.classList.remove('active'));
-        node.classList.add('active');
-        const year = node.getAttribute('data-year');
-        infoBox.innerHTML = storicData[year];
-      });
-    });
-  });
-
-  document.getElementById('btn-back-floating').addEventListener('click', () => {
-    floatingTimeline.classList.add('hidden-panel');
-    showCardsView();
-  });
+  document.getElementById('btn-back-floating').addEventListener('click', () => { hideTimelineView(); });
 
   document.getElementById('btn-back').addEventListener('click', () => {
     showCardsView();
