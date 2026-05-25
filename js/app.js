@@ -674,7 +674,7 @@
   ];
 
   // Nodi alternati: dispari sopra la linea, pari sotto — per non ammassare le date
-  const tlNodeOffsets = [2.8, -2.8, 2.8, -2.8, 2.8];
+  const tlNodeOffsets = [1.6, -1.6, 1.6, -1.6, 1.6];
 
   // Tick verticali ai 5 nodi (WebGL) — si estendono dalla linea verso il nodo
   tlTickObjs = [];
@@ -728,6 +728,28 @@
   tlInfoCss.lookAt(0, TL_Y - 3.5, 0);
   gridGroup.add(tlInfoCss);
 
+  // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
+  const guideText  = "Seleziona un'epoca per sincronizzarti con un personaggio storico.";
+  const GUIDE_R    = 22, GUIDE_Y = 7.5;
+  const CHAR_SCALE = 0.018, CHAR_STEP = 0.015;
+  // Centro spostato a destra (+0.15) per non sovrapporsi al logo Abstergo a sinistra
+  const guideStartPhi = thetaCenter - (guideText.length * CHAR_STEP) / 2;
+  tlGuideEl = [];
+  guideText.split('').forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'pointer-events:none; color:rgba(255,255,255,0.92); font-size:26px; font-weight:400; letter-spacing:0; text-transform:uppercase; text-shadow:0 0 12px rgba(255,255,255,0.5); white-space:pre; display:inline-block; font-family:Consolas,\'Lucida Console\',monospace;';
+    el.style.opacity = '0';
+    el.textContent = ch;
+    document.getElementById('hud-container').appendChild(el);
+    tlGuideEl.push(el);
+    const phi = guideStartPhi + i * CHAR_STEP;
+    const css = new THREE.CSS3DObject(el);
+    css.position.set(Math.cos(phi) * GUIDE_R, GUIDE_Y, Math.sin(phi) * GUIDE_R);
+    css.scale.set(CHAR_SCALE, CHAR_SCALE, CHAR_SCALE);
+    css.lookAt(0, GUIDE_Y, 0);
+    gridGroup.add(css);
+  });
+
   // Bottone indietro CSS3D
   tlBackEl = document.createElement('div');
   tlBackEl.className = 'btn-back';
@@ -748,63 +770,35 @@
     const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
     const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
     const yNode = TL_Y + tlNodeOffsets[s];
-    const yDna  = yNode + (tlNodeOffsets[s] > 0 ? 1.8 : -1.8);
+    const yDna  = yNode + (tlNodeOffsets[s] > 0 ? 1.2 : -1.2);
 
     const mg = new THREE.Group();
     mg.position.set(cx, yDna, cz);
-    mg.scale.setScalar(2.0);
+    mg.scale.setScalar(1.4);
+    // Ruota il DNA in modo che il suo asse segua la tangente del cilindro a quest'angolo
+    mg.rotation.y = Math.atan2(-Math.cos(phi), -Math.sin(phi));
     mg.visible = false;
 
-    // Elica orizzontale ispirata al modello Animus: curve ciano/bianco ad alto contrasto
-    const MTURNS = 3, MSEGS = 120, MRAD = 0.4, MH = 2.2;
-    const mPts1 = [], mPts2 = [], mRungPts = [];
-    for (let i = 0; i <= MSEGS; i++) {
-      const t = i / MSEGS, a = t * Math.PI * 2 * MTURNS;
-      const x = (t - 0.5) * MH;
-      mPts1.push(new THREE.Vector3(x,  Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
-      mPts2.push(new THREE.Vector3(x, -Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
-    }
-    const MRINGS = MTURNS * 7;
-    for (let i = 0; i <= MRINGS; i++) {
-      const t = i / MRINGS, a = t * Math.PI * 2 * MTURNS;
-      const x = (t - 0.5) * MH;
-      mRungPts.push(new THREE.Vector3(x,  Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
-      mRungPts.push(new THREE.Vector3(x, -Math.cos(a) * MRAD, Math.sin(a) * MRAD * 0.3));
-    }
+    // Due onde sinusoidali piatte che scorrono (stile schermata analisi Animus)
+    const MN = 2, MSEGS = 80, MAMP = 0.18, MH = 2.0, MDEPTH = 0.04;
+    const mArr1 = new Float32Array((MSEGS + 1) * 3);
+    const mArr2 = new Float32Array((MSEGS + 1) * 3);
+    const MRUNGS = MN * 6;
+    const mArrR = new Float32Array((MRUNGS + 1) * 6);
 
-    // Materiali olografici
-    const mMat1 = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
-    const mMat2 = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
-    const mRMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.50, blending: THREE.AdditiveBlending, depthWrite: false });
+    const mGeo1 = new THREE.BufferGeometry(); mGeo1.setAttribute('position', new THREE.BufferAttribute(mArr1, 3));
+    const mGeo2 = new THREE.BufferGeometry(); mGeo2.setAttribute('position', new THREE.BufferAttribute(mArr2, 3));
+    const mGeoR = new THREE.BufferGeometry(); mGeoR.setAttribute('position', new THREE.BufferAttribute(mArrR, 3));
 
-    mg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(mPts1), mMat1));
-    mg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(mPts2), mMat2));
-    mg.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(mRungPts), mRMat));
+    mg.add(new THREE.Line(mGeo1, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mg.add(new THREE.Line(mGeo2, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mg.add(new THREE.LineSegments(mGeoR, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })));
 
-    // Aggiungiamo microscopici ottaedri wireframe lungo i filamenti (nodi nucleotidici olografici)
-    const minioctGeo = new THREE.OctahedronGeometry(0.045, 0);
-    const minioctMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
-    
-    // Mettiamo 8 nodi su ciascuna catena a distanze regolari
-    const numNodes = 8;
-    for (let n = 0; n <= numNodes; n++) {
-      const idx = Math.floor((n / numNodes) * MSEGS);
-      
-      const s1 = new THREE.Mesh(minioctGeo, minioctMat);
-      s1.position.copy(mPts1[idx]);
-      mg.add(s1);
-
-      const s2 = new THREE.Mesh(minioctGeo, minioctMat);
-      s2.position.copy(mPts2[idx]);
-      mg.add(s2);
-    }
-
-    // Bounding box olegrafico (faint scanner box)
-    const boxGeo = new THREE.BoxGeometry(2.4, 1.0, 0.5);
-    const boxMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
-    const scannerBox = new THREE.Mesh(boxGeo, boxMat);
-    mg.add(scannerBox);
-    mg.userData.scannerBox = scannerBox;
+    mg.userData.mArr1 = mArr1; mg.userData.mArr2 = mArr2; mg.userData.mArrR = mArrR;
+    mg.userData.mGeo1 = mGeo1; mg.userData.mGeo2 = mGeo2; mg.userData.mGeoR = mGeoR;
+    mg.userData.MN = MN; mg.userData.MSEGS = MSEGS; mg.userData.MAMP = MAMP;
+    mg.userData.MH = MH; mg.userData.MDEPTH = MDEPTH; mg.userData.MRUNGS = MRUNGS;
+    mg.userData.phase = s * 0.8; // Fase iniziale diversa per ogni nodo
 
     gridGroup.add(mg);
     tlDnaGroups.push(mg);
@@ -829,9 +823,14 @@
     tlTickObjs.forEach(t => { t.visible = true; });
     tlNodeEls.forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; });
     tlInfoEl.style.opacity = '1';
-    tlInfoEl.innerHTML = '<div style="color:rgba(140,215,255,0.65);font-size:20px;letter-spacing:0.12em;text-transform:uppercase">Seleziona un frammento di memoria</div>';
-    tlBackEl.style.opacity = '1';
-    tlBackEl.style.pointerEvents = 'auto';
+    tlInfoEl.innerHTML = '';
+    dnaBackArrow.style.display = 'block';
+    tlGuideTimeouts.forEach(t => clearTimeout(t));
+    tlGuideTimeouts = [];
+    tlGuideEl.forEach((el, i) => {
+      el.style.opacity = '0';
+      tlGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
+    });
     tlDnaGroups.forEach(g => { g.visible = true; });
   }
 
@@ -841,8 +840,10 @@
     tlTickObjs.forEach(t => { t.visible = false; });
     tlNodeEls.forEach(el => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; el.classList.remove('active'); });
     tlInfoEl.style.opacity = '0';
-    tlBackEl.style.opacity = '0';
-    tlBackEl.style.pointerEvents = 'none';
+    dnaBackArrow.style.display = 'none';
+    tlGuideTimeouts.forEach(t => clearTimeout(t));
+    tlGuideTimeouts = [];
+    tlGuideEl.forEach(el => { el.style.opacity = '0'; });
     tlDnaGroups.forEach((g, s) => { g.visible = false; tlDnaHovers[s] = false; });
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
@@ -851,7 +852,8 @@
   tlBackEl.addEventListener('click', () => hideTimelineView());
 
   // Dichiarazioni anticipate (usate sopra negli IIFE)
-  var tlArcLine, tlTickObjs, tlNodeEls, tlNodeCsss, tlInfoEl, tlBackEl, tlDnaGroups, tlDnaHovers;
+  var tlArcLine, tlTickObjs, tlNodeEls, tlNodeCsss, tlInfoEl, tlBackEl, tlDnaGroups, tlDnaHovers, tlGuideEl, tlGuideTimeouts;
+  tlGuideTimeouts = [];
   var outerRing, innerRing, animusParticles, animusParticlesMat;
   var topSweep1, topSweep2, bottomSweep1, bottomSweep2, sweepMat;
   var memoryBlocks;
@@ -878,16 +880,15 @@
   dnaGroup.visible = false;
   gridGroup.add(dnaGroup);
 
-  // Materiali DNA olografici
-  const matStrand1     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.90, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 2 });
-  const matStrand1Glow = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 5 });
-  const matStrand2     = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.90, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 2 });
-  const matStrand2Glow = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 5 });
-  const matRung        = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.50, blending: THREE.AdditiveBlending, depthWrite: false });
-  
-  // Ottaedri wireframe bianchi per i nodi standard (stile pixel/data vettoriale)
-  const matSph1        = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.70, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matSph2        = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.70, blending: THREE.AdditiveBlending, depthWrite: false });
+  // Materiali DNA — eliche: glow a 3 strati (core bianco + glow + tinta cyan)
+  const matSA  = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0,  blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSB  = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSC  = new THREE.LineBasicMaterial({ color: 0x55bbff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matRung = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5,  blending: THREE.AdditiveBlending, depthWrite: false });
+
+  // Nodi: sfere compatte bianche luminose
+  const matSph1 = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSph2 = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
 
   // Geometrie aggiornabili ogni frame
   const STRAND_SEGS = 200;
@@ -898,16 +899,29 @@
 
   const geo1 = new THREE.BufferGeometry(); geo1.setAttribute('position', new THREE.BufferAttribute(arr1, 3));
   const geo2 = new THREE.BufferGeometry(); geo2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
-  dnaGroup.add(new THREE.Line(geo1, matStrand1));
-  dnaGroup.add(new THREE.Line(geo1, matStrand1Glow));
-  dnaGroup.add(new THREE.Line(geo2, matStrand2));
-  dnaGroup.add(new THREE.Line(geo2, matStrand2Glow));
+  // 3 layer di glow per elica: core + glow + tinta
+  dnaGroup.add(new THREE.Line(geo1, matSA));
+  dnaGroup.add(new THREE.Line(geo1, matSB));
+  dnaGroup.add(new THREE.Line(geo1, matSC));
+  dnaGroup.add(new THREE.Line(geo2, matSA));
+  dnaGroup.add(new THREE.Line(geo2, matSB));
+  dnaGroup.add(new THREE.Line(geo2, matSC));
 
   const geoRungs = new THREE.BufferGeometry(); geoRungs.setAttribute('position', new THREE.BufferAttribute(arrRungs, 3));
-  dnaGroup.add(new THREE.LineSegments(geoRungs, matRung));
 
-  // Ottaedri olografici (diamanti pixelati al posto di sfere biologiche pesanti)
-  const gSph = new THREE.OctahedronGeometry(0.08, 0);
+  // Rungs: cilindro bianco esterno + core cyan sottile = effetto "cavo energetico"
+  const rungCylGeo = new THREE.CylinderGeometry(0.028, 0.028, 1, 7, 1);
+  const rungCylMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.80, blending: THREE.AdditiveBlending, depthWrite: false });
+  const rungCorGeo = new THREE.CylinderGeometry(0.011, 0.011, 1, 6, 1);
+  const rungCorMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 1.0,  blending: THREE.AdditiveBlending, depthWrite: false });
+  const rungCyls = [], rungCors = [];
+  for (let i = 0; i <= NUM_RUNGS; i++) {
+    const cyl = new THREE.Mesh(rungCylGeo, rungCylMat); dnaGroup.add(cyl); rungCyls.push(cyl);
+    const cor = new THREE.Mesh(rungCorGeo, rungCorMat); dnaGroup.add(cor); rungCors.push(cor);
+  }
+
+  // Nodi piccoli e nitidi
+  const gSph = new THREE.SphereGeometry(0.05, 8, 6);
   const sphArr1 = [], sphArr2 = [];
   for (let i = 0; i <= NUM_RUNGS; i++) {
     const s1 = new THREE.Mesh(gSph, matSph1); dnaGroup.add(s1); sphArr1.push(s1);
@@ -920,14 +934,17 @@
   const specialGenes = specialGeneIndices.map(i => [sphArr1[i], sphArr2[i]]);
 
   // Diamo un colore azzurro olografico emettitore ai 5 geni selezionabili per spiccare
-  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: false, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: false, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
   
   // Hitbox invisibili per facilitare la selezione col mouse (calibrata)
   const hitBoxes = [];
   const hitBoxGeo = new THREE.SphereGeometry(0.85, 8, 8);
   const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
 
+  const gSphSpecial = new THREE.SphereGeometry(0.065, 16, 12);
   specialGenes.forEach(pair => {
+    pair[0].geometry = gSphSpecial;
+    pair[1].geometry = gSphSpecial;
     pair[0].material = matSphSpecial;
     pair[1].material = matSphSpecial;
 
@@ -942,7 +959,7 @@
 
   // Aggiungiamo i 5 reticoli HUD rotanti a forma di diamante per evidenziare i geni
   const reticleArr1 = [], reticleArr2 = [];
-  const reticleGeo = new THREE.RingGeometry(0.24, 0.28, 4, 1);
+  const reticleGeo = new THREE.RingGeometry(0.14, 0.17, 48, 1);
   for (let s = 0; s < NUM_SECTIONS; s++) {
     const rMat1 = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const r1 = new THREE.Mesh(reticleGeo, rMat1);
@@ -1092,6 +1109,11 @@
       arrRungs[ri+3]=cx; arrRungs[ri+4]=-vO; arrRungs[ri+5]=cz;
       sphArr1[i].position.set(cx, vO,  cz);
       sphArr2[i].position.set(cx, -vO, cz);
+      const rungH = Math.max(Math.abs(vO) * 2, 0.01);
+      rungCyls[i].position.set(cx, 0, cz);
+      rungCyls[i].scale.set(1, rungH, 1);
+      rungCors[i].position.set(cx, 0, cz);
+      rungCors[i].scale.set(1, rungH, 1);
     }
     geoRungs.attributes.position.needsUpdate = true;
 
@@ -1119,40 +1141,199 @@
   }
 
   let dnaPhase = 0;
-  let selectedDnaGene = -1; // -1 = nessuno; 0-4 = sezione selezionata dalla timeline
+  let selectedDnaGene = -1;
+  let lastHoveredGene  = -1;
   updateDNA(0);
 
   const dnaBackArrow = document.getElementById('dnaBackArrow');
-  const dnaInstructions = document.getElementById('dnaInstructions');
+
+  // Testo guida curvo per la vista DNA — un CSS3DObject per carattere
+  const dnaGuideText = "Seleziona un frammento del tuo DNA per sincronizzarti con l'antenato che ha vissuto in quell'epoca.";
+  const DNA_GUIDE_R  = 22, DNA_GUIDE_Y = 7.5;
+  const DNA_CHAR_SCALE = 0.018, DNA_CHAR_STEP = 0.015;
+  const dnaGuideStartPhi = thetaCenter + 0.2 - (dnaGuideText.length * DNA_CHAR_STEP) / 2;
+  const dnaGuideEls = [];
+  dnaGuideText.split('').forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'pointer-events:none; color:rgba(255,255,255,0.92); font-size:26px; font-weight:400; letter-spacing:0; text-transform:uppercase; text-shadow:0 0 12px rgba(255,255,255,0.5); white-space:pre; display:inline-block; font-family:Consolas,\'Lucida Console\',monospace;';
+    el.style.opacity = '0';
+    el.textContent = ch;
+    document.getElementById('hud-container').appendChild(el);
+    dnaGuideEls.push(el);
+    const phi = dnaGuideStartPhi + i * DNA_CHAR_STEP;
+    const css = new THREE.CSS3DObject(el);
+    css.position.set(Math.cos(phi) * DNA_GUIDE_R, DNA_GUIDE_Y, Math.sin(phi) * DNA_GUIDE_R);
+    css.scale.set(DNA_CHAR_SCALE, DNA_CHAR_SCALE, DNA_CHAR_SCALE);
+    css.lookAt(0, DNA_GUIDE_Y, 0);
+    gridGroup.add(css);
+  });
+  let dnaGuideTimeouts = [];
 
   function showDNAView() {
     panelL.classList.add('hidden-panel');
     panelR.classList.add('hidden-panel');
     dnaGroup.visible           = true;
     dnaBackArrow.style.display = 'block';
-    dnaInstructions.style.display = 'block';
-    dnaLabelEls.forEach(el => { 
-      el.style.opacity = ''; // Rimuovi inline
-      el.classList.add('visible'); 
+    dnaLabelEls.forEach(el => { el.style.opacity = '0'; });
+    // Materializzazione carattere per carattere
+    dnaGuideTimeouts.forEach(t => clearTimeout(t));
+    dnaGuideTimeouts = [];
+    dnaGuideEls.forEach((el, i) => {
+      el.style.opacity = '0';
+      dnaGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
     });
   }
 
   function hideDNAView() {
     dnaGroup.visible           = false;
     dnaBackArrow.style.display = 'none';
-    dnaInstructions.style.display = 'none';
-    dnaLabelEls.forEach(el => { 
-      el.classList.remove('visible'); 
-    });
+    dnaGuideTimeouts.forEach(t => clearTimeout(t));
+    dnaGuideTimeouts = [];
+    dnaGuideEls.forEach(el => { el.style.opacity = '0'; });
+    dnaLabelEls.forEach(el => { el.style.opacity = '0'; });
     allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
     selectedDnaGene = -1;
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
   }
 
-  // Se il DNA è stato aperto dalla timeline, freccia indietro → torna alla timeline
+  // ── SHOWCASE BOOKING CINEMATICO ──
+  const geneData = [
+    { year: '1500', name: 'Ezio Auditore', epoch: 'Rinascimento Italiano'        },
+    { year: '1600', name: 'Edward Kenway', epoch: "Età d'Oro della Pirateria"    },
+    { year: '1700', name: 'Connor Kenway', epoch: 'Rivoluzione Americana'        },
+    { year: '1800', name: 'Arno Dorian',   epoch: 'Rivoluzione Francese'         },
+    { year: '1900', name: 'Jacob Frye',    epoch: 'Rivoluzione Industriale'      },
+  ];
+  const today = new Date().toISOString().split('T')[0];
+
+  let bookingPhase      = 'idle'; // 'idle'|'extracting'|'showcasing'|'retracting'
+  let bookingAnimT      = 0;
+  let bookingTargetGene = -1;
+  const bookingStartPos  = new THREE.Vector3();
+  const bookingCenterPos = new THREE.Vector3(0, 0, 7);
+  function easeInOutCubic(t) { return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; }
+
+  // Materiali DNA da dissolvere durante l'animazione
+  const dnaFadeMats = [
+    { mat: matSA,        base: 1.0  }, { mat: matSB,        base: 0.45 },
+    { mat: matSC,        base: 0.22 }, { mat: rungCylMat,   base: 0.80 },
+    { mat: rungCorMat,   base: 1.0  }, { mat: matSph1,      base: 1.0  },
+    { mat: matSph2,      base: 1.0  }, { mat: matSphSpecial, base: 0.9 },
+  ];
+
+  // ── Sfera showcase (aggiunta alla scene, non a gridGroup) ──
+  const showcaseGroup = new THREE.Group();
+  scene.add(showcaseGroup);
+
+  const scSphGeo  = new THREE.SphereGeometry(1.0, 28, 20);
+  const scSphMat  = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const scSph     = new THREE.Mesh(scSphGeo, scSphMat); showcaseGroup.add(scSph);
+
+  const scWireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const scWire    = new THREE.Mesh(scSphGeo, scWireMat); showcaseGroup.add(scWire);
+
+  const scGlowGeo = new THREE.SphereGeometry(1.4, 16, 12);
+  const scGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const scGlow    = new THREE.Mesh(scGlowGeo, scGlowMat); showcaseGroup.add(scGlow);
+
+  const scRingGeo  = new THREE.RingGeometry(1.18, 1.26, 80);
+  const mkRM = () => new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const scRing1 = new THREE.Mesh(scRingGeo, mkRM()); showcaseGroup.add(scRing1);
+  const scRing2 = new THREE.Mesh(scRingGeo, mkRM()); scRing2.rotation.x = Math.PI/3;  showcaseGroup.add(scRing2);
+  const scRing3 = new THREE.Mesh(scRingGeo, mkRM()); scRing3.rotation.x = -Math.PI/3; showcaseGroup.add(scRing3);
+
+  const scScanGeo = new THREE.RingGeometry(0, 1.7, 64);
+  const scScanMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const scScan = new THREE.Mesh(scScanGeo, scScanMat); showcaseGroup.add(scScan);
+
+  // ── Pannello sinistro: data/orario ──
+  const scLeftEl = document.createElement('div');
+  scLeftEl.innerHTML = `<div class="sc-panel">
+    <div class="sc-panel-tag">ACCESSO GENETICO</div>
+    <div class="sc-gene-name" id="scGeneName">—</div>
+    <div class="sc-epoch" id="scEpoch">—</div>
+    <div class="sc-divider"></div>
+    <div class="sc-instruction">Scegli data e orario dell'esperienza<br>da fare all'Abstergo</div>
+    <div class="sc-field"><label class="sc-label">Data sessione</label>
+      <input type="date" id="scDate" class="sc-input" value="${today}" min="${today}"></div>
+    <div class="sc-field"><label class="sc-label">Orario</label>
+      <select id="scTime" class="sc-input">
+        <option>09:00</option><option>10:00</option><option>11:00</option>
+        <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
+      </select></div>
+  </div>`;
+  scLeftEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
+  document.getElementById('hud-container').appendChild(scLeftEl);
+  const scLeftCss = new THREE.CSS3DObject(scLeftEl);
+  scLeftCss.position.set(-8, 0, 9);
+  scLeftCss.lookAt(0, 0, 18);
+  scLeftCss.scale.setScalar(0.012);
+  scene.add(scLeftCss);
+
+  // ── Pannello destro: prezzo/durata/azioni ──
+  const scRightEl = document.createElement('div');
+  scRightEl.innerHTML = `<div class="sc-panel">
+    <div class="sc-panel-tag">DETTAGLI ESPERIENZA</div>
+    <div class="sc-spec-row"><span class="sc-spec-label">Durata massima</span><span class="sc-spec-value">2 ORE</span></div>
+    <div class="sc-spec-sep"></div>
+    <div class="sc-spec-row"><span class="sc-spec-label">Costo esperienza</span><span class="sc-spec-value sc-price">€ 300</span></div>
+    <div class="sc-divider"></div>
+    <div class="sc-actions">
+      <button class="sc-btn-confirm" id="scConfirmBtn">CONFERMA PRENOTAZIONE</button>
+      <button class="sc-btn-cancel"  id="scCancelBtn">ANNULLA</button>
+    </div>
+    <div class="sc-confirm-msg" id="scConfirmMsg" style="display:none">⬡ PRENOTAZIONE CONFERMATA</div>
+  </div>`;
+  scRightEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
+  document.getElementById('hud-container').appendChild(scRightEl);
+  const scRightCss = new THREE.CSS3DObject(scRightEl);
+  scRightCss.position.set(8, 0, 9);
+  scRightCss.lookAt(0, 0, 18);
+  scRightCss.scale.setScalar(0.012);
+  scene.add(scRightCss);
+
+  function showSceneBooking(s) {
+    bookingTargetGene = s;
+    bookingPhase = 'extracting';
+    bookingAnimT = 0;
+    sphArr1[specialGeneIndices[s]].getWorldPosition(bookingStartPos);
+    showcaseGroup.position.copy(bookingStartPos);
+    showcaseGroup.scale.setScalar(0.05);
+    scSphMat.opacity = scWireMat.opacity = scGlowMat.opacity = scScanMat.opacity = 0;
+    scRing1.material.opacity = scRing2.material.opacity = scRing3.material.opacity = 0;
+    const g = geneData[s];
+    document.getElementById('scGeneName').textContent = `${g.name.toUpperCase()} · ${g.year}`;
+    document.getElementById('scEpoch').textContent    = g.epoch.toUpperCase();
+    document.getElementById('scConfirmBtn').disabled  = false;
+    document.getElementById('scConfirmMsg').style.display = 'none';
+    document.getElementById('scDate').value = today;
+  }
+  function hideSceneBooking() {
+    if (bookingPhase === 'showcasing') { bookingPhase = 'retracting'; bookingAnimT = 0; }
+  }
+
+  document.getElementById('scCancelBtn').addEventListener('click',  () => hideSceneBooking());
+  document.getElementById('scConfirmBtn').addEventListener('click', () => {
+    document.getElementById('scConfirmBtn').disabled = true;
+    document.getElementById('scConfirmMsg').style.display = 'block';
+    setTimeout(() => hideSceneBooking(), 3500);
+  });
+
+  // Click sul canvas: lancia animazione se sopra un frammento
+  canvas.addEventListener('click', () => {
+    if (dnaGroup.visible && bookingPhase === 'idle' && lastHoveredGene !== -1) {
+      showSceneBooking(lastHoveredGene);
+    }
+  });
+
+  // Freccia indietro: gestisce showcase, DNA e timeline
   dnaBackArrow.addEventListener('click', () => {
-    if (selectedDnaGene !== -1) {
+    if (bookingPhase !== 'idle') {
+      hideSceneBooking();
+    } else if (tlArcLine && tlArcLine.visible) {
+      hideTimelineView();
+    } else if (selectedDnaGene !== -1) {
       hideDNAView();
       showTimelineView();
     } else {
@@ -1356,6 +1537,7 @@
         
         let isHoveringDNA = hits.length > 0;
         let hoveredGene = -1;
+        lastHoveredGene = -1;
         
         if (isHoveringDNA) {
           const hit = hits[0].object;
@@ -1363,6 +1545,7 @@
           for (let s = 0; s < NUM_SECTIONS; s++) {
             if (specialGenes[s].includes(parentNode)) {
               hoveredGene = s;
+              lastHoveredGene = s;
               break;
             }
           }
@@ -1372,13 +1555,15 @@
         for (let s = 0; s < NUM_SECTIONS; s++) {
           if (s === hoveredGene || s === selectedDnaGene) {
             dnaLabelEls[s].classList.add('hovered');
+            dnaLabelEls[s].style.opacity = '1';
           } else {
             dnaLabelEls[s].classList.remove('hovered');
+            dnaLabelEls[s].style.opacity = '0';
           }
         }
 
-        // Il DNA si ferma se c'è un gene selezionato o in hover
-        if (hoveredGene === -1 && selectedDnaGene === -1) {
+        // Il DNA si ferma se c'è un gene selezionato, hovered o in booking
+        if (hoveredGene === -1 && selectedDnaGene === -1 && bookingPhase === 'idle') {
           dnaPhase += 0.025;
         }
         updateDNA(dnaPhase);
@@ -1390,12 +1575,11 @@
           let targetScale = 0.8; // Geni normali più piccoli
           
           if (s !== -1) {
-            // È un gene speciale selezionabile (spicca dal resto)
-            targetScale = 1.4;
-            
-            // Ingrandimento moderato se ci passo il cursore o lo seleziono
+            // È un gene speciale selezionabile: respira a idle
+            targetScale = 1.0 + 0.15 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
+
             if (hoveredGene === s || selectedDnaGene === s) {
-               targetScale = 2.4;
+              targetScale = 1.8;
             }
           }
           
@@ -1404,24 +1588,29 @@
           sphArr2[i].scale.lerp(tempScale, 0.15);
         }
 
+        // Pulsazione opacità sfere selezionabili
+        matSphSpecial.opacity = 0.7 + 0.25 * Math.abs(Math.sin(now * 1.8));
+
         // Animazione dei 5 reticoli HUD a diamante (rotazione, scala e pulsazione)
         const tempRScale = new THREE.Vector3();
         for (let s = 0; s < NUM_SECTIONS; s++) {
           const isTarget = (hoveredGene === s || selectedDnaGene === s);
           
           // Scala
-          const targetRScaleVal = isTarget ? 2.2 : 1.0;
+          const idleRScale = 1.0 + 0.2 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
+          const targetRScaleVal = isTarget ? 1.9 : idleRScale;
           tempRScale.set(targetRScaleVal, targetRScaleVal, targetRScaleVal);
           reticleArr1[s].scale.lerp(tempRScale, 0.15);
           reticleArr2[s].scale.lerp(tempRScale, 0.15);
 
           // Pulsazione opacità
-          const targetOpacity = isTarget ? (0.6 + 0.4 * Math.sin(now * 12.0)) : 0.4;
+          const idleOpacity = 0.55 + 0.3 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
+          const targetOpacity = isTarget ? (0.7 + 0.3 * Math.sin(now * 12.0)) : idleOpacity;
           reticleArr1[s].material.opacity = targetOpacity;
           reticleArr2[s].material.opacity = targetOpacity;
 
           // Rotazione local Z + billboarding
-          const spinSpeed = isTarget ? 4.0 : 0.8;
+          const spinSpeed = isTarget ? 4.0 : 1.4;
           const spinAngle = now * spinSpeed;
           reticleArr1[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), spinAngle));
           reticleArr2[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -spinAngle)); // rotazione inversa
@@ -1445,26 +1634,102 @@
         }
       }
 
-      // Mini DNA sulla timeline: rotazione continua + ingrandimento su hover
+      // ── ANIMAZIONE SHOWCASE BOOKING ──
+      if (bookingPhase !== 'idle') {
+        bookingAnimT += 0.022;
+        const raw = Math.min(bookingAnimT, 1);
+        const t   = easeInOutCubic(raw);
+
+        if (bookingPhase === 'extracting') {
+          showcaseGroup.position.lerpVectors(bookingStartPos, bookingCenterPos, t);
+          showcaseGroup.scale.setScalar(0.05 + t * 2.45);
+          scSphMat.opacity  = t * 0.75;
+          scWireMat.opacity = t * 0.35;
+          scGlowMat.opacity = t * 0.18;
+          scRing1.material.opacity = t * 0.9;
+          scRing2.material.opacity = t * 0.75;
+          scRing3.material.opacity = t * 0.75;
+          const dA = 1 - t;
+          dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base * dA; });
+          dnaGuideEls.forEach(el => { el.style.opacity = String(dA); });
+          if (raw >= 1) {
+            bookingPhase = 'showcasing';
+            bookingAnimT = 0;
+            dnaGroup.visible = false;
+            scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
+            scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
+          }
+        }
+
+        if (bookingPhase === 'showcasing') {
+          scSph.rotation.y  += 0.007;
+          scWire.rotation.y += 0.007; scWire.rotation.x += 0.003;
+          scRing1.rotation.z += 0.009;
+          scRing2.rotation.z -= 0.007;
+          scRing3.rotation.y += 0.011;
+          scGlowMat.opacity = 0.1  + 0.07 * Math.sin(now * 2.2);
+          scSphMat.opacity  = 0.6  + 0.12 * Math.sin(now * 1.8);
+          scScanMat.opacity = 0.3  + 0.22 * Math.abs(Math.sin(now * 1.5));
+          scScan.rotation.x += 0.018;
+        }
+
+        if (bookingPhase === 'retracting') {
+          showcaseGroup.position.lerpVectors(bookingCenterPos, bookingStartPos, t);
+          showcaseGroup.scale.setScalar(Math.max(2.5 - t * 2.45, 0.01));
+          const sA = 1 - t;
+          scSphMat.opacity  = 0.75 * sA; scWireMat.opacity = 0.35 * sA;
+          scGlowMat.opacity = 0.18 * sA; scScanMat.opacity = 0;
+          scRing1.material.opacity = 0.9  * sA;
+          scRing2.material.opacity = 0.75 * sA;
+          scRing3.material.opacity = 0.75 * sA;
+          scLeftEl.style.opacity  = String(Math.max(0, 1 - t * 3));
+          scRightEl.style.opacity = String(Math.max(0, 1 - t * 3));
+          if (t > 0.33) { scLeftEl.style.pointerEvents = 'none'; scRightEl.style.pointerEvents = 'none'; }
+          dnaGroup.visible = true;
+          dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base * t; });
+          dnaGuideEls.forEach(el => { el.style.opacity = String(t); });
+          if (raw >= 1) {
+            bookingPhase = 'idle'; bookingTargetGene = -1;
+            dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base; });
+            dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
+            scSphMat.opacity = scWireMat.opacity = scGlowMat.opacity = 0;
+            scRing1.material.opacity = scRing2.material.opacity = scRing3.material.opacity = 0;
+          }
+        }
+      }
+
+      // Mini DNA sulla timeline: onde sinusoidali scorrevoli + scala su hover
       if (tlDnaGroups && tlArcLine && tlArcLine.visible) {
         const tV = new THREE.Vector3();
         tlDnaGroups.forEach((g, s) => {
-          g.rotation.x += 0.008;
-          const ts = tlDnaHovers[s] ? 4.0 : 2.0;
+          g.userData.phase = (g.userData.phase || s * 0.8) + 0.04;
+          const ph = g.userData.phase;
+          const { mArr1, mArr2, mArrR, mGeo1, mGeo2, mGeoR,
+                  MN, MSEGS, MAMP, MH, MDEPTH, MRUNGS } = g.userData;
+
+          if (mGeo1) {
+            for (let i = 0; i <= MSEGS; i++) {
+              const t = i / MSEGS, a = t * Math.PI * 2 * MN + ph;
+              const x = (t - 0.5) * MH;
+              mArr1[i*3]   = x; mArr1[i*3+1] =  Math.sin(a) * MAMP; mArr1[i*3+2] = Math.cos(a) * MDEPTH;
+              mArr2[i*3]   = x; mArr2[i*3+1] = -Math.sin(a) * MAMP; mArr2[i*3+2] = Math.cos(a) * MDEPTH;
+            }
+            mGeo1.attributes.position.needsUpdate = true;
+            mGeo2.attributes.position.needsUpdate = true;
+
+            for (let i = 0; i <= MRUNGS; i++) {
+              const t = i / MRUNGS, a = t * Math.PI * 2 * MN + ph;
+              const x = (t - 0.5) * MH;
+              const ri = i * 6;
+              mArrR[ri]   = x; mArrR[ri+1] =  Math.sin(a) * MAMP; mArrR[ri+2] = Math.cos(a) * MDEPTH;
+              mArrR[ri+3] = x; mArrR[ri+4] = -Math.sin(a) * MAMP; mArrR[ri+5] = Math.cos(a) * MDEPTH;
+            }
+            mGeoR.attributes.position.needsUpdate = true;
+          }
+
+          const ts = tlDnaHovers[s] ? 2.2 : 1.4;
           tV.set(ts, ts, ts);
           g.scale.lerp(tV, 0.1);
-
-          // Animazione bounding box olegrafico
-          if (g.userData.scannerBox) {
-            const baseOpacity = tlDnaHovers[s] ? 0.45 : 0.12;
-            const baseScale = tlDnaHovers[s] ? 1.12 : 1.0;
-            // Pulsazione sinusoidale delicata
-            const pulse = baseOpacity + 0.06 * Math.sin(now * 5.0);
-            g.userData.scannerBox.material.opacity = pulse;
-            g.userData.scannerBox.scale.setScalar(baseScale);
-            // Rotazione lieve inversa per scompigliare
-            g.userData.scannerBox.rotation.y = now * 0.05;
-          }
         });
       }
 

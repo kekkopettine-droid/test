@@ -501,4 +501,193 @@ body {
   text-align: center;
 }
 
+/* ── SHOWCASE BOOKING PANELS ── */
+.sc-panel {
+  width: 310px;
+  background: rgba(0, 5, 16, 0.94);
+  border: 1px solid rgba(0, 255, 255, 0.38);
+  box-shadow: 0 0 50px rgba(0,255,255,0.15), inset 0 0 30px rgba(0,255,255,0.04);
+  padding: 26px 28px 22px;
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  color: #fff;
+  position: relative;
+}
+.sc-panel::before, .sc-panel::after {
+  content:''; position:absolute; width:12px; height:12px;
+  border-color:#00ffff; border-style:solid; opacity:.85;
+}
+.sc-panel::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+.sc-panel::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+
+.sc-panel-tag {
+  font-size:8px; font-weight:700; letter-spacing:.28em;
+  color:rgba(0,255,255,.6); margin-bottom:12px; text-transform:uppercase;
+}
+.sc-gene-name {
+  font-size:18px; font-weight:700; letter-spacing:.06em;
+  color:#ffffff; text-shadow:0 0 14px rgba(255,255,255,.5); margin-bottom:4px;
+}
+.sc-epoch {
+  font-size:10px; letter-spacing:.2em; color:rgba(0,255,255,.7);
+  text-shadow:0 0 8px rgba(0,255,255,.4); margin-bottom:16px;
+}
+.sc-divider { height:1px; background:rgba(0,255,255,.18); margin:14px 0; }
+.sc-instruction {
+  font-size:13px; font-weight:600; letter-spacing:.03em;
+  color:rgba(255,255,255,.85); line-height:1.45; margin-bottom:16px;
+}
+.sc-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.sc-label { font-size:8px; font-weight:700; letter-spacing:.26em; color:rgba(0,255,255,.6); }
+.sc-input {
+  background:rgba(0,255,255,.05); border:1px solid rgba(0,255,255,.28);
+  color:#fff; font-family:'Rajdhani',monospace; font-size:14px; font-weight:600;
+  padding:8px 10px; outline:none; cursor:pointer; width:100%;
+  -webkit-appearance:none; appearance:none; color-scheme:dark;
+  transition:border-color .2s, box-shadow .2s;
+}
+.sc-input:focus { border-color:#00ffff; box-shadow:0 0 10px rgba(0,255,255,.3); }
+.sc-input option { background:#020c18; color:#fff; }
+
+.sc-spec-row {
+  display:flex; justify-content:space-between; align-items:center; padding:5px 0;
+}
+.sc-spec-sep { height:1px; background:rgba(0,255,255,.15); margin:2px 0; }
+.sc-spec-label { font-size:9px; letter-spacing:.2em; color:rgba(255,255,255,.45); }
+.sc-spec-value {
+  font-size:22px; font-weight:700; letter-spacing:.06em;
+  color:#fff; text-shadow:0 0 12px rgba(255,255,255,.45);
+}
+.sc-spec-value.sc-price { color:#00ffff; text-shadow:0 0 14px rgba(0,255,255,.6); }
+
+.sc-actions { display:flex; flex-direction:column; gap:8px; }
+.sc-btn-confirm {
+  background:transparent; border:1px solid #00ffff; color:#00ffff;
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.26em; padding:12px; cursor:pointer; text-transform:uppercase;
+  box-shadow:0 0 14px rgba(0,255,255,.2);
+  transition:background .2s, box-shadow .2s, color .2s;
+}
+.sc-btn-confirm:hover { background:rgba(0,255,255,.1); box-shadow:0 0 26px rgba(0,255,255,.5); color:#fff; }
+.sc-btn-cancel {
+  background:transparent; border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.4); font-family:'Rajdhani',sans-serif;
+  font-size:10px; font-weight:600; letter-spacing:.24em;
+  padding:8px; cursor:pointer; text-transform:uppercase;
+  transition:border-color .2s, color .2s;
+}
+.sc-btn-cancel:hover { border-color:rgba(255,255,255,.45); color:rgba(255,255,255,.75); }
+.sc-confirm-msg {
+  margin-top:14px; font-size:10px; font-weight:700; letter-spacing:.2em;
+  color:#00ffff; text-align:center; text-shadow:0 0 14px rgba(0,255,255,.9);
+  animation:scConfirmPulse 1.5s infinite;
+}
+@keyframes scConfirmPulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+/* ── BOOKING 3D IN-SCENE CARD ── */
+.b3d-card {
+  width: 340px;
+  background: rgba(0, 6, 18, 0.93);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 50px rgba(0,255,255,0.18), inset 0 0 40px rgba(0,255,255,0.05);
+  padding: 28px 30px 24px;
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  color: #fff;
+  position: relative;
+  pointer-events: auto;
+}
+.b3d-card::before, .b3d-card::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border-color: #00ffff;
+  border-style: solid;
+  opacity: 0.9;
+}
+.b3d-card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.b3d-card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+.b3d-hbar {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+}
+.b3d-hbar-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0,255,255,0.5));
+}
+.b3d-hbar-line:first-child {
+  background: linear-gradient(to left, transparent, rgba(0,255,255,0.5));
+}
+.b3d-header-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.28em;
+  color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.7); white-space: nowrap;
+}
+.b3d-gene-id {
+  font-size: 9px; letter-spacing: 0.18em; color: rgba(255,255,255,0.35);
+  font-family: monospace; margin-bottom: 18px;
+}
+.b3d-instruction {
+  font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.9); line-height: 1.45; margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0,255,255,0.15); padding-bottom: 16px;
+}
+.b3d-fields { display: flex; gap: 14px; margin-bottom: 18px; }
+.b3d-field  { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.b3d-label  {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.28em;
+  color: rgba(0,255,255,0.65); text-transform: uppercase;
+}
+.b3d-input {
+  background: rgba(0,255,255,0.05);
+  border: 1px solid rgba(0,255,255,0.28);
+  color: #fff;
+  font-family: 'Rajdhani', monospace;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 8px 10px; outline: none; cursor: pointer; width: 100%;
+  -webkit-appearance: none; appearance: none; color-scheme: dark;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.b3d-input:focus { border-color: #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.3); }
+.b3d-input option { background: #020c18; color: #fff; }
+
+.b3d-specs {
+  display: flex; justify-content: space-between;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  padding: 12px 16px; margin-bottom: 18px;
+}
+.b3d-spec { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.b3d-spec-label {
+  font-size: 8px; letter-spacing: 0.22em; color: rgba(255,255,255,0.4); text-transform: uppercase;
+}
+.b3d-spec-value {
+  font-size: 20px; font-weight: 700; letter-spacing: 0.06em;
+  color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.5);
+}
+.b3d-sep { width: 1px; background: rgba(0,255,255,0.2); }
+
+.b3d-actions { display: flex; flex-direction: column; gap: 8px; }
+.b3d-btn-confirm {
+  background: transparent; border: 1px solid #00ffff; color: #00ffff;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.28em; padding: 12px; cursor: pointer; text-transform: uppercase;
+  box-shadow: 0 0 14px rgba(0,255,255,0.22);
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+}
+.b3d-btn-confirm:hover { background: rgba(0,255,255,0.1); box-shadow: 0 0 28px rgba(0,255,255,0.5); color: #fff; }
+.b3d-btn-cancel {
+  background: transparent; border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4); font-family: 'Rajdhani', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
+  padding: 8px; cursor: pointer; text-transform: uppercase;
+  transition: border-color 0.2s, color 0.2s;
+}
+.b3d-btn-cancel:hover { border-color: rgba(255,255,255,0.45); color: rgba(255,255,255,0.75); }
+
+.b3d-confirm-msg {
+  margin-top: 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  color: #00ffff; text-align: center; text-shadow: 0 0 14px rgba(0,255,255,0.9);
+  animation: b3dConfirmPulse 1.5s infinite;
+}
+@keyframes b3dConfirmPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
 
