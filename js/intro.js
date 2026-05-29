@@ -116,31 +116,156 @@
   aniBack.position.set(0, 4.0, -14);
   scene.add(aniBack);
 
+  /* SpotLight dall'alto — ombre reali sulla macchina e sul pavimento */
+  const aniSpot = new THREE.SpotLight(0xc8d8e8, 2.8, 28, Math.PI * 0.18, 0.45, 1.2);
+  aniSpot.position.set(0, 9.5, -10);
+  aniSpot.target.position.set(0, 0, -10);
+  aniSpot.castShadow = true;
+  aniSpot.shadow.mapSize.set(1024, 1024);
+  aniSpot.shadow.camera.near = 1;
+  aniSpot.shadow.camera.far = 18;
+  aniSpot.shadow.bias = -0.001;
+  scene.add(aniSpot);
+  scene.add(aniSpot.target);
+
   /* ════════════════════════════════════════════
-     MATERIALI
+     TEXTURE PROCEDURALI — generate via canvas
+  ════════════════════════════════════════════ */
+
+  function makeTileFloor() {
+    const sz = 512, ts = 128; // 4×4 tiles
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = sz;
+    const cx = cv.getContext('2d');
+
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        const x = col * ts, y = row * ts;
+        const v = 36 + Math.floor(Math.random() * 10);
+        cx.fillStyle = `rgb(${v},${v+4},${v+8})`;
+        cx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+        /* specular spot */
+        const g = cx.createRadialGradient(x+ts*0.28,y+ts*0.28,0, x+ts*0.5,y+ts*0.5, ts*0.65);
+        g.addColorStop(0, 'rgba(255,255,255,0.06)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        cx.fillStyle = g;
+        cx.fillRect(x, y, ts, ts);
+      }
+    }
+    /* fughe tra le piastrelle */
+    cx.fillStyle = '#080c10';
+    for (let i = 1; i < 4; i++) {
+      cx.fillRect(i*ts-1, 0, 2, sz);
+      cx.fillRect(0, i*ts-1, sz, 2);
+    }
+    /* rumore fine */
+    for (let i = 0; i < 12000; i++) {
+      const px = Math.random()*sz, py = Math.random()*sz;
+      const a = Math.random() * 0.05;
+      cx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`;
+      cx.fillRect(px, py, 1, 1);
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(ROOM_W / 4, 110 / 4);
+    return t;
+  }
+
+  function makeConcreteWall() {
+    const sz = 512;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = sz;
+    const cx = cv.getContext('2d');
+
+    cx.fillStyle = '#505a64';
+    cx.fillRect(0, 0, sz, sz);
+    /* pannelli orizzontali */
+    cx.strokeStyle = 'rgba(0,0,0,0.22)';
+    cx.lineWidth = 2;
+    [0, 128, 256, 384, 512].forEach(y => {
+      cx.beginPath(); cx.moveTo(0, y); cx.lineTo(sz, y); cx.stroke();
+    });
+    /* variazione verticale per ogni pannello */
+    for (let py = 0; py < 4; py++) {
+      const brightness = 0.94 + Math.random() * 0.12;
+      cx.fillStyle = `rgba(${brightness>1?255:Math.floor(80*brightness)},${Math.floor(90*brightness)},${Math.floor(100*brightness)},0.25)`;
+      cx.fillRect(0, py*128, sz, 126);
+    }
+    /* rumore cemento */
+    for (let i = 0; i < 55000; i++) {
+      const px = Math.random()*sz, py = Math.random()*sz;
+      const a = Math.random() * 0.07;
+      cx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`;
+      cx.fillRect(px, py, 1 + Math.random()*0.5, 1 + Math.random()*0.5);
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(4, 1.2);
+    return t;
+  }
+
+  function makeCeilTex() {
+    const sz = 256;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = sz;
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#252c34';
+    cx.fillRect(0, 0, sz, sz);
+    for (let i = 0; i < 20000; i++) {
+      const px = Math.random()*sz, py = Math.random()*sz;
+      cx.fillStyle = `rgba(0,0,0,${Math.random()*0.08})`;
+      cx.fillRect(px, py, 1, 1);
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(8, 28);
+    return t;
+  }
+
+  function makeMetalDkTex() {
+    const sz = 256;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = sz;
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#18202a';
+    cx.fillRect(0, 0, sz, sz);
+    /* brushed lines */
+    for (let y = 0; y < sz; y += 2) {
+      const a = 0.02 + Math.random() * 0.04;
+      cx.fillStyle = `rgba(255,255,255,${a})`;
+      cx.fillRect(0, y, sz, 1);
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(2, 2);
+    return t;
+  }
+
+  const floorTex  = makeTileFloor();
+  const wallTex   = makeConcreteWall();
+  const ceilTex   = makeCeilTex();
+  const metalTex  = makeMetalDkTex();
+
+  /* ════════════════════════════════════════════
+     MATERIALI — texture-based
   ════════════════════════════════════════════ */
   const M = {
-    concrete:    new THREE.MeshStandardMaterial({ color: 0x556068, roughness: 0.92, metalness: 0.0 }),
-    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x363e46, roughness: 0.98, metalness: 0.0 }),
-    concreteWall:new THREE.MeshStandardMaterial({ color: 0x4e5860, roughness: 0.92, metalness: 0.0 }),
-    /* Pavimento lucido — riflette la luce dei pannelli LED */
-    floor:       new THREE.MeshStandardMaterial({ color: 0x282e36, roughness: 0.22, metalness: 0.12 }),
-    metalDk:     new THREE.MeshStandardMaterial({ color: 0x1a2028, roughness: 0.28, metalness: 0.95 }),
-    metal:       new THREE.MeshStandardMaterial({ color: 0x4a5460, roughness: 0.22, metalness: 0.88 }),
-    handle:      new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.08, metalness: 0.98 }),
-    animus:      new THREE.MeshStandardMaterial({ color: 0x3a4a58, roughness: 0.38, metalness: 0.75 }),
-    animusDk:    new THREE.MeshStandardMaterial({ color: 0x242e38, roughness: 0.45, metalness: 0.80 }),
-    animusPlatf: new THREE.MeshStandardMaterial({ color: 0x2a3440, roughness: 0.52, metalness: 0.62 }),
+    concrete:    new THREE.MeshStandardMaterial({ color: 0x909aa4, roughness: 0.92, metalness: 0.0, map: wallTex }),
+    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x606870, roughness: 0.96, metalness: 0.0, map: ceilTex }),
+    concreteWall:new THREE.MeshStandardMaterial({ color: 0x8a9aa6, roughness: 0.90, metalness: 0.0, map: wallTex }),
+    floor:       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.20, metalness: 0.10, map: floorTex }),
+    metalDk:     new THREE.MeshStandardMaterial({ color: 0x707880, roughness: 0.28, metalness: 0.95, map: metalTex }),
+    metal:       new THREE.MeshStandardMaterial({ color: 0x8090a0, roughness: 0.22, metalness: 0.88 }),
+    handle:      new THREE.MeshStandardMaterial({ color: 0xb0b8c0, roughness: 0.06, metalness: 0.98 }),
+    animus:      new THREE.MeshStandardMaterial({ color: 0x5a6a78, roughness: 0.35, metalness: 0.78 }),
+    animusDk:    new THREE.MeshStandardMaterial({ color: 0x363e48, roughness: 0.42, metalness: 0.82 }),
+    animusPlatf: new THREE.MeshStandardMaterial({ color: 0x404c58, roughness: 0.50, metalness: 0.65 }),
     glass:       new THREE.MeshStandardMaterial({
-      color: 0x8ab0c0,
-      transparent: true,
-      opacity: 0.18,
-      roughness: 0.02,
-      metalness: 0.05,
-      side: THREE.DoubleSide,
-      depthWrite: false,
+      color: 0x90c0d0, transparent: true, opacity: 0.15,
+      roughness: 0.01, metalness: 0.0,
+      side: THREE.DoubleSide, depthWrite: false,
     }),
-    lightStrip:  new THREE.MeshBasicMaterial({ color: 0xd0e0f0, transparent: true, opacity: 0.9 }),
+    lightStrip:  new THREE.MeshBasicMaterial({ color: 0xe8f0f8, transparent: true, opacity: 0.95 }),
     glow:        (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false }),
     glowDS:      (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
   };
@@ -160,22 +285,26 @@
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, 110), M.concreteDk);
   ceil.rotation.x = Math.PI / 2;
   ceil.position.set(0, ROOM_H, -28);
+  ceil.receiveShadow = true;
   scene.add(ceil);
 
   /* Parete di fondo */
   const backWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_H), M.concreteWall);
   backWall.position.set(0, ROOM_H / 2, -72);
+  backWall.receiveShadow = true;
   scene.add(backWall);
 
   /* Pareti laterali */
   const lw = new THREE.Mesh(new THREE.PlaneGeometry(110, ROOM_H), M.concreteWall);
   lw.rotation.y = Math.PI / 2;
   lw.position.set(-ROOM_W / 2, ROOM_H / 2, -28);
+  lw.receiveShadow = true;
   scene.add(lw);
 
   const rw = new THREE.Mesh(new THREE.PlaneGeometry(110, ROOM_H), M.concreteWall);
   rw.rotation.y = -Math.PI / 2;
   rw.position.set(ROOM_W / 2, ROOM_H / 2, -28);
+  rw.receiveShadow = true;
   scene.add(rw);
 
   /* ── Finestre laterali — dark glass, solo architettura, nessuna luce diurna ── */
@@ -201,7 +330,8 @@
 
   /* ── Colonne industriali ── */
   function addColumn(x, z) {
-    const col = new THREE.Mesh(new THREE.BoxGeometry(1.3, ROOM_H, 1.3), M.concrete);
+    const colMat = new THREE.MeshStandardMaterial({ color: 0x8090a0, roughness: 0.90, metalness: 0.0, map: wallTex });
+    const col = new THREE.Mesh(new THREE.BoxGeometry(1.3, ROOM_H, 1.3), colMat);
     col.position.set(x, ROOM_H / 2, z);
     col.castShadow = true;
     col.receiveShadow = true;
@@ -255,14 +385,17 @@
 
   const wallSL = new THREE.Mesh(new THREE.BoxGeometry(sideW, ROOM_H, 0.26), M.concreteWall);
   wallSL.position.set(-(DOOR_W / 2 + sideW / 2), ROOM_H / 2, 0);
+  wallSL.castShadow = true; wallSL.receiveShadow = true;
   doorGroup.add(wallSL);
 
   const wallSR = new THREE.Mesh(new THREE.BoxGeometry(sideW, ROOM_H, 0.26), M.concreteWall);
   wallSR.position.set((DOOR_W / 2 + sideW / 2), ROOM_H / 2, 0);
+  wallSR.castShadow = true; wallSR.receiveShadow = true;
   doorGroup.add(wallSR);
 
   const wallTop = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, ROOM_H - DOOR_H, 0.26), M.concreteWall);
   wallTop.position.set(0, DOOR_H + (ROOM_H - DOOR_H) / 2, 0);
+  wallTop.castShadow = true; wallTop.receiveShadow = true;
   doorGroup.add(wallTop);
 
   /* ── Cornice porta (metallo anodizzato scuro) ── */
@@ -420,6 +553,7 @@
   /* Piattaforma rialzata */
   const platform = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.09, 5.2), M.animusPlatf);
   platform.position.set(0, 0.045, 0);
+  platform.castShadow = true;
   platform.receiveShadow = true;
   aniGroup.add(platform);
 
