@@ -78,12 +78,11 @@
   /* Tone mapping realistico — evita il sovraesposizione */
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.85;
-  renderer.setClearColor(0x0c1318, 1);
+  renderer.setClearColor(0x01050a, 1);
 
   /* ── SCENA E CAMERA ── */
   const scene = new THREE.Scene();
-  /* Fog più densa — evita di vedere "le mura della stanza" in modo artificiale */
-  scene.fog = new THREE.Fog(0x0c1318, 28, 80);
+  scene.fog = new THREE.Fog(0x01050a, 6, 32);
 
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(0, EYE_H, 20);
@@ -95,85 +94,60 @@
   function norm(p, s, e) { return clamp((p-s)/(e-s), 0, 1); }
 
   /* ════════════════════════════════════════════
-     LUCI — calibrate per ambienti industriali realistici
-     (nessuna sovraesposizione)
+     LUCI — lab oscuro, solo artificial + Animus glow
   ════════════════════════════════════════════ */
 
-  /* Ambient bassa e fredda */
-  scene.add(new THREE.AmbientLight(0x6878a0, 0.85));
+  /* Ambient quasi zero — lascia che sia l'Animus a illuminare */
+  scene.add(new THREE.AmbientLight(0x040c18, 0.35));
 
-  /* Luce soffusa dall'alto (non direzionale — evita ombre dure) */
-  const overheadFill = new THREE.HemisphereLight(0x8090aa, 0x303840, 0.7);
+  /* Hemisphere: cielo scurissimo / terra nera */
+  const overheadFill = new THREE.HemisphereLight(0x0a1828, 0x020408, 0.3);
   scene.add(overheadFill);
 
-  /* Luce principale — simulazione finestre laterali sinistra */
-  const sunLight = new THREE.DirectionalLight(0xb0c8d8, 1.4);
-  sunLight.position.set(-12, 14, 6);
-  sunLight.castShadow = true;
-  sunLight.shadow.mapSize.set(2048, 2048);
-  sunLight.shadow.camera.near = 0.5;
-  sunLight.shadow.camera.far = 100;
-  sunLight.shadow.camera.left = -25;
-  sunLight.shadow.camera.right = 25;
-  sunLight.shadow.camera.top = 18;
-  sunLight.shadow.camera.bottom = -3;
-  sunLight.shadow.bias = -0.001;
-  scene.add(sunLight);
-
-  /* Fill destra — molto soffusa */
-  const fillLight = new THREE.DirectionalLight(0x8090a8, 0.55);
-  fillLight.position.set(14, 6, 3);
-  scene.add(fillLight);
-
-  /* Faretti a soffitto — deboli, localizzati */
+  /* Spot a soffitto — luce fredda, stretta, industriale */
   [4, -8, -20, -35].forEach(z => {
-    const pl = new THREE.PointLight(0xc8d8e8, 2.2, 18);
+    const pl = new THREE.PointLight(0x3050a0, 1.0, 10);
     pl.position.set(0, 9.5, z);
     scene.add(pl);
   });
 
-  /* Glow Animus (ridotto — solo accenno) */
-  const animusGlow = new THREE.PointLight(0x0088aa, 2.0, 12);
+  /* Glow Animus — protagonista visivo della scena, cyan intenso */
+  const animusGlow = new THREE.PointLight(0x00aacc, 5.0, 20);
   animusGlow.position.set(0, 1.2, -10);
   scene.add(animusGlow);
+
+  /* Secondary fill attorno all'Animus — riempie le ombre dure */
+  const aniBack = new THREE.PointLight(0x006688, 1.8, 14);
+  aniBack.position.set(0, 4.0, -14);
+  scene.add(aniBack);
 
   /* ════════════════════════════════════════════
      MATERIALI
   ════════════════════════════════════════════ */
   const M = {
-    concrete:    new THREE.MeshStandardMaterial({ color: 0x7a8890, roughness: 0.92, metalness: 0.0 }),
-    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x525e66, roughness: 0.98, metalness: 0.0 }),
-    concreteWall:new THREE.MeshStandardMaterial({ color: 0x8090a0, roughness: 0.9,  metalness: 0.0 }),
-    floor:       new THREE.MeshStandardMaterial({ color: 0x8a9ca8, roughness: 0.35, metalness: 0.05 }),
-    metalDk:     new THREE.MeshStandardMaterial({ color: 0x18222a, roughness: 0.25, metalness: 0.95 }),
-    metal:       new THREE.MeshStandardMaterial({ color: 0x6a7a88, roughness: 0.22, metalness: 0.88 }),
-    handle:      new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.08, metalness: 0.98 }),
-    animus:      new THREE.MeshStandardMaterial({ color: 0x7a8e9e, roughness: 0.38, metalness: 0.75 }),
-    animusDk:    new THREE.MeshStandardMaterial({ color: 0x4e5e6e, roughness: 0.45, metalness: 0.80 }),
-    animusPlatf: new THREE.MeshStandardMaterial({ color: 0x546070, roughness: 0.52, metalness: 0.62 }),
-    /* Vetro porta: più opaco e blueish per sembrare vetro temperato */
+    /* Dark lab — tutto desaturato, quasi nero */
+    concrete:    new THREE.MeshStandardMaterial({ color: 0x111820, roughness: 0.92, metalness: 0.0 }),
+    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x080e14, roughness: 0.98, metalness: 0.0 }),
+    concreteWall:new THREE.MeshStandardMaterial({ color: 0x0e1620, roughness: 0.92, metalness: 0.0 }),
+    /* Pavimento: scuro, leggermente riflettente — rimanda il glow Animus */
+    floor:       new THREE.MeshStandardMaterial({ color: 0x08101a, roughness: 0.18, metalness: 0.18 }),
+    metalDk:     new THREE.MeshStandardMaterial({ color: 0x0c1620, roughness: 0.28, metalness: 0.95 }),
+    metal:       new THREE.MeshStandardMaterial({ color: 0x202c38, roughness: 0.22, metalness: 0.88 }),
+    handle:      new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.08, metalness: 0.98 }),
+    /* Animus: grigio-blu scuro — emerge dall'ambiente con le sue luci */
+    animus:      new THREE.MeshStandardMaterial({ color: 0x1a2a38, roughness: 0.38, metalness: 0.75 }),
+    animusDk:    new THREE.MeshStandardMaterial({ color: 0x0e1a24, roughness: 0.45, metalness: 0.80 }),
+    animusPlatf: new THREE.MeshStandardMaterial({ color: 0x141e28, roughness: 0.52, metalness: 0.62 }),
     glass:       new THREE.MeshStandardMaterial({
-      color: 0x7aaabb,
+      color: 0x1a3040,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.18,
       roughness: 0.02,
       metalness: 0.05,
       side: THREE.DoubleSide,
       depthWrite: false,
-      envMapIntensity: 0.8
     }),
-    /* Finestre: non più MeshBasicMaterial bianco accecante */
-    window:      new THREE.MeshStandardMaterial({
-      color: 0x7090a8,
-      transparent: true,
-      opacity: 0.55,
-      roughness: 0.15,
-      metalness: 0.0,
-      emissive: 0x304050,
-      emissiveIntensity: 0.4,
-      side: THREE.FrontSide
-    }),
-    lightStrip:  new THREE.MeshBasicMaterial({ color: 0xb8c8d8, transparent: true, opacity: 0.88 }),
+    lightStrip:  new THREE.MeshBasicMaterial({ color: 0x203040, transparent: true, opacity: 0.7 }),
     glow:        (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false }),
     glowDS:      (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
   };
@@ -211,29 +185,19 @@
   rw.position.set(ROOM_W / 2, ROOM_H / 2, -28);
   scene.add(rw);
 
-  /* ── Finestre laterali — luce soffusa, non abbagliante ── */
-  function addWindow(side, z) {
-    const x = (ROOM_W / 2) * side;
+  /* ── Strip luci a muro — accento cyan subtile, industrial ── */
+  function addWallStrip(side, z) {
+    const x = (ROOM_W / 2 - 0.08) * side;
     const rotY = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-
-    /* Frame metallico scuro attorno alla finestra */
-    const fr = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 6.0), M.metalDk);
-    fr.rotation.y = rotY;
-    fr.position.set(x * 0.999, 5.5, z);
-    scene.add(fr);
-
-    /* Vetro finestra */
-    const win = new THREE.Mesh(new THREE.PlaneGeometry(4.1, 5.5), M.window);
-    win.rotation.y = rotY;
-    win.position.set(x * 0.998, 5.5, z);
-    scene.add(win);
-
-    /* Luce molto contenuta che simula la provenienza dalla finestra */
-    const wl = new THREE.PointLight(0x90b0c0, 1.2, 14);
-    wl.position.set(x * 0.85, 5.5, z);
-    scene.add(wl);
+    const strip = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.04, 1.6),
+      M.glow(0x004466, 0.45)
+    );
+    strip.rotation.y = rotY;
+    strip.position.set(x, 3.5, z);
+    scene.add(strip);
   }
-  [-1, 1].forEach(side => [-5, -19, -34].forEach(z => addWindow(side, z)));
+  [-1, 1].forEach(side => [-5, -19, -34].forEach(z => addWallStrip(side, z)));
 
   /* ── Colonne industriali ── */
   function addColumn(x, z) {
@@ -273,7 +237,7 @@
 
   /* ── Pavimento riflettente (linea sottile lungo il centro) ── */
   const floorLineGeo = new THREE.PlaneGeometry(0.02, 80);
-  const floorLineMat = M.glow(0x4488aa, 0.06);
+  const floorLineMat = M.glow(0x00aacc, 0.3);
   const floorLine = new THREE.Mesh(floorLineGeo, floorLineMat);
   floorLine.rotation.x = -Math.PI / 2;
   floorLine.position.set(0, 0.005, -25);
@@ -431,8 +395,8 @@
   platform.receiveShadow = true;
   aniGroup.add(platform);
 
-  /* Bordi glow cyan piattaforma (sottile) */
-  const eg = M.glow(0x006680, 0.28);
+  /* Bordi glow cyan piattaforma — come i bordi dei panel del progetto */
+  const eg = M.glow(0x00ccdd, 0.65);
   [-2.8, 2.8].forEach(x => {
     const e = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 5.2), eg);
     e.position.set(x, 0.085, 0);
@@ -489,7 +453,7 @@
   aniGroup.add(disc);
 
   /* Anello glow disc */
-  const discRingMat = M.glowDS(0x0088aa, 0.4);
+  const discRingMat = M.glowDS(0x00ccff, 0.8);
   const discRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.28, 32), discRingMat);
   discRing.rotation.x = -Math.PI / 2;
   discRing.position.set(0.06, 2.32, -1.0);
@@ -503,20 +467,20 @@
   const circleGeo = new THREE.CircleGeometry(0.2, 32);
   const glowCircles = [];
   [-0.62, 0, 0.62].forEach((x) => {
-    const cMat = M.glow(0xc8d8e0, 0.45);
+    const cMat = M.glow(0xaaeeff, 0.75);
     cMat.side = THREE.DoubleSide;
     const circle = new THREE.Mesh(circleGeo, cMat);
     circle.position.set(x, 0.32, 2.14);
     aniGroup.add(circle);
     glowCircles.push(circle);
 
-    /* Alone minimo */
-    const halo = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32), M.glowDS(0x708090, 0.08));
+    /* Alone */
+    const halo = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32), M.glowDS(0x0088bb, 0.28));
     halo.position.set(x, 0.32, 2.13);
     aniGroup.add(halo);
 
-    /* Luce punto ridotta */
-    const pl = new THREE.PointLight(0x90aabb, 0.7, 2.5);
+    /* Luce punto */
+    const pl = new THREE.PointLight(0x00aacc, 1.6, 3.5);
     pl.position.set(x, 0.55, 2.22);
     aniGroup.add(pl);
   });
@@ -540,7 +504,7 @@
 
   const scrGlow = new THREE.Mesh(
     new THREE.PlaneGeometry(0.28, 0.17),
-    M.glow(0x1a4a6a, 0.55)
+    M.glow(0x0066aa, 0.85)
   );
   scrGlow.rotation.x = -0.35;
   scrGlow.position.set(-1.52, 1.49, -0.875);
@@ -561,9 +525,9 @@
 
   /* ── Nebbia a pavimento ── */
   const mistMats = [
-    M.glowDS(0x6088aa, 0.1),
-    M.glowDS(0x6088aa, 0.07),
-    M.glowDS(0x6088aa, 0.06),
+    M.glowDS(0x003850, 0.22),
+    M.glowDS(0x002840, 0.15),
+    M.glowDS(0x001830, 0.12),
   ];
   const mistMeshes = [
     { geo: new THREE.PlaneGeometry(8, 8),  pos: [0, 0.06, -10], ry: 0    },
@@ -690,17 +654,18 @@
 
     updateScene(scrollProg);
 
-    /* Pulsazione cerchi — sottile */
+    /* Pulsazione cerchi */
     glowCircles.forEach((c, i) => {
-      c.material.opacity = 0.38 + 0.08 * Math.sin(t * 1.1 + i * 1.25);
+      c.material.opacity = 0.6 + 0.18 * Math.sin(t * 1.7 + i * 1.25);
     });
 
     /* Disc rotation */
     discRing.rotation.z = t * 0.9;
     disc.rotation.y = t * 0.4;
 
-    /* Glow Animus pulse — contenuto */
-    animusGlow.intensity = 1.8 + 0.3 * Math.sin(t * 0.9);
+    /* Glow Animus pulse */
+    animusGlow.intensity = 4.5 + 1.4 * Math.sin(t * 1.4);
+    aniBack.intensity     = 1.6 + 0.5 * Math.sin(t * 1.1 + 1.2);
 
     /* Nebbia */
     mistMeshes[0].position.x = Math.sin(t * 0.28) * 0.55;
@@ -755,54 +720,59 @@
      Risultato: seamless
   ════════════════════════════════════════════ */
   function triggerTransition() {
-    /* ── Step 1: nasconde HUD intro gradualmente ── */
+    /* ── Step 1: HUD intro esce ── */
     const hudEl = document.getElementById('intro-hud');
     const phaseEl = document.getElementById('intro-phase-indicator');
     const corners = document.querySelectorAll('.intro-corner');
     [hudEl, phaseEl, ...corners].forEach(el => {
-      if (el) { el.style.transition = 'opacity 0.6s ease'; el.style.opacity = '0'; }
+      if (el) { el.style.transition = 'opacity 0.5s ease'; el.style.opacity = '0'; }
     });
 
-    /* ── Step 2: prepara il Three.js del progetto ── */
+    /* ── Step 2: prepara canvas Three.js principale ── */
     const threeCV = document.getElementById('threeCanvas');
     const bootEl  = document.getElementById('boot');
     const vignette = document.getElementById('vignette');
     const scanlines = document.getElementById('scanlines');
     const hudContainer = document.getElementById('hud-container');
 
-    /* Mostra il canvas Three.js sotto l'intro (ancora invisibile) */
     if (threeCV) {
       threeCV.style.display = 'block';
       threeCV.style.opacity = '0';
       threeCV.style.transition = 'none';
     }
 
-    /* Resetta il boot animation PRIMA di rivelare */
-    /* Questo ripristina gridGroup.rotation.y = -PI*1.5 (destra→centro) */
     if (window._resetBoot) window._resetBoot();
-
-    /* Sblocca bootProgress (intro finisce) */
     window.introIsActive = false;
 
-    /* Svela CSS3DRenderer */
+    /* CSS3DRenderer */
     document.querySelectorAll('body > div').forEach(el => {
       if (el.style && el.style.zIndex === '5') {
         el.style.display = '';
         el.style.opacity = '0';
-        el.style.transition = 'opacity 1.4s ease 0.3s';
+        el.style.transition = 'opacity 2.0s ease 0.8s';
         setTimeout(() => { el.style.opacity = '1'; }, 50);
       }
     });
 
-    /* ── Step 3: Cross-fade fluido ── */
+    /* ── Step 3: flash bianco + crossfade ── */
     setTimeout(() => {
-      /* Intro canvas esce */
-      threeCanvas.style.transition = 'opacity 1.4s ease';
+      /* Flash — simula l'ingresso nella simulazione */
+      if (flashEl) {
+        flashEl.style.transition = 'opacity 0.18s ease';
+        flashEl.style.opacity = '0.85';
+        setTimeout(() => {
+          flashEl.style.transition = 'opacity 1.0s ease';
+          flashEl.style.opacity = '0';
+        }, 180);
+      }
+
+      /* Intro canvas esce lentamente */
+      threeCanvas.style.transition = 'opacity 2.0s ease 0.1s';
       threeCanvas.style.opacity = '0';
 
-      /* Canvas Three.js progetto entra */
+      /* Canvas progetto entra in sync */
       if (threeCV) {
-        threeCV.style.transition = 'opacity 1.4s ease';
+        threeCV.style.transition = 'opacity 2.0s ease 0.1s';
         threeCV.style.opacity = '1';
       }
 
@@ -810,13 +780,13 @@
       if (bootEl) {
         bootEl.style.display = 'flex';
         bootEl.style.opacity = '0';
-        bootEl.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => { if (bootEl) bootEl.style.opacity = '1'; }, 200);
+        bootEl.style.transition = 'opacity 0.6s ease 0.2s';
+        setTimeout(() => { if (bootEl) bootEl.style.opacity = '1'; }, 300);
       }
 
-      /* Display CSS intro: fade out mentre il display curvo Three.js entra */
+      /* Display CSS intro esce */
       if (displayWrap) {
-        displayWrap.style.transition = 'opacity 1.2s ease 0.4s';
+        displayWrap.style.transition = 'opacity 1.0s ease';
         displayWrap.style.opacity = '0';
       }
 
@@ -824,9 +794,9 @@
       if (scanlines)   { scanlines.style.display = 'block'; }
       if (hudContainer){ hudContainer.style.display = ''; }
 
-    }, 300);
+    }, 200);
 
-    /* ── Step 4: rimuove intro ── */
+    /* ── Step 4: cleanup ── */
     setTimeout(() => {
       seq.style.display = 'none';
       introActive = false;
@@ -836,7 +806,7 @@
       window.removeEventListener('wheel',      onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove',  onTouchMove);
-    }, 1800);
+    }, 2400);
   }
 
   /* ── RESIZE ── */
