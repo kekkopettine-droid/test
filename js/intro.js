@@ -69,9 +69,9 @@
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  /* Tone mapping realistico — evita il sovraesposizione */
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.1;
+  renderer.physicallyCorrectLights = true;
   renderer.setClearColor(0x111820, 1);
 
   /* ── SCENA E CAMERA ── */
@@ -87,6 +87,63 @@
   function ease(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function norm(p, s, e) { return clamp((p-s)/(e-s), 0, 1); }
+
+  /* ════════════════════════════════════════════
+     ENVIRONMENT MAP — IBL (Image Based Lighting)
+     Trasforma metalli da "plastica dipinta" a superfici realistiche
+  ════════════════════════════════════════════ */
+  function buildEnvMap() {
+    const w = 512, h = 256;
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+
+    /* Fondo: spazio industriale scuro */
+    ctx.fillStyle = '#10161e';
+    ctx.fillRect(0, 0, w, h);
+
+    /* Pannello LED soffitto — sorgente luminosa principale */
+    const ceilLight = ctx.createRadialGradient(w*0.5, 0, 0, w*0.5, h*0.05, h*0.55);
+    ceilLight.addColorStop(0,   'rgba(210,230,248,0.85)');
+    ceilLight.addColorStop(0.3, 'rgba(180,200,228,0.35)');
+    ceilLight.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = ceilLight;
+    ctx.fillRect(0, 0, w, h * 0.55);
+
+    /* Luce di fill sinistra (finestra diffusa) */
+    const leftFill = ctx.createRadialGradient(0, h*0.4, 0, w*0.15, h*0.4, h*0.6);
+    leftFill.addColorStop(0,   'rgba(160,195,228,0.30)');
+    leftFill.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = leftFill;
+    ctx.fillRect(0, 0, w*0.35, h);
+
+    /* Fill caldo destra (riflessione muri) */
+    const rightFill = ctx.createRadialGradient(w, h*0.5, 0, w*0.82, h*0.5, h*0.7);
+    rightFill.addColorStop(0,   'rgba(140,165,190,0.18)');
+    rightFill.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = rightFill;
+    ctx.fillRect(w*0.6, 0, w*0.4, h);
+
+    /* Pavimento scuro (basso) */
+    const floorDark = ctx.createLinearGradient(0, h*0.82, 0, h);
+    floorDark.addColorStop(0, 'rgba(0,0,0,0)');
+    floorDark.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = floorDark;
+    ctx.fillRect(0, h*0.75, w, h*0.25);
+
+    const tex = new THREE.CanvasTexture(cv);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    const env = pmrem.fromEquirectangular(tex).texture;
+    pmrem.dispose();
+    tex.dispose();
+    return env;
+  }
+
+  const envMap = buildEnvMap();
+  scene.environment = envMap;
 
   /* ════════════════════════════════════════════
      LUCI — indoor corporate: pannelli LED a soffitto, Animus accent
@@ -115,6 +172,18 @@
   const aniBack = new THREE.PointLight(0x006688, 1.2, 10);
   aniBack.position.set(0, 4.0, -14);
   scene.add(aniBack);
+
+  /* Rim light sinistro — separa l'Animus dal fondo, effetto edge lighting */
+  const rimL = new THREE.SpotLight(0x8ab0d0, 1.4, 18, Math.PI * 0.22, 0.6, 1.8);
+  rimL.position.set(-6, 4.5, -12);
+  rimL.target.position.set(0, 1.0, -10);
+  scene.add(rimL); scene.add(rimL.target);
+
+  /* Rim light destro (più caldo) */
+  const rimR = new THREE.SpotLight(0x7090a8, 0.9, 14, Math.PI * 0.25, 0.7, 2.0);
+  rimR.position.set(5, 3.0, -8);
+  rimR.target.position.set(0, 0.8, -10);
+  scene.add(rimR); scene.add(rimR.target);
 
   /* SpotLight dall'alto — ombre reali sulla macchina e sul pavimento */
   const aniSpot = new THREE.SpotLight(0xc8d8e8, 2.8, 28, Math.PI * 0.18, 0.45, 1.2);
@@ -250,22 +319,39 @@
      MATERIALI — texture-based
   ════════════════════════════════════════════ */
   const M = {
-    concrete:    new THREE.MeshStandardMaterial({ color: 0x909aa4, roughness: 0.92, metalness: 0.0, map: wallTex }),
-    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x606870, roughness: 0.96, metalness: 0.0, map: ceilTex }),
-    concreteWall:new THREE.MeshStandardMaterial({ color: 0x8a9aa6, roughness: 0.90, metalness: 0.0, map: wallTex }),
-    floor:       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.20, metalness: 0.10, map: floorTex }),
-    metalDk:     new THREE.MeshStandardMaterial({ color: 0x707880, roughness: 0.28, metalness: 0.95, map: metalTex }),
-    metal:       new THREE.MeshStandardMaterial({ color: 0x8090a0, roughness: 0.22, metalness: 0.88 }),
-    handle:      new THREE.MeshStandardMaterial({ color: 0xb0b8c0, roughness: 0.06, metalness: 0.98 }),
-    animus:      new THREE.MeshStandardMaterial({ color: 0x5a6a78, roughness: 0.35, metalness: 0.78 }),
-    animusDk:    new THREE.MeshStandardMaterial({ color: 0x363e48, roughness: 0.42, metalness: 0.82 }),
-    animusPlatf: new THREE.MeshStandardMaterial({ color: 0x404c58, roughness: 0.50, metalness: 0.65 }),
-    glass:       new THREE.MeshStandardMaterial({
-      color: 0x90c0d0, transparent: true, opacity: 0.15,
-      roughness: 0.01, metalness: 0.0,
+    /* Cemento/calcestruzzo — mat opaca con texture */
+    concrete:    new THREE.MeshStandardMaterial({ color: 0x909aa4, roughness: 0.94, metalness: 0.0, map: wallTex }),
+    concreteDk:  new THREE.MeshStandardMaterial({ color: 0x606870, roughness: 0.97, metalness: 0.0, map: ceilTex }),
+    concreteWall:new THREE.MeshStandardMaterial({ color: 0x8a9aa6, roughness: 0.92, metalness: 0.0, map: wallTex }),
+    /* Pavimento lucido — texture + alta riflessività ambientale */
+    floor:       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.12, metalness: 0.08, map: floorTex, envMapIntensity: 1.2 }),
+    /* Metallo scuro — brushed con env map forte */
+    metalDk:     new THREE.MeshStandardMaterial({ color: 0x808898, roughness: 0.22, metalness: 0.96, map: metalTex, envMapIntensity: 1.8 }),
+    metal:       new THREE.MeshStandardMaterial({ color: 0x909aaa, roughness: 0.18, metalness: 0.92, envMapIntensity: 1.6 }),
+    /* Maniglie: acciaio lucido */
+    handle:      new THREE.MeshStandardMaterial({ color: 0xc8d0d8, roughness: 0.03, metalness: 1.0, envMapIntensity: 2.2 }),
+    /* Animus: MeshPhysicalMaterial con clearcoat — aspetto verniciato industriale */
+    animus:      new THREE.MeshPhysicalMaterial({
+      color: 0x5a6a78, roughness: 0.28, metalness: 0.82,
+      clearcoat: 0.55, clearcoatRoughness: 0.12, envMapIntensity: 1.4
+    }),
+    animusDk:    new THREE.MeshPhysicalMaterial({
+      color: 0x2e3840, roughness: 0.38, metalness: 0.86,
+      clearcoat: 0.35, clearcoatRoughness: 0.18, envMapIntensity: 1.2
+    }),
+    animusPlatf: new THREE.MeshPhysicalMaterial({
+      color: 0x3c4850, roughness: 0.45, metalness: 0.70,
+      clearcoat: 0.25, clearcoatRoughness: 0.22, envMapIntensity: 1.0
+    }),
+    /* Vetro: MeshPhysicalMaterial — riflette l'ambiente */
+    glass:       new THREE.MeshPhysicalMaterial({
+      color: 0xaaccdd, roughness: 0.0, metalness: 0.0,
+      transparent: true, opacity: 0.18,
+      clearcoat: 1.0, clearcoatRoughness: 0.0,
+      envMapIntensity: 1.5,
       side: THREE.DoubleSide, depthWrite: false,
     }),
-    lightStrip:  new THREE.MeshBasicMaterial({ color: 0xe8f0f8, transparent: true, opacity: 0.95 }),
+    lightStrip:  new THREE.MeshBasicMaterial({ color: 0xeef4fc, transparent: true, opacity: 0.95 }),
     glow:        (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false }),
     glowDS:      (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
   };
@@ -702,6 +788,22 @@
     scene.add(m);
     return m;
   });
+
+  /* ── Riflesso Animus sul pavimento (fake mirror via clone additive) ── */
+  const aniMirror = aniGroup.clone();
+  aniMirror.scale.y = -1;
+  aniMirror.position.set(0, 0, -10);
+  aniMirror.traverse(child => {
+    if (!child.isMesh) return;
+    child.material = new THREE.MeshBasicMaterial({
+      color: 0x8090a0,
+      transparent: true,
+      opacity: 0.06,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+  });
+  scene.add(aniMirror);
 
   /* ════════════════════════════════════════════
      KEYFRAME CAMERA
