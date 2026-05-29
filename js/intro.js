@@ -71,7 +71,7 @@
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   /* Tone mapping realistico — evita il sovraesposizione */
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.85;
+  renderer.toneMappingExposure = 1.05;
   renderer.setClearColor(0x111820, 1);
 
   /* ── SCENA E CAMERA ── */
@@ -80,7 +80,7 @@
   scene.fog = new THREE.Fog(0x111820, 22, 65);
 
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, EYE_H, 20);
+  camera.position.set(0, EYE_H, 15.5);
   camera.lookAt(0, EYE_H, ENTRY_Z);
 
   /* ── HELPER ── */
@@ -317,7 +317,7 @@
   hR.position.set(DOOR_W / 4 - 0.2, DOOR_H * 0.5, 0.013);
   doorGroup.add(hR);
 
-  /* ── Logo Abstergo sul vetro (canvas texture) ── */
+  /* ── Logo Abstergo sul vetro — incisione frost, bianco opaco ── */
   function buildLogoTex() {
     const c = document.createElement('canvas');
     c.width = 640; c.height = 320;
@@ -326,36 +326,34 @@
 
     const lx = 170, ly = 160, ts = 62;
 
-    /* Triangolo - top sinistra */
+    /* Simbolo: tre triangoli in stile etching su vetro */
     ctx.beginPath();
     ctx.moveTo(lx - ts * 0.84, ly + ts * 0.4);
     ctx.lineTo(lx - ts * 0.04, ly - ts);
-    ctx.lineTo(lx + ts * 0.3, ly - ts * 0.08);
+    ctx.lineTo(lx + ts * 0.3,  ly - ts * 0.08);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 160, 200, 0.48)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.fill();
 
-    /* Triangolo - destra */
     ctx.beginPath();
-    ctx.moveTo(lx + ts * 0.3, ly - ts * 0.08);
+    ctx.moveTo(lx + ts * 0.3,  ly - ts * 0.08);
     ctx.lineTo(lx + ts * 0.95, ly + ts * 0.4);
     ctx.lineTo(lx + ts * 0.02, ly + ts * 0.4);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 180, 220, 0.65)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.fill();
 
-    /* Triangolo - basso */
     ctx.beginPath();
     ctx.moveTo(lx - ts * 0.84, ly + ts * 0.4);
     ctx.lineTo(lx + ts * 0.95, ly + ts * 0.4);
     ctx.lineTo(lx + ts * 0.62, ly + ts * 0.9);
     ctx.lineTo(lx - ts * 0.62, ly + ts * 0.9);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 140, 180, 0.38)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
     ctx.fill();
 
-    /* Separatore */
-    ctx.strokeStyle = 'rgba(0, 165, 210, 0.42)';
+    /* Separatore verticale */
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(lx + ts * 1.22, ly - ts * 0.86);
@@ -363,24 +361,54 @@
     ctx.stroke();
 
     /* Testo */
-    ctx.fillStyle = 'rgba(0, 120, 165, 0.75)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
     ctx.font = 'bold 50px "Segoe UI", Arial, sans-serif';
     ctx.fillText('Abstergo', lx + ts * 1.42, ly + 12);
 
-    ctx.fillStyle = 'rgba(0, 105, 155, 0.58)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.font = '28px "Segoe UI", Arial, sans-serif';
     ctx.fillText('Industries', lx + ts * 1.55, ly + 50);
 
     return new THREE.CanvasTexture(c);
   }
 
+  /* Logo diviso in due metà — una per porta, così si separa all'apertura */
   const logoTex = buildLogoTex();
-  const logoMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(DOOR_W - 0.14, (DOOR_W - 0.14) * 0.5),
-    new THREE.MeshBasicMaterial({ map: logoTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+
+  const fullLogoW = DOOR_W - 0.14;
+  const fullLogoH = fullLogoW * 0.5;
+  const halfLogoW = fullLogoW / 2;
+
+  /* Metà sinistra: simbolo (0%–50% della texture) */
+  const logoTexL = logoTex.clone();
+  logoTexL.repeat.set(0.5, 1);
+  logoTexL.offset.set(0, 0);
+  logoTexL.needsUpdate = true;
+
+  /* Metà destra: testo (50%–100% della texture) */
+  const logoTexR = logoTex.clone();
+  logoTexR.repeat.set(0.5, 1);
+  logoTexR.offset.set(0.5, 0);
+  logoTexR.needsUpdate = true;
+
+  /* Posizione relativa al pannello di vetro (glassL/glassR centrati a y=DOOR_H/2) */
+  const logoRelY  = DOOR_H * 0.58 - DOOR_H / 2; // = DOOR_H * 0.08
+  const logoRelXL =  (DOOR_W / 4 - halfLogoW / 2); // piccolo offset per allineare
+  const logoRelXR = -(DOOR_W / 4 - halfLogoW / 2);
+
+  const logoMeshL = new THREE.Mesh(
+    new THREE.PlaneGeometry(halfLogoW, fullLogoH),
+    new THREE.MeshBasicMaterial({ map: logoTexL, transparent: true, depthWrite: false, side: THREE.DoubleSide })
   );
-  logoMesh.position.set(0, DOOR_H * 0.58, 0.016);
-  doorGroup.add(logoMesh);
+  logoMeshL.position.set(logoRelXL, logoRelY, 0.013);
+  glassL.add(logoMeshL);
+
+  const logoMeshR = new THREE.Mesh(
+    new THREE.PlaneGeometry(halfLogoW, fullLogoH),
+    new THREE.MeshBasicMaterial({ map: logoTexR, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+  );
+  logoMeshR.position.set(logoRelXR, logoRelY, 0.013);
+  glassR.add(logoMeshR);
 
   /* ════════════════════════════════════════════
      MACCHINA ANIMUS
@@ -545,8 +573,8 @@
      KEYFRAME CAMERA
   ════════════════════════════════════════════ */
   const KF = [
-    { p: 0.00, pos: [0, EYE_H, 20],          tgt: [0, EYE_H * 0.97, ENTRY_Z]  },
-    { p: 0.20, pos: [0, EYE_H, 20],          tgt: [0, EYE_H * 0.97, ENTRY_Z]  },
+    { p: 0.00, pos: [0, EYE_H, 15.5],        tgt: [0, EYE_H * 0.97, ENTRY_Z]  },
+    { p: 0.20, pos: [0, EYE_H, 15.5],        tgt: [0, EYE_H * 0.97, ENTRY_Z]  },
     { p: 0.52, pos: [0, EYE_H, 13.4],        tgt: [0, EYE_H * 0.87, -4]       },
     { p: 0.76, pos: [0, EYE_H, 0],           tgt: [0, 1.05, -10]               },
     { p: 0.88, pos: [0, EYE_H - 0.22, -5],   tgt: [0, 0.88, -10]              },
