@@ -5,11 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ANIMUS INTERFACE</title>
 
-<!-- IMPORT DEL FILE CSS -->
+<!-- IMPORT DEI FILE CSS -->
+<link rel="stylesheet" href="css/intro.css">
 <link rel="stylesheet" href="css/style.css">
 
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════
+     INTRO SEQUENCE — overlay UI sul canvas Three.js
+     Il canvas 3D è iniettato dinamicamente da intro.js
+═══════════════════════════════════════════════════ -->
+<div id="intro-sequence">
+
+  <!-- Angoli decorativi HUD -->
+  <div class="intro-corner tl"></div>
+  <div class="intro-corner tr"></div>
+  <div class="intro-corner bl"></div>
+  <div class="intro-corner br"></div>
+
+  <!-- Overlay atmosferici -->
+  <div id="intro-scanlines"></div>
+  <div id="intro-vignette"></div>
+
+  <!-- ═══ ENTRY SCREEN (overlay logo sul canvas 3D) ═══ -->
+  <div id="intro-entry">
+    <div class="intro-logo-wrap">
+      <svg class="intro-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="400" height="100"
+           style="filter: drop-shadow(0 0 16px rgba(0,255,255,0.7)) drop-shadow(0 0 36px rgba(0,255,255,0.28));">
+        <g transform="translate(14, 9) scale(0.20)">
+          <path d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301" fill="rgba(255,255,255,0.75)" />
+          <path d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557" fill="rgba(255,255,255,0.95)" />
+          <path d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006" fill="rgba(255,255,255,0.55)" />
+        </g>
+        <line x1="102" y1="15" x2="102" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+        <text x="116" y="50" font-family="'Rajdhani','Segoe UI',Arial,sans-serif"
+              font-size="30" font-weight="700" letter-spacing="1" fill="#ffffff">Abstergo</text>
+        <text x="117" y="70" font-family="'Rajdhani','Segoe UI',Arial,sans-serif"
+              font-size="16" font-weight="400" letter-spacing="2"
+              fill="rgba(255,255,255,0.7)">Industries</text>
+      </svg>
+      <div class="intro-logo-tagline">Accesso Animus &mdash; Sessione in attesa</div>
+    </div>
+    <div class="intro-scroll-hint">
+      <div class="intro-scroll-text">Scroll per accedere</div>
+      <div class="intro-scroll-chevrons">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DISPLAY OLOGRAFICI (fase distensione sull'Animus) ═══ -->
+  <div id="intro-displays-wrap">
+    <!-- Display 1 -->
+    <div class="intro-display-panel">
+      <div class="intro-dp-cable"></div>
+      <div class="intro-dp-corner tl"></div><div class="intro-dp-corner tr"></div>
+      <div class="intro-dp-corner bl"></div><div class="intro-dp-corner br"></div>
+      <div class="intro-dp-label">SISTEMA ANIMUS</div>
+      <div class="intro-dp-title">INIZIALIZZAZIONE<br>IN CORSO</div>
+      <div class="intro-dp-bar-wrap"><div class="intro-dp-bar-fill"></div></div>
+      <div class="intro-dp-status">CARICAMENTO MEMORIE GENETICHE</div>
+      <div class="intro-dp-stream"></div>
+    </div>
+    <!-- Display 2 -->
+    <div class="intro-display-panel">
+      <div class="intro-dp-cable"></div>
+      <div class="intro-dp-corner tl"></div><div class="intro-dp-corner tr"></div>
+      <div class="intro-dp-corner bl"></div><div class="intro-dp-corner br"></div>
+      <div class="intro-dp-label">ABSTERGO INDUSTRIES</div>
+      <div class="intro-dp-title">SINCRONIZZAZIONE<br>NEURALE</div>
+      <div class="intro-dp-bar-wrap"><div class="intro-dp-bar-fill"></div></div>
+      <div class="intro-dp-status">INTERFACCIA ANIMUS v3.0</div>
+      <div class="intro-dp-stream"></div>
+    </div>
+    <!-- Display 3 -->
+    <div class="intro-display-panel">
+      <div class="intro-dp-cable"></div>
+      <div class="intro-dp-corner tl"></div><div class="intro-dp-corner tr"></div>
+      <div class="intro-dp-corner bl"></div><div class="intro-dp-corner br"></div>
+      <div class="intro-dp-label">ANALISI DNA</div>
+      <div class="intro-dp-title">SEQUENZA<br>IDENTIFICATA</div>
+      <div class="intro-dp-bar-wrap"><div class="intro-dp-bar-fill"></div></div>
+      <div class="intro-dp-status">FRAMMENTI ANCESTRALI TROVATI</div>
+      <div class="intro-dp-stream"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HUD PROGRESSO ═══ -->
+  <div id="intro-hud">
+    <div id="intro-hud-label">ABSTERGO INDUSTRIES &mdash; INGRESSO</div>
+    <div id="intro-hud-bar-wrap">
+      <div id="intro-hud-bar-fill"></div>
+    </div>
+    <div id="intro-hud-sub">
+      <div class="intro-scroll-icon">
+        <span></span><span></span><span></span>
+      </div>
+      SCROLL PER CONTINUARE
+    </div>
+  </div>
+
+  <!-- ═══ INDICATORE FASI ═══ -->
+  <div id="intro-phase-indicator">
+    <div class="intro-phase-dot-row">
+      <div class="intro-phase-dot active"></div>
+      <div class="intro-phase-dot"></div>
+      <div class="intro-phase-dot"></div>
+      <div class="intro-phase-dot"></div>
+      <div class="intro-phase-dot"></div>
+    </div>
+    <div class="intro-phase-label">SEQUENZA ACCESSO</div>
+  </div>
+
+  <!-- Flash finale -->
+  <div id="intro-flash"></div>
+
+</div><!-- fine #intro-sequence -->
 
 <!-- Boot splash -->
 <div id="boot">
@@ -136,10 +248,13 @@
 
 <!-- THREE.JS CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- CSS3DRenderer for embedding HTML into WebGL -->
+<!-- CSS3DRenderer -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS3DRenderer.js"></script>
 
-<!-- IMPORT DEL FILE JS -->
+<!-- INTRO SEQUENCE (dopo Three.js perché lo usa) -->
+<script src="js/intro.js"></script>
+
+<!-- APP PRINCIPALE -->
 <script src="js/app.js"></script>
 
 </body>

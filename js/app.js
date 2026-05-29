@@ -21,6 +21,10 @@
   cssRenderer.domElement.style.zIndex = '5';
   cssRenderer.domElement.style.pointerEvents = 'none';
   document.body.appendChild(cssRenderer.domElement);
+  // Nasconde il renderer CSS3D durante l'intro sequence
+  if (document.getElementById('intro-sequence')) {
+    cssRenderer.domElement.style.display = 'none';
+  }
   const scene  = new THREE.Scene();
   scene.fog    = new THREE.FogExp2(0x1a1a1a, 0.025);
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
@@ -1357,6 +1361,21 @@
   let bootProgress = 0;
   let hasBooted = false;
 
+  // Espone una funzione globale per resettare il boot al termine dell'intro
+  // intro.js chiama window._resetBoot() prima di rivelare il progetto
+  window._resetBoot = function () {
+    bootProgress = 0;
+    hasBooted   = false;
+    ledProgress = 0;
+    panelProgress = 0;
+    logoEl.style.opacity = '0';
+    panelL.style.opacity = '0';
+    panelR.style.opacity = '0';
+    panelL.style.pointerEvents = 'none';
+    panelR.style.pointerEvents = 'none';
+    gridGroup.rotation.y = -Math.PI * 1.5; // riparte da destra
+  };
+
   // Impostiamo l'opacità HTML a zero per iniziare e disabilitiamo i click
   logoEl.style.opacity = "0";
   panelL.style.opacity = "0";
@@ -1372,7 +1391,9 @@
 
     // --- ANIMUS BOOT ANIMATION: rotazione pura, nessuna dissolvenza ---
     if (bootProgress < 1) {
-      bootProgress += 0.004; // Velocità aumentata
+      // Non avanza durante l'intro sequence
+      if (window.introIsActive) return;
+      bootProgress += 0.004;
       if (bootProgress >= 1) {
         bootProgress = 1;
         // Imposta opacità finali dei materiali 3D alla fine della rotazione
