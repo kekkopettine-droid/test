@@ -21,6 +21,19 @@
   cssRenderer.domElement.style.zIndex = '5';
   cssRenderer.domElement.style.pointerEvents = 'none';
   document.body.appendChild(cssRenderer.domElement);
+
+  /* Quando i pannelli gene sono aperti, qualsiasi click sul cssRenderer chiude —
+     il CSS3D hit-testing è inaffidabile per elementi inclinati in prospettiva */
+  cssRenderer.domElement.addEventListener('click', (e) => {
+    /* Chiude i pannelli gene se aperti (tranne PRENOTA) */
+    if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
+      const id = e.target && e.target.id;
+      if (id === 'scConfirmBtn') return;
+      if (id === 'charConfirmBtn' || id === 'charBackBtn') return; /* non interferire con char view */
+      hideGeneInfo();
+    }
+  });
+
   // Nasconde il renderer CSS3D durante l'intro sequence
   if (document.getElementById('intro-sequence')) {
     cssRenderer.domElement.style.display = 'none';
@@ -499,20 +512,41 @@
   // 3) PANNELLO DESTRO
   const panelR = document.getElementById('panelR');
   const cssObjR = new THREE.CSS3DObject(panelR);
-  const thetaR = thetaCenter + spread; 
+  const thetaR = thetaCenter + spread;
   cssObjR.position.set(Math.cos(thetaR) * panelRadiusCSS, -1, Math.sin(thetaR) * panelRadiusCSS);
   cssObjR.scale.set(0.035, 0.035, 0.035);
   cssObjR.lookAt(0, -1, 0);
   gridGroup.add(cssObjR);
 
-  // 4) PANNELLO DETTAGLIO
-  const panelDetail = document.getElementById('panelDetail');
-  const cssObjDetail = new THREE.CSS3DObject(panelDetail);
-  // Spostato alla sua posizione originale
-  cssObjDetail.position.set(Math.cos(thetaCenter) * panelRadiusCSS, -1, Math.sin(thetaCenter) * panelRadiusCSS);
-  cssObjDetail.scale.set(0.035, 0.035, 0.035);
-  cssObjDetail.lookAt(0, -1, 0);
-  gridGroup.add(cssObjDetail);
+  /* ── Piani WebGL invisibili per hit-testing affidabile ──
+     Nella scene principale (NON gridGroup) con posizioni world dopo boot.
+     gridGroup.position = (0,0,5), rotation.y = 0 dopo boot.
+     World pos pannello = local pos + (0,0,5) */
+  const panelHitMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
+  const panelHitGeo = new THREE.PlaneGeometry(480 * 0.035, 380 * 0.035); /* 16.8 × 13.3 */
+
+  const hitPlaneL = new THREE.Mesh(panelHitGeo, panelHitMat);
+  hitPlaneL.position.set(
+    Math.cos(thetaL) * panelRadiusCSS,
+    -1,
+    Math.sin(thetaL) * panelRadiusCSS + 5
+  );
+  hitPlaneL.lookAt(0, -1, 18); /* guarda verso la camera */
+  scene.add(hitPlaneL);
+
+  const hitPlaneR = new THREE.Mesh(panelHitGeo, panelHitMat);
+  hitPlaneR.position.set(
+    Math.cos(thetaR) * panelRadiusCSS,
+    -1,
+    Math.sin(thetaR) * panelRadiusCSS + 5
+  );
+  hitPlaneR.lookAt(0, -1, 18);
+  scene.add(hitPlaneR);
+
+  /* Raycaster dedicato ai pannelli — creato una volta sola */
+  const panelRaycaster = new THREE.Raycaster();
+
+  /* panelDetail rimosso in quanto non più usato ed era fonte di interferenze al centro dello schermo */
 
   /* ── PARTICOLARI GEOMETRICI DELL'HUD IN STILE ANIMUS (TOP, BOTTOM, LATI) ── */
   
@@ -711,26 +745,19 @@
     el.innerHTML = `<div class="tl-node-dot"></div><div class="tl-node-year">${tlNodeData[s].year}</div>`;
     el.style.opacity = '0';
     el.style.pointerEvents = 'none';
+    el.style.zIndex = '1000';
     document.getElementById('hud-container').appendChild(el);
     tlNodeEls.push(el);
     const cssN = new THREE.CSS3DObject(el);
     cssN.position.set(cx, yNode, cz);
     cssN.scale.set(0.018, 0.018, 0.018);
     cssN.lookAt(0, yNode, 0);
+    // FIX SAFARI BUG: microscopica rotazione per evitare che il piano sia perfettamente ortogonale
+    cssN.rotation.y += 0.001;
+    cssN.rotation.x += 0.001;
     gridGroup.add(cssN);
     tlNodeCsss.push(cssN);
   }
-
-  // Info box CSS3D (centro display)
-  tlInfoEl = document.createElement('div');
-  tlInfoEl.style.cssText = 'text-align:center;min-width:650px;pointer-events:none;';
-  tlInfoEl.style.opacity = '0';
-  document.getElementById('hud-container').appendChild(tlInfoEl);
-  const tlInfoCss = new THREE.CSS3DObject(tlInfoEl);
-  tlInfoCss.position.set(Math.cos(thetaCenter) * TL_R, TL_Y - 3.5, Math.sin(thetaCenter) * TL_R);
-  tlInfoCss.scale.set(0.012, 0.012, 0.012);
-  tlInfoCss.lookAt(0, TL_Y - 3.5, 0);
-  gridGroup.add(tlInfoCss);
 
   // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
   const guideText  = "Seleziona un'epoca per sincronizzarti con un personaggio storico.";
@@ -754,18 +781,7 @@
     gridGroup.add(css);
   });
 
-  // Bottone indietro CSS3D
-  tlBackEl = document.createElement('div');
-  tlBackEl.className = 'btn-back';
-  tlBackEl.textContent = 'INDIETRO';
-  tlBackEl.style.opacity = '0';
-  tlBackEl.style.pointerEvents = 'none';
-  document.getElementById('hud-container').appendChild(tlBackEl);
-  const tlBackCss = new THREE.CSS3DObject(tlBackEl);
-  tlBackCss.position.set(Math.cos(thetaCenter) * TL_R, TL_Y - 6.0, Math.sin(thetaCenter) * TL_R);
-  tlBackCss.scale.set(0.016, 0.016, 0.016);
-  tlBackCss.lookAt(0, TL_Y - 6.0, 0);
-  gridGroup.add(tlBackCss);
+
 
   // Mini DNA WebGL sopra/sotto ogni pallino della timeline
   tlDnaGroups = [];
@@ -808,14 +824,166 @@
     tlDnaGroups.push(mg);
   }
 
+  /* ══ PERSONAGGI STORICI per epoca ══ */
+  const historicalChars = [
+    [ /* 1500 - Rinascimento */
+      { name: 'Leonardo da Vinci',   dates: '1452–1519', role: 'Artista, scienziato e inventore. Mente universale del Rinascimento.' },
+      { name: 'Lorenzo de\' Medici', dates: '1449–1492', role: 'Signore di Firenze, mecenate delle arti, centro del potere politico.' },
+      { name: 'Niccolò Machiavelli', dates: '1469–1527', role: 'Filosofo e stratega. Teorico del potere senza compromessi.' },
+      { name: 'Michelangelo',         dates: '1475–1564', role: 'Scultore e pittore. Creatore della Cappella Sistina e del David.' },
+    ],
+    [ /* 1600 - Pirateria */
+      { name: 'Barbanera',       dates: '1680–1718', role: 'Il pirata più temuto dei Caraibi. Simbolo del terrore dei mari.' },
+      { name: 'Anne Bonny',      dates: '1697–1782', role: 'Piratessa leggendaria. Sfidò le convenzioni di un\'epoca intera.' },
+      { name: 'Henry Morgan',    dates: '1635–1688', role: 'Corsaro gallese, poi Governatore della Giamaica. Doppio gioco supremo.' },
+      { name: 'Calico Jack',     dates: '1682–1720', role: 'Capitano pirata noto per la sua bandiera e il suo equipaggio.' },
+    ],
+    [ /* 1700 - Rivoluzione Americana */
+      { name: 'George Washington',  dates: '1732–1799', role: 'Generale e primo Presidente degli Stati Uniti d\'America.' },
+      { name: 'Benjamin Franklin',  dates: '1706–1790', role: 'Scienziato, diplomatico e Padre Fondatore.' },
+      { name: 'Thomas Jefferson',   dates: '1743–1826', role: 'Autore della Dichiarazione di Indipendenza americana.' },
+      { name: 'Alexander Hamilton', dates: '1755–1804', role: 'Stratega finanziario, architetto del governo federale.' },
+    ],
+    [ /* 1800 - Rivoluzione Francese */
+      { name: 'Napoleone Bonaparte', dates: '1769–1821', role: 'Generale e Imperatore. Rivoluzionò l\'Europa con armi e leggi.' },
+      { name: 'Marie Antoinette',    dates: '1755–1793', role: 'Regina di Francia. Simbolo del potere e della sua caduta.' },
+      { name: 'Maximilien Robespierre', dates: '1758–1794', role: 'Architetto del Terrore rivoluzionario. Il volto oscuro degli ideali.' },
+      { name: 'Jean-Paul Marat',     dates: '1743–1793', role: 'Giornalista radicale e voce del popolo insorto.' },
+    ],
+    [ /* 1900 - Rivoluzione Industriale */
+      { name: 'Nikola Tesla',   dates: '1856–1943', role: 'Inventore visionario. Padre dell\'elettricità alternata.' },
+      { name: 'Karl Marx',      dates: '1818–1883', role: 'Filosofo e teorico. Le sue idee cambiarono il corso della storia.' },
+      { name: 'Charles Darwin', dates: '1809–1882', role: 'Naturalista. La teoria dell\'evoluzione scosse le basi del sapere.' },
+      { name: 'Queen Victoria', dates: '1819–1901', role: 'Regina dell\'Impero Britannico nel suo massimo splendore.' },
+    ],
+  ];
+
+  /* ══ VISTA PERSONAGGI — lista a sinistra, descrizione a destra, entrambi sempre visibili ══ */
+  let charViewEpoch = -1;
+  const charEpochLabels = ['Rinascimento','Età d\'Oro Pirateria','Rivoluzione Americana','Rivoluzione Francese','Rivoluzione Industriale'];
+
+  /* Pannello SINISTRA — nomi personaggi */
+  const charListEl = document.createElement('div');
+  charListEl.style.cssText = 'opacity:0;transition:opacity .4s ease;pointer-events:none;';
+  document.getElementById('hud-container').appendChild(charListEl);
+  const charListCss = new THREE.CSS3DObject(charListEl);
+  charListCss.scale.setScalar(0.028);
+  charListCss.position.set(0, 1000, 0); // Sposta fuori schermo per evitare che il wrapper blocchi il centro
+  scene.add(charListCss);
+
+  /* Pannello DESTRA — descrizione personaggio + bottoni */
+  const charDetailEl = document.createElement('div');
+  charDetailEl.innerHTML = `<div class="sc-panel" style="width:360px;">
+    <div class="sc-panel-tag">PROFILO STORICO</div>
+    <div class="sc-epoch" id="charName" style="margin-bottom:4px;">Seleziona un personaggio</div>
+    <div style="font-size:10px;letter-spacing:.18em;color:rgba(0,255,255,.55);margin-bottom:8px;" id="charDates"></div>
+    <div class="sc-divider"></div>
+    <div id="charRole" style="color:rgba(200,240,255,.82);font-size:15px;line-height:1.65;margin:8px 0 12px;font-family:Rajdhani,sans-serif;">—</div>
+    <div class="sc-actions" id="charActions" style="display:none;">
+      <button class="sc-btn-confirm" id="charConfirmBtn">INIZIA ESPERIENZA</button>
+    </div>
+    <div class="sc-confirm-msg" id="charConfirmMsg" style="display:none">⬡ SINCRONIZZAZIONE AVVIATA</div>
+  </div>`;
+  charDetailEl.style.cssText = 'opacity:0;transition:opacity .4s ease;pointer-events:none;';
+  document.getElementById('hud-container').appendChild(charDetailEl);
+  const charDetailCss = new THREE.CSS3DObject(charDetailEl);
+  charDetailCss.scale.setScalar(0.028);
+  charDetailCss.position.set(0, 1000, 0); // Sposta fuori schermo
+  scene.add(charDetailCss);
+
+  document.getElementById('charConfirmBtn').addEventListener('click', () => {
+    document.getElementById('charConfirmBtn').disabled = true;
+    document.getElementById('charConfirmMsg').style.display = 'block';
+    setTimeout(() => hideCharacterView(), 3000);
+  });
+
+  function buildCharList(epochIdx) {
+    const chars  = historicalChars[epochIdx];
+    const label  = charEpochLabels[epochIdx];
+    const year   = tlNodeData[epochIdx].year;
+    const rows   = chars.map((ch, i) =>
+      `<div class="char-row" data-i="${i}" style="
+        padding:10px 8px;border-bottom:1px solid rgba(0,255,255,.10);
+        cursor:pointer;transition:background .15s,color .15s;border-radius:2px;">
+        <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:.04em;">${ch.name}</div>
+        <div style="font-size:9px;letter-spacing:.18em;color:rgba(0,255,255,.5);margin-top:2px;">${ch.dates}</div>
+      </div>`
+    ).join('');
+    charListEl.innerHTML = `<div class="sc-panel" style="width:300px;">
+      <div class="sc-panel-tag">PERSONAGGI — ${year}</div>
+      <div class="sc-epoch" style="margin-bottom:8px;">${label}</div>
+      <div class="sc-divider"></div>
+      ${rows}
+    </div>`;
+    charListEl.querySelectorAll('.char-row').forEach(row => {
+      const i = parseInt(row.dataset.i);
+      row.addEventListener('mouseenter', () => {
+        row.style.background = 'rgba(0,255,255,.06)';
+        updateCharDetail(epochIdx, i, false);
+      });
+      row.addEventListener('mouseleave', () => { row.style.background = ''; });
+      row.addEventListener('click', () => updateCharDetail(epochIdx, i, true));
+    });
+  }
+
+  function updateCharDetail(epochIdx, charIdx, confirm) {
+    const ch = historicalChars[epochIdx][charIdx];
+    document.getElementById('charName').textContent  = ch.name;
+    document.getElementById('charDates').textContent = ch.dates;
+    document.getElementById('charRole').textContent  = ch.role;
+    document.getElementById('charActions').style.display = confirm ? 'flex' : 'none';
+    if (confirm) {
+      document.getElementById('charConfirmBtn').disabled = false;
+      document.getElementById('charConfirmMsg').style.display = 'none';
+    }
+  }
+
+  function showCharacterView(epochIdx) {
+    charViewEpoch = epochIdx;
+    buildCharList(epochIdx);
+
+    const r   = gridRadius - 2.5;
+    const margin = 0.32;
+    /* phi < thetaCenter → x negativo → sinistra; phi > thetaCenter → x positivo → destra */
+    const phiNames = thetaCenter - margin; /* sinistra */
+    const phiDesc  = thetaCenter + margin; /* destra  */
+    charListCss.position.set(Math.cos(phiNames)*r, 0, Math.sin(phiNames)*r + 5);
+    charListCss.lookAt(0, 0, 18);
+    charDetailCss.position.set(Math.cos(phiDesc)*r, 0, Math.sin(phiDesc)*r + 5);
+    charDetailCss.lookAt(0, 0, 18);
+
+    /* Reset dettaglio */
+    document.getElementById('charName').textContent = 'Seleziona un personaggio';
+    document.getElementById('charDates').textContent = '';
+    document.getElementById('charRole').textContent  = '—';
+    document.getElementById('charActions').style.display = 'none';
+    document.getElementById('charConfirmMsg').style.display = 'none';
+
+    charListEl.style.opacity   = '1'; charListEl.style.pointerEvents   = 'auto';
+    charDetailEl.style.opacity = '1'; charDetailEl.style.pointerEvents = 'auto';
+    cssRenderer.domElement.style.pointerEvents = 'auto';
+    dnaBackArrow.style.display = 'block';
+  }
+
+  function hideCharacterView() {
+    charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
+    charDetailEl.style.opacity = '0'; charDetailEl.style.pointerEvents = 'none';
+    charListCss.position.set(0, 1000, 0);
+    charDetailCss.position.set(0, 1000, 0);
+    charViewEpoch = -1;
+    cssRenderer.domElement.style.pointerEvents = 'none';
+    dnaBackArrow.style.display = 'none';
+    panelL.classList.remove('hidden-panel');
+    panelR.classList.remove('hidden-panel');
+  }
+
   // Click + hover sui nodi
   tlNodeEls.forEach((el, s) => {
     el.addEventListener('mouseenter', () => { tlDnaHovers[s] = true; });
     el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
-    el.addEventListener('click', () => {
-      hideTimelineView();
-      selectedDnaGene = s;
-      showDNAView();
+    el.addEventListener('pointerdown', () => {
+      hideTimelineElements(); /* nasconde solo la timeline, NON ripristina i pannelli */
+      showCharacterView(s);
     });
   });
 
@@ -825,38 +993,44 @@
     tlArcLine.visible = true;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
     tlTickObjs.forEach(t => { t.visible = true; });
-    tlNodeEls.forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; });
-    tlInfoEl.style.opacity = '1';
-    tlInfoEl.innerHTML = '';
+    tlNodeEls.forEach(el => { 
+      el.style.opacity = '1'; 
+      el.style.pointerEvents = 'auto'; 
+      el.style.zIndex = '1000'; 
+      if (el.parentElement) el.parentElement.style.zIndex = '1000';
+    });
     dnaBackArrow.style.display = 'block';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     tlGuideEl.forEach((el, i) => {
       el.style.opacity = '0';
+      if (el.parentElement) el.parentElement.style.pointerEvents = 'none';
       tlGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
     });
     tlDnaGroups.forEach(g => { g.visible = true; });
   }
 
-  function hideTimelineView() {
+  function hideTimelineElements() {
     tlArcLine.visible = false;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
     tlTickObjs.forEach(t => { t.visible = false; });
     tlNodeEls.forEach(el => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; el.classList.remove('active'); });
-    tlInfoEl.style.opacity = '0';
     dnaBackArrow.style.display = 'none';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     tlGuideEl.forEach(el => { el.style.opacity = '0'; });
     tlDnaGroups.forEach((g, s) => { g.visible = false; tlDnaHovers[s] = false; });
+  }
+  function hideTimelineView() {
+    hideTimelineElements();
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
   }
 
-  tlBackEl.addEventListener('click', () => hideTimelineView());
+
 
   // Dichiarazioni anticipate (usate sopra negli IIFE)
-  var tlArcLine, tlTickObjs, tlNodeEls, tlNodeCsss, tlInfoEl, tlBackEl, tlDnaGroups, tlDnaHovers, tlGuideEl, tlGuideTimeouts;
+  var tlArcLine, tlTickObjs, tlNodeEls, tlNodeCsss, tlDnaGroups, tlDnaHovers, tlGuideEl, tlGuideTimeouts;
   tlGuideTimeouts = [];
   var outerRing, innerRing, animusParticles, animusParticlesMat;
   var topSweep1, topSweep2, bottomSweep1, bottomSweep2, sweepMat;
@@ -866,11 +1040,7 @@
   let hoverL = false;
   let hoverR = false;
 
-  panelL.addEventListener('mouseenter', () => hoverL = true);
-  panelL.addEventListener('mouseleave', () => hoverL = false);
-
-  panelR.addEventListener('mouseenter', () => hoverR = true);
-  panelR.addEventListener('mouseleave', () => hoverR = false);
+  /* hover gestito via raycasting nel loop animate — nessun listener CSS necessario */
 
 
   /* ══════════════════════════════════════════════
@@ -1147,6 +1317,7 @@
   let dnaPhase = 0;
   let selectedDnaGene = -1;
   let lastHoveredGene  = -1;
+  let blockCanvasClick = false;
   updateDNA(0);
 
   const dnaBackArrow = document.getElementById('dnaBackArrow');
@@ -1203,11 +1374,26 @@
 
   // ── SHOWCASE BOOKING CINEMATICO ──
   const geneData = [
-    { year: '1500', name: 'Ezio Auditore', epoch: 'Rinascimento Italiano'        },
-    { year: '1600', name: 'Edward Kenway', epoch: "Età d'Oro della Pirateria"    },
-    { year: '1700', name: 'Connor Kenway', epoch: 'Rivoluzione Americana'        },
-    { year: '1800', name: 'Arno Dorian',   epoch: 'Rivoluzione Francese'         },
-    { year: '1900', name: 'Jacob Frye',    epoch: 'Rivoluzione Industriale'      },
+    { year: '1500', epoch: 'Rinascimento',
+      price: '€ 480', duration: '2 ORE',
+      tagline: 'Arte, potere e cospirazioni.',
+      desc: 'Un\'epoca di straordinario fervore intellettuale e artistico, in cui le grandi famiglie si contendono il controllo degli stati attraverso alleanze, tradimenti e veleni. Sotto la superficie del rinnovamento culturale, antiche fratellanze segrete muovono le loro pedine per dominare il destino dell\'umanità.' },
+    { year: '1600', epoch: "Età d'Oro della Pirateria",
+      price: '€ 390', duration: '2 ORE',
+      tagline: 'Libertà, rischio e mare aperto.',
+      desc: 'Le grandi potenze coloniali si contendono le rotte commerciali mentre uomini e donne fuggono dalle leggi del vecchio mondo per costruirsi un destino sui mari. Un\'epoca di esplorazione senza confini, dove la libertà assoluta ha sempre un prezzo altissimo.' },
+    { year: '1700', epoch: 'Rivoluzione Americana',
+      price: '€ 430', duration: '2 ORE',
+      tagline: 'Indipendenza contro il vecchio ordine.',
+      desc: 'Per la prima volta nella storia moderna, un popolo insorge contro un impero e si dà le proprie leggi. Tra ideali illuministi e battaglie sanguinose, si gettano le basi di un nuovo sistema politico mentre forze nell\'ombra cercano di piegare la rivoluzione ai propri scopi.' },
+    { year: '1800', epoch: 'Rivoluzione Francese',
+      price: '€ 450', duration: '2 ORE',
+      tagline: 'Il vecchio mondo crolla sotto i piedi.',
+      desc: 'La monarchia cede al furore popolare, le istituzioni millenarie vengono spazzate via nel giro di mesi. È un\'era di trasformazione violenta e radicale, in cui gli ideali di libertà e uguaglianza si scontrano con la brutalità del potere e con chi vuole usare il caos per imporsi sulle macerie.' },
+    { year: '1900', epoch: 'Rivoluzione Industriale',
+      price: '€ 360', duration: '2 ORE',
+      tagline: 'Il progresso trasforma ogni cosa.',
+      desc: 'Macchine a vapore, fabbriche fumanti e milioni di persone che abbandonano le campagne per le città. Il mondo si trasforma a una velocità mai vista prima. Mentre la tecnologia promette benessere, le disparità sociali si acuiscono e movimenti operai sfidano chi detiene il controllo sui mezzi di produzione.' },
   ];
   const today = new Date().toISOString().split('T')[0];
 
@@ -1226,120 +1412,170 @@
     { mat: matSph2,      base: 1.0  }, { mat: matSphSpecial, base: 0.9 },
   ];
 
-  // ── Sfera showcase (aggiunta alla scene, non a gridGroup) ──
-  const showcaseGroup = new THREE.Group();
-  scene.add(showcaseGroup);
-
-  const scSphGeo  = new THREE.SphereGeometry(1.0, 28, 20);
-  const scSphMat  = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const scSph     = new THREE.Mesh(scSphGeo, scSphMat); showcaseGroup.add(scSph);
-
-  const scWireMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const scWire    = new THREE.Mesh(scSphGeo, scWireMat); showcaseGroup.add(scWire);
-
-  const scGlowGeo = new THREE.SphereGeometry(1.4, 16, 12);
-  const scGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const scGlow    = new THREE.Mesh(scGlowGeo, scGlowMat); showcaseGroup.add(scGlow);
-
-  const scRingGeo  = new THREE.RingGeometry(1.18, 1.26, 80);
-  const mkRM = () => new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const scRing1 = new THREE.Mesh(scRingGeo, mkRM()); showcaseGroup.add(scRing1);
-  const scRing2 = new THREE.Mesh(scRingGeo, mkRM()); scRing2.rotation.x = Math.PI/3;  showcaseGroup.add(scRing2);
-  const scRing3 = new THREE.Mesh(scRingGeo, mkRM()); scRing3.rotation.x = -Math.PI/3; showcaseGroup.add(scRing3);
-
-  const scScanGeo = new THREE.RingGeometry(0, 1.7, 64);
-  const scScanMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const scScan = new THREE.Mesh(scScanGeo, scScanMat); showcaseGroup.add(scScan);
+  // (showcase group rimosso — il gene si evidenzia in place)
 
   // ── Pannello sinistro: data/orario ──
   const scLeftEl = document.createElement('div');
   scLeftEl.innerHTML = `<div class="sc-panel">
     <div class="sc-panel-tag">ACCESSO GENETICO</div>
-    <div class="sc-gene-name" id="scGeneName">—</div>
     <div class="sc-epoch" id="scEpoch">—</div>
+    <div id="scTagline" style="color:rgba(0,220,255,0.75);font-size:18px;font-family:'Rajdhani',sans-serif;letter-spacing:0.06em;margin:4px 0 8px;">—</div>
     <div class="sc-divider"></div>
-    <div class="sc-instruction">Scegli data e orario dell'esperienza<br>da fare all'Abstergo</div>
-    <div class="sc-field"><label class="sc-label">Data sessione</label>
-      <input type="date" id="scDate" class="sc-input" value="${today}" min="${today}"></div>
-    <div class="sc-field"><label class="sc-label">Orario</label>
-      <select id="scTime" class="sc-input">
-        <option>09:00</option><option>10:00</option><option>11:00</option>
-        <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
-      </select></div>
+    <div style="display:flex;gap:24px;">
+      <div class="sc-spec-row" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;">
+        <span class="sc-spec-label">Durata</span><span class="sc-spec-value" id="scDuration">—</span>
+      </div>
+      <div class="sc-spec-row" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;">
+        <span class="sc-spec-label">Costo</span><span class="sc-spec-value sc-price" id="scPrice">—</span>
+      </div>
+    </div>
+    <div class="sc-divider"></div>
+    <div style="display:flex;gap:10px;">
+      <div class="sc-field" style="flex:1;margin-bottom:0;">
+        <label class="sc-label">Data</label>
+        <input type="date" id="scDate" class="sc-input" value="${today}" min="${today}">
+      </div>
+      <div class="sc-field" style="flex:1;margin-bottom:0;">
+        <label class="sc-label">Orario</label>
+        <select id="scTime" class="sc-input">
+          <option>09:00</option><option>10:00</option><option>11:00</option>
+          <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
+        </select>
+      </div>
+    </div>
+    <div class="sc-actions" style="margin-top:10px;">
+      <button class="sc-btn-confirm" id="scConfirmBtn">PRENOTA</button>
+      <button class="sc-btn-cancel"  id="scCancelBtn">CHIUDI</button>
+    </div>
+    <div class="sc-confirm-msg" id="scConfirmMsg" style="display:none">⬡ PRENOTAZIONE CONFERMATA</div>
   </div>`;
   scLeftEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
   document.getElementById('hud-container').appendChild(scLeftEl);
   const scLeftCss = new THREE.CSS3DObject(scLeftEl);
-  scLeftCss.position.set(-8, 0, 9);
+  scLeftCss.position.set(-12, 0, -8);
   scLeftCss.lookAt(0, 0, 18);
-  scLeftCss.scale.setScalar(0.012);
+  scLeftCss.scale.setScalar(0.028);
   scene.add(scLeftCss);
 
-  // ── Pannello destro: prezzo/durata/azioni ──
+  // ── Pannello destro: descrizione ambientazione epoca ──
   const scRightEl = document.createElement('div');
   scRightEl.innerHTML = `<div class="sc-panel">
-    <div class="sc-panel-tag">DETTAGLI ESPERIENZA</div>
-    <div class="sc-spec-row"><span class="sc-spec-label">Durata massima</span><span class="sc-spec-value">2 ORE</span></div>
-    <div class="sc-spec-sep"></div>
-    <div class="sc-spec-row"><span class="sc-spec-label">Costo esperienza</span><span class="sc-spec-value sc-price">€ 300</span></div>
+    <div class="sc-panel-tag">AMBIENTAZIONE</div>
+    <div class="sc-epoch" id="scEpochRight" style="margin-bottom:14px;">—</div>
     <div class="sc-divider"></div>
-    <div class="sc-actions">
-      <button class="sc-btn-confirm" id="scConfirmBtn">CONFERMA PRENOTAZIONE</button>
-      <button class="sc-btn-cancel"  id="scCancelBtn">ANNULLA</button>
-    </div>
-    <div class="sc-confirm-msg" id="scConfirmMsg" style="display:none">⬡ PRENOTAZIONE CONFERMATA</div>
+    <div id="scDescRight" style="color:rgba(200,240,255,0.88);font-size:24px;line-height:1.75;font-family:'Rajdhani',sans-serif;font-weight:400;letter-spacing:0.02em;">—</div>
   </div>`;
   scRightEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
   document.getElementById('hud-container').appendChild(scRightEl);
   const scRightCss = new THREE.CSS3DObject(scRightEl);
-  scRightCss.position.set(8, 0, 9);
+  scRightCss.position.set(12, 0, -8);
   scRightCss.lookAt(0, 0, 18);
-  scRightCss.scale.setScalar(0.012);
+  scRightCss.scale.setScalar(0.028);
   scene.add(scRightCss);
 
-  function showSceneBooking(s) {
-    bookingTargetGene = s;
-    bookingPhase = 'extracting';
-    bookingAnimT = 0;
-    sphArr1[specialGeneIndices[s]].getWorldPosition(bookingStartPos);
-    showcaseGroup.position.copy(bookingStartPos);
-    showcaseGroup.scale.setScalar(0.05);
-    scSphMat.opacity = scWireMat.opacity = scGlowMat.opacity = scScanMat.opacity = 0;
-    scRing1.material.opacity = scRing2.material.opacity = scRing3.material.opacity = 0;
+  function showGeneInfo(s) {
+    selectedDnaGene = s;
+    canvas.style.pointerEvents = 'none';
+    dnaBackArrow.style.pointerEvents = 'none';
+    dnaBackArrow.style.opacity = '0.2';
+    cssRenderer.domElement.style.pointerEvents = 'auto';
     const g = geneData[s];
-    document.getElementById('scGeneName').textContent = `${g.name.toUpperCase()} · ${g.year}`;
-    document.getElementById('scEpoch').textContent    = g.epoch.toUpperCase();
-    document.getElementById('scConfirmBtn').disabled  = false;
+    document.getElementById('scEpoch').textContent    = `${g.epoch.toUpperCase()} · ${g.year}`;
+    document.getElementById('scTagline').textContent  = g.tagline;
+    document.getElementById('scPrice').textContent      = g.price;
+    document.getElementById('scDuration').textContent   = g.duration;
+    document.getElementById('scEpochRight').textContent = g.epoch.toUpperCase();
+    document.getElementById('scDescRight').textContent  = g.desc;
+    document.getElementById('scConfirmBtn').disabled    = false;
     document.getElementById('scConfirmMsg').style.display = 'none';
     document.getElementById('scDate').value = today;
+
+    /* Pannelli sulla superficie interna del display curvo.
+       Posizionati simmetricamente rispetto al gene, con offset verso il centro
+       dell'arco per garantire sempre visibilità ottimale. */
+    const t_gene   = specialGeneIndices[s] / NUM_RUNGS;
+    const phi_gene = panelArcStart + t_gene * arcLength;
+    const r        = gridRadius - 2.5;
+    /* ~280px * 0.028 = 7.8u → semi 3.9 → clamp ±(11-3.9-1.1) = ±6 */
+    const gY       = Math.max(-6, Math.min(6, sphArr1[specialGeneIndices[s]].position.y));
+
+    /* Calcola quanto il gene è distante dal centro dell'arco (0=centro, 1=bordo) */
+    const distFromCenter = (phi_gene - thetaCenter) / (arcLength / 2); /* -1..+1 */
+    /* Offset base: pannello sx a phi+, pannello dx a phi- */
+    const baseDelta = 0.32;
+    /* Per geni al bordo, sposta entrambi i pannelli verso il centro */
+    const centerPull = distFromCenter * 0.28;
+    const phiLRaw = phi_gene + baseDelta - centerPull;
+    const phiRRaw = phi_gene - baseDelta - centerPull;
+    /* margin tiene conto della semi-larghezza fisica del pannello a scala 0.028:
+       ~380px * 0.028 = 10.6 unità → semiangolo = 10.6/(2*r) ≈ 0.24 rad + safety 0.15 */
+    const margin  = 0.55;
+    const phiL = Math.min(Math.max(phiLRaw, panelArcStart + margin), panelArcStart + arcLength - margin);
+    const phiR = Math.min(Math.max(phiRRaw, panelArcStart + margin), panelArcStart + arcLength - margin);
+
+    scLeftCss.position.set(Math.cos(phiL) * r, gY, Math.sin(phiL) * r + 5);
+    scLeftCss.lookAt(0, gY, 18);
+    scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
+    scRightCss.lookAt(0, gY, 18);
+
+    scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
+    scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
+    /* Nascondi solo la scritta guida — il DNA rimane visibile e reattivo all'hover */
+    dnaGuideEls.forEach(el => { el.style.opacity = '0'; });
+    dnaLabelEls.forEach(el => { el.style.opacity = '0'; el.classList.remove('hovered'); });
   }
-  function hideSceneBooking() {
-    if (bookingPhase === 'showcasing') { bookingPhase = 'retracting'; bookingAnimT = 0; }
+  function hideGeneInfo() {
+    selectedDnaGene = -1;
+    dnaBackArrow.style.pointerEvents = '';
+    dnaBackArrow.style.opacity = '';
+    cssRenderer.domElement.style.pointerEvents = 'none';
+    setTimeout(() => { canvas.style.pointerEvents = ''; }, 120);
+    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
+    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+    allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
+    dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
   }
 
-  document.getElementById('scCancelBtn').addEventListener('click',  () => hideSceneBooking());
+  document.getElementById('scCancelBtn').addEventListener('click', () => hideGeneInfo());
   document.getElementById('scConfirmBtn').addEventListener('click', () => {
     document.getElementById('scConfirmBtn').disabled = true;
     document.getElementById('scConfirmMsg').style.display = 'block';
-    setTimeout(() => hideSceneBooking(), 3500);
+    setTimeout(() => hideGeneInfo(), 3500);
   });
 
-  // Click sul canvas: lancia animazione se sopra un frammento
-  canvas.addEventListener('click', () => {
-    if (dnaGroup.visible && bookingPhase === 'idle' && lastHoveredGene !== -1) {
-      showSceneBooking(lastHoveredGene);
+  /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
+  window.addEventListener('click', e => {
+    if (blockCanvasClick) return;
+    if (selectedDnaGene !== -1) return;
+
+    /* Pannelli principali: raycasting su hitPlane invisibili */
+    if (hasBooted && !panelL.classList.contains('hidden-panel')) {
+      panelRaycaster.setFromCamera(rawMouse, camera);
+      if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { showDNAView(); return; }
+      if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { showTimelineView(); return; }
+    }
+
+    /* Geni DNA */
+    if (dnaGroup.visible && lastHoveredGene !== -1) {
+      showGeneInfo(lastHoveredGene);
     }
   });
 
   // Freccia indietro: gestisce showcase, DNA e timeline
   dnaBackArrow.addEventListener('click', () => {
-    if (bookingPhase !== 'idle') {
-      hideSceneBooking();
+    if (selectedDnaGene !== -1) {
+      hideGeneInfo();
+    } else if (charViewEpoch !== -1) {
+      /* Se il dettaglio è visibile → torna alla lista; altrimenti chiudi tutto */
+      const detailVisible = charDetailEl && charDetailEl.style.opacity === '1'
+                            && document.getElementById('charActions').style.display !== 'none';
+      if (detailVisible) {
+        document.getElementById('charBackBtn').click();
+      } else {
+        hideCharacterView();
+      }
     } else if (tlArcLine && tlArcLine.visible) {
       hideTimelineView();
-    } else if (selectedDnaGene !== -1) {
-      hideDNAView();
-      showTimelineView();
     } else {
       hideDNAView();
     }
@@ -1448,12 +1684,24 @@
       camera.lookAt(0, 0, 0);
     }
 
-    // Animazione fluida dell'ingrandimento in 3D
-    const targetScaleL = hoverL ? 0.037 : 0.035;
-    cssObjL.scale.lerp(new THREE.Vector3(targetScaleL, targetScaleL, targetScaleL), 0.15);
+    /* Raycasting pannelli — usa rawMouse (posizione reale, non smorzata) */
+    if (hasBooted && !panelL.classList.contains('hidden-panel')) {
+      panelRaycaster.setFromCamera(rawMouse, camera);
+      hoverL = panelRaycaster.intersectObject(hitPlaneL).length > 0;
+      hoverR = panelRaycaster.intersectObject(hitPlaneR).length > 0;
+    } else {
+      hoverL = false; hoverR = false;
+    }
 
-    const targetScaleR = hoverR ? 0.037 : 0.035;
-    cssObjR.scale.lerp(new THREE.Vector3(targetScaleR, targetScaleR, targetScaleR), 0.15);
+    const targetScaleL = hoverL ? 0.042 : 0.035;
+    cssObjL.scale.lerp(new THREE.Vector3(targetScaleL, targetScaleL, targetScaleL), 0.12);
+    panelL.style.borderColor = hoverL ? 'rgba(0,255,255,0.9)' : '';
+    panelL.style.boxShadow   = hoverL ? 'inset 0 0 60px rgba(0,255,255,0.25)' : '';
+
+    const targetScaleR = hoverR ? 0.042 : 0.035;
+    cssObjR.scale.lerp(new THREE.Vector3(targetScaleR, targetScaleR, targetScaleR), 0.12);
+    panelR.style.borderColor = hoverR ? 'rgba(0,255,255,0.9)' : '';
+    panelR.style.boxShadow   = hoverR ? 'inset 0 0 60px rgba(0,255,255,0.25)' : '';
 
     renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
@@ -1553,9 +1801,11 @@
 
       // Rotazione DNA "spiedo" + hover sui 5 geni
       if (dnaGroup.visible) {
+        /* Se un pannello è aperto, nessun hover sui geni */
+        const panelOpen = selectedDnaGene !== -1;
         dnaRaycaster.setFromCamera(dnaMouse, camera);
-        const hits = dnaRaycaster.intersectObjects(hitBoxes);
-        
+        const hits = panelOpen ? [] : dnaRaycaster.intersectObjects(hitBoxes);
+
         let isHoveringDNA = hits.length > 0;
         let hoveredGene = -1;
         lastHoveredGene = -1;
@@ -1584,7 +1834,7 @@
         }
 
         // Il DNA si ferma se c'è un gene selezionato, hovered o in booking
-        if (hoveredGene === -1 && selectedDnaGene === -1 && bookingPhase === 'idle') {
+        if (hoveredGene === -1 && selectedDnaGene === -1) {
           dnaPhase += 0.025;
         }
         updateDNA(dnaPhase);
@@ -1599,7 +1849,9 @@
             // È un gene speciale selezionabile: respira a idle
             targetScale = 1.0 + 0.15 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
 
-            if (hoveredGene === s || selectedDnaGene === s) {
+            if (selectedDnaGene === s) {
+              targetScale = 4.5;
+            } else if (hoveredGene === s) {
               targetScale = 1.8;
             }
           }
@@ -1616,8 +1868,8 @@
         const tempRScale = new THREE.Vector3();
         for (let s = 0; s < NUM_SECTIONS; s++) {
           const isTarget = (hoveredGene === s || selectedDnaGene === s);
-          
-          // Scala
+
+          // Scala reticolo — proporzionale alla sfera, non va oltre 1.8
           const idleRScale = 1.0 + 0.2 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
           const targetRScaleVal = isTarget ? 1.9 : idleRScale;
           tempRScale.set(targetRScaleVal, targetRScaleVal, targetRScaleVal);
@@ -1655,69 +1907,7 @@
         }
       }
 
-      // ── ANIMAZIONE SHOWCASE BOOKING ──
-      if (bookingPhase !== 'idle') {
-        bookingAnimT += 0.022;
-        const raw = Math.min(bookingAnimT, 1);
-        const t   = easeInOutCubic(raw);
-
-        if (bookingPhase === 'extracting') {
-          showcaseGroup.position.lerpVectors(bookingStartPos, bookingCenterPos, t);
-          showcaseGroup.scale.setScalar(0.05 + t * 2.45);
-          scSphMat.opacity  = t * 0.75;
-          scWireMat.opacity = t * 0.35;
-          scGlowMat.opacity = t * 0.18;
-          scRing1.material.opacity = t * 0.9;
-          scRing2.material.opacity = t * 0.75;
-          scRing3.material.opacity = t * 0.75;
-          const dA = 1 - t;
-          dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base * dA; });
-          dnaGuideEls.forEach(el => { el.style.opacity = String(dA); });
-          if (raw >= 1) {
-            bookingPhase = 'showcasing';
-            bookingAnimT = 0;
-            dnaGroup.visible = false;
-            scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
-            scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
-          }
-        }
-
-        if (bookingPhase === 'showcasing') {
-          scSph.rotation.y  += 0.007;
-          scWire.rotation.y += 0.007; scWire.rotation.x += 0.003;
-          scRing1.rotation.z += 0.009;
-          scRing2.rotation.z -= 0.007;
-          scRing3.rotation.y += 0.011;
-          scGlowMat.opacity = 0.1  + 0.07 * Math.sin(now * 2.2);
-          scSphMat.opacity  = 0.6  + 0.12 * Math.sin(now * 1.8);
-          scScanMat.opacity = 0.3  + 0.22 * Math.abs(Math.sin(now * 1.5));
-          scScan.rotation.x += 0.018;
-        }
-
-        if (bookingPhase === 'retracting') {
-          showcaseGroup.position.lerpVectors(bookingCenterPos, bookingStartPos, t);
-          showcaseGroup.scale.setScalar(Math.max(2.5 - t * 2.45, 0.01));
-          const sA = 1 - t;
-          scSphMat.opacity  = 0.75 * sA; scWireMat.opacity = 0.35 * sA;
-          scGlowMat.opacity = 0.18 * sA; scScanMat.opacity = 0;
-          scRing1.material.opacity = 0.9  * sA;
-          scRing2.material.opacity = 0.75 * sA;
-          scRing3.material.opacity = 0.75 * sA;
-          scLeftEl.style.opacity  = String(Math.max(0, 1 - t * 3));
-          scRightEl.style.opacity = String(Math.max(0, 1 - t * 3));
-          if (t > 0.33) { scLeftEl.style.pointerEvents = 'none'; scRightEl.style.pointerEvents = 'none'; }
-          dnaGroup.visible = true;
-          dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base * t; });
-          dnaGuideEls.forEach(el => { el.style.opacity = String(t); });
-          if (raw >= 1) {
-            bookingPhase = 'idle'; bookingTargetGene = -1;
-            dnaFadeMats.forEach(({ mat, base }) => { mat.opacity = base; });
-            dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
-            scSphMat.opacity = scWireMat.opacity = scGlowMat.opacity = 0;
-            scRing1.material.opacity = scRing2.material.opacity = scRing3.material.opacity = 0;
-          }
-        }
-      }
+      // (animazione booking rimossa — gene si evidenzia in place)
 
       // Mini DNA sulla timeline: onde sinusoidali scorrevoli + scala su hover
       if (tlDnaGroups && tlArcLine && tlArcLine.visible) {
@@ -1763,30 +1953,15 @@
   /* ══════════════════════════════════════════
      LOGICA SPA: CAMBIO SCHERMATA
   ══════════════════════════════════════════ */
-  function showDetailView(title, content) {
-    panelL.classList.add('hidden-panel');
-    panelR.classList.add('hidden-panel');
-    
-    document.getElementById('detail-title').innerHTML = title;
-    document.getElementById('detail-content').innerHTML = content;
-    
-    panelDetail.classList.remove('hidden-panel');
-  }
 
   function showCardsView() {
-    panelDetail.classList.add('hidden-panel');
-    
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
   }
 
-  panelL.addEventListener('click', () => {
-    showDNAView();
-  });
+  /* Click gestito tramite window + raycasting — nessun handler diretto necessario */
 
-  panelR.addEventListener('click', () => { showTimelineView(); });
 
-  document.getElementById('btn-back-floating').addEventListener('click', () => { hideTimelineView(); });
 
   document.getElementById('btn-back').addEventListener('click', () => {
     showCardsView();
