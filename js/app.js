@@ -178,7 +178,7 @@
   const gridRadius = 25;
   const gridGroup = new THREE.Group();
   gridGroup.position.set(0, 0, 5); // Spostato un po' più vicino
-  gridGroup.rotation.y = -Math.PI * 1.5; // Parte da destra, fuori campo
+  gridGroup.rotation.y = Math.PI; // Parte da sinistra completamente fuori campo
   scene.add(gridGroup);
 
   // IL VETRO (Arco molto ampio per coprire i lati vuoti)
@@ -407,6 +407,16 @@
   cssLogo.scale.set(0.013, 0.013, 0.013);
   cssLogo.lookAt(0, 8.0, 0);
   gridGroup.add(cssLogo);
+
+  // SCHERMATA DI BENVENUTO (Centro)
+  const welcomeEl = document.getElementById('welcomeScreen');
+  welcomeEl.style.opacity = 0;
+  const cssWelcome = new THREE.CSS3DObject(welcomeEl);
+  // Posizionato esattamente al centro verticale e ingrandito
+  cssWelcome.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0.0, Math.sin(thetaCenter) * panelRadiusCSS);
+  cssWelcome.scale.set(0.025, 0.025, 0.025);
+  cssWelcome.lookAt(0, 0.0, 0);
+  gridGroup.add(cssWelcome);
 
   // 1b) TECH HALO DIETRO IL LOGO (Cerchi concentrici rotanti in stile Animus)
   const haloGroup = new THREE.Group();
@@ -1596,12 +1606,17 @@
   ══════════════════════════════════════════ */
   let bootProgress = 0;
   let hasBooted = false;
+  let isWelcoming = false;
+  let welcomeStartTime = 0;
 
   // Espone una funzione globale per resettare il boot al termine dell'intro
   // intro.js chiama window._resetBoot() prima di rivelare il progetto
   window._resetBoot = function () {
     bootProgress = 0;
     hasBooted   = false;
+    isWelcoming = false;
+    welcomeStartTime = 0;
+    welcomeEl.style.opacity = '0';
     ledProgress = 0;
     panelProgress = 0;
     logoEl.style.opacity = '0';
@@ -1609,13 +1624,14 @@
     panelR.style.opacity = '0';
     panelL.style.pointerEvents = 'none';
     panelR.style.pointerEvents = 'none';
-    gridGroup.rotation.y = -Math.PI * 1.5; // riparte da destra
+    gridGroup.rotation.y = Math.PI; // riparte da sinistra completamente fuori campo
   };
 
   // Impostiamo l'opacità HTML a zero per iniziare e disabilitiamo i click
   logoEl.style.opacity = "0";
   panelL.style.opacity = "0";
   panelR.style.opacity = "0";
+  welcomeEl.style.opacity = "0";
   panelL.style.pointerEvents = "none";
   panelR.style.pointerEvents = "none";
 
@@ -1625,19 +1641,35 @@
   function animate(){
     requestAnimationFrame(animate);
 
-    // --- ANIMUS BOOT ANIMATION: rotazione pura, nessuna dissolvenza ---
-    if (bootProgress < 1) {
-      // Non avanza durante l'intro sequence
-      if (window.introIsActive) return;
-      bootProgress += 0.004;
-      if (bootProgress >= 1) {
-        bootProgress = 1;
-        // Imposta opacità finali dei materiali 3D alla fine della rotazione
-        screenGlassMat.opacity = 1;
-        bezelMat.opacity = 1;
-        gridMatHoriz.opacity = 0.15;
-        gridMatVert.opacity = 0.08;
-        if (!hasBooted) {
+    // --- ANIMUS BOOT ANIMATION E SCHERMATA BENVENUTO ---
+    if (bootProgress < 1 || isWelcoming) {
+      if (bootProgress < 1) {
+        // Non avanza durante l'intro sequence
+        if (!window.introIsActive) {
+          bootProgress += 0.004;
+          if (bootProgress >= 1) {
+            bootProgress = 1;
+            // Imposta opacità finali dei materiali 3D alla fine della rotazione
+            screenGlassMat.opacity = 1;
+            bezelMat.opacity = 1;
+            gridMatHoriz.opacity = 0.15;
+            gridMatVert.opacity = 0.08;
+            if (!hasBooted && !isWelcoming) {
+              isWelcoming = true;
+              welcomeStartTime = Date.now();
+              welcomeEl.style.opacity = '1'; // Fade in
+            }
+          }
+        }
+      }
+      
+      if (isWelcoming) {
+        const elapsed = Date.now() - welcomeStartTime;
+        if (elapsed > 2800) {
+          welcomeEl.style.opacity = '0'; // Fade out
+        }
+        if (elapsed > 3500) {
+          isWelcoming = false;
           hasBooted = true;
           eMouse.set(0, 0);
         }
@@ -1645,8 +1677,8 @@
       
       const ease = 1 - Math.pow(1 - bootProgress, 4);
       
-      // Rotazione pura: il display gira da destra verso il centro
-      gridGroup.rotation.y = (-Math.PI * 1.5) * (1 - ease);
+      // Rotazione: il display parte da sinistra (fuori campo) verso il centro
+      gridGroup.rotation.y = Math.PI * (1 - ease);
 
       // I materiali 3D sono visibili per tutta la rotazione
       screenGlassMat.opacity = 1;

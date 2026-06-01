@@ -692,4 +692,36 @@ body {
 }
 @keyframes b3dConfirmPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
+/* ── WELCOME SCREEN ── */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 800px;
+  height: 400px;
+  background: transparent;
+  border: none;
+  transition: opacity 1s ease-in-out;
+  pointer-events: none;
+}
 
+.welcome-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.15em;
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6);
+  transform: translateX(-60px);
+}
+
+.welcome-logo {
+  animation: logoBlink 2s infinite ease-in-out;
+}
+
+@keyframes logoBlink {
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 35px rgba(255,255,255,1)); }
+}
