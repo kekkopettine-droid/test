@@ -35,6 +35,7 @@
   let rafHandle     = null;
   let bootResetDone = false;
   let mainCV        = null;
+  let doorSoundPlayed = false;
 
   /* Segnala ad app.js che l'intro è attiva → blocca bootProgress */
   window.introIsActive = true;
@@ -1634,6 +1635,10 @@
   ════════════════════════════════════════════ */
   function updateScene(p) {
     /* ── Porte ── */
+    if (p > 0.18 && !doorSoundPlayed) {
+      if (window.audioEngine) window.audioEngine.playDoorOpen();
+      doorSoundPlayed = true;
+    }
     const doorPhase = ease(norm(p, 0.18, 0.48));
     const slide = doorPhase * (DOOR_W / 2 + 0.08);
     glassL.position.x  = -DOOR_W / 4 - slide;
@@ -1711,12 +1716,16 @@
      SCROLL HANDLERS
   ════════════════════════════════════════════ */
   function onWheel(e) {
+    if (window.audioEngine) window.audioEngine.init();
     if (!introActive) return;
     const d = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 80);
     velocity += d * SCROLL_ACCEL;
     velocity = Math.sign(velocity) * Math.min(Math.abs(velocity), MAX_VEL);
   }
-  function onTouchStart(e) { touchY = e.touches[0].clientY; }
+  function onTouchStart(e) { 
+    if (window.audioEngine) window.audioEngine.init();
+    touchY = e.touches[0].clientY; 
+  }
   function onTouchMove(e) {
     if (!introActive || touchY === null) return;
     const dy = touchY - e.touches[0].clientY;
@@ -1735,6 +1744,7 @@
      Nessuna transizione: taglio istantaneo al display principale.
   ════════════════════════════════════════════ */
   function triggerTransition() {
+    if (window.audioEngine) window.audioEngine.playTransition();
     /* Taglio diretto: intro sparisce, display appare istantaneamente */
     if (window._resetBoot) window._resetBoot();
     window.introIsActive = false;

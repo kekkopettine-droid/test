@@ -927,6 +927,7 @@
   scene.add(charDetailCss);
 
   document.getElementById('charConfirmBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('charConfirmBtn').disabled = true;
     document.getElementById('charConfirmMsg').style.display = 'block';
     setTimeout(() => hideCharacterView(), 3000);
@@ -953,11 +954,15 @@
     charListEl.querySelectorAll('.char-row').forEach(row => {
       const i = parseInt(row.dataset.i);
       row.addEventListener('mouseenter', () => {
+        if (window.audioEngine) window.audioEngine.playHover();
         row.style.background = 'rgba(0,255,255,.06)';
         updateCharDetail(epochIdx, i, false);
       });
       row.addEventListener('mouseleave', () => { row.style.background = ''; });
-      row.addEventListener('click', () => updateCharDetail(epochIdx, i, true));
+      row.addEventListener('click', () => {
+        if (window.audioEngine) window.audioEngine.playClick();
+        updateCharDetail(epochIdx, i, true);
+      });
     });
   }
 
@@ -1012,9 +1017,13 @@
 
   // Click + hover sui nodi
   tlNodeEls.forEach((el, s) => {
-    el.addEventListener('mouseenter', () => { tlDnaHovers[s] = true; });
+    el.addEventListener('mouseenter', () => { 
+      if (window.audioEngine) window.audioEngine.playHover();
+      tlDnaHovers[s] = true; 
+    });
     el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
     el.addEventListener('pointerdown', () => {
+      if (window.audioEngine) window.audioEngine.playClick();
       hideTimelineElements(); /* nasconde solo la timeline, NON ripristina i pannelli */
       showCharacterView(s);
     });
@@ -1569,8 +1578,12 @@
     dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
   }
 
-  document.getElementById('scCancelBtn').addEventListener('click', () => hideGeneInfo());
+  document.getElementById('scCancelBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideGeneInfo();
+  });
   document.getElementById('scConfirmBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('scConfirmBtn').disabled = true;
     document.getElementById('scConfirmMsg').style.display = 'block';
     setTimeout(() => hideGeneInfo(), 3500);
@@ -1584,8 +1597,16 @@
     /* Pannelli principali: raycasting su hitPlane invisibili */
     if (hasBooted && !panelL.classList.contains('hidden-panel')) {
       panelRaycaster.setFromCamera(rawMouse, camera);
-      if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { showDNAView(); return; }
-      if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { showTimelineView(); return; }
+      if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { 
+        if (window.audioEngine) window.audioEngine.playClick();
+        showDNAView(); 
+        return; 
+      }
+      if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { 
+        if (window.audioEngine) window.audioEngine.playClick();
+        showTimelineView(); 
+        return; 
+      }
     }
 
     /* Geni DNA */
@@ -1596,6 +1617,7 @@
 
   // Freccia indietro: gestisce showcase, DNA e timeline
   dnaBackArrow.addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
     if (selectedDnaGene !== -1) {
       hideGeneInfo();
     } else if (charViewEpoch !== -1) {
@@ -1628,6 +1650,7 @@
   // Espone una funzione globale per resettare il boot al termine dell'intro
   // intro.js chiama window._resetBoot() prima di rivelare il progetto
   window._resetBoot = function () {
+    if (window.audioEngine) window.audioEngine.playBoot();
     bootProgress = 0;
     hasBooted   = false;
     isWelcoming = false;
@@ -2012,6 +2035,7 @@
 
 
   document.getElementById('btn-back').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
     showCardsView();
   });
 
