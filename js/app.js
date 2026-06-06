@@ -1035,11 +1035,14 @@
     tlArcLine.visible = true;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
     tlTickObjs.forEach(t => { t.visible = true; });
-    tlNodeEls.forEach(el => { 
+    tlNodeEls.forEach((el, s) => { 
       el.style.opacity = '1'; 
       el.style.pointerEvents = 'auto'; 
       el.style.zIndex = '1000'; 
       if (el.parentElement) el.parentElement.style.zIndex = '1000';
+      if (tlNodeCsss && tlNodeCsss[s]) {
+        tlNodeCsss[s].position.y = TL_Y + tlNodeOffsets[s];
+      }
     });
     dnaBackArrow.style.display = 'block';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
@@ -1056,7 +1059,14 @@
     tlArcLine.visible = false;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
     tlTickObjs.forEach(t => { t.visible = false; });
-    tlNodeEls.forEach(el => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; el.classList.remove('active'); });
+    tlNodeEls.forEach((el, s) => { 
+      el.style.opacity = '0'; 
+      el.style.pointerEvents = 'none'; 
+      el.classList.remove('active'); 
+      if (tlNodeCsss && tlNodeCsss[s]) {
+        tlNodeCsss[s].position.y = 1000;
+      }
+    });
     dnaBackArrow.style.display = 'none';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
@@ -1487,7 +1497,6 @@
     </div>
     <div class="sc-actions" style="margin-top:10px;">
       <button class="sc-btn-confirm" id="scConfirmBtn">PRENOTA</button>
-      <button class="sc-btn-cancel"  id="scCancelBtn">CHIUDI</button>
     </div>
     <div class="sc-confirm-msg" id="scConfirmMsg" style="display:none">⬡ PRENOTAZIONE CONFERMATA</div>
   </div>`;
@@ -1518,8 +1527,6 @@
   function showGeneInfo(s) {
     selectedDnaGene = s;
     canvas.style.pointerEvents = 'none';
-    dnaBackArrow.style.pointerEvents = 'none';
-    dnaBackArrow.style.opacity = '0.2';
     cssRenderer.domElement.style.pointerEvents = 'auto';
     const g = geneData[s];
     document.getElementById('scEpoch').textContent    = `${g.epoch.toUpperCase()} · ${g.year}`;
@@ -1532,28 +1539,17 @@
     document.getElementById('scConfirmMsg').style.display = 'none';
     document.getElementById('scDate').value = today;
 
-    /* Pannelli sulla superficie interna del display curvo.
-       Posizionati simmetricamente rispetto al gene, con offset verso il centro
-       dell'arco per garantire sempre visibilità ottimale. */
-    const t_gene   = specialGeneIndices[s] / NUM_RUNGS;
-    const phi_gene = panelArcStart + t_gene * arcLength;
-    const r        = gridRadius - 2.5;
-    /* ~280px * 0.028 = 7.8u → semi 3.9 → clamp ±(11-3.9-1.1) = ±6 */
-    const gY       = Math.max(-6, Math.min(6, sphArr1[specialGeneIndices[s]].position.y));
+    /* Hide DNA group so the interface is clean */
+    dnaGroup.visible = false;
 
-    /* Calcola quanto il gene è distante dal centro dell'arco (0=centro, 1=bordo) */
-    const distFromCenter = (phi_gene - thetaCenter) / (arcLength / 2); /* -1..+1 */
-    /* Offset base: pannello sx a phi+, pannello dx a phi- */
-    const baseDelta = 0.32;
-    /* Per geni al bordo, sposta entrambi i pannelli verso il centro */
-    const centerPull = distFromCenter * 0.28;
-    const phiLRaw = phi_gene + baseDelta - centerPull;
-    const phiRRaw = phi_gene - baseDelta - centerPull;
-    /* margin tiene conto della semi-larghezza fisica del pannello a scala 0.028:
-       ~380px * 0.028 = 10.6 unità → semiangolo = 10.6/(2*r) ≈ 0.24 rad + safety 0.15 */
-    const margin  = 0.55;
-    const phiL = Math.min(Math.max(phiLRaw, panelArcStart + margin), panelArcStart + arcLength - margin);
-    const phiR = Math.min(Math.max(phiRRaw, panelArcStart + margin), panelArcStart + arcLength - margin);
+    /* Pannelli centrati sulla superficie interna del display curvo. */
+    const r        = gridRadius - 2.5;
+    const gY       = 0; // Centered vertically
+
+    /* Centered panels around thetaCenter */
+    const margin = 0.35; // Spacing from center
+    const phiL = thetaCenter + margin;
+    const phiR = thetaCenter - margin;
 
     scLeftCss.position.set(Math.cos(phiL) * r, gY, Math.sin(phiL) * r + 5);
     scLeftCss.lookAt(0, gY, 18);
@@ -1562,26 +1558,24 @@
 
     scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
     scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
-    /* Nascondi solo la scritta guida — il DNA rimane visibile e reattivo all'hover */
     dnaGuideEls.forEach(el => { el.style.opacity = '0'; });
     dnaLabelEls.forEach(el => { el.style.opacity = '0'; el.classList.remove('hovered'); });
   }
   function hideGeneInfo() {
     selectedDnaGene = -1;
-    dnaBackArrow.style.pointerEvents = '';
-    dnaBackArrow.style.opacity = '';
+    lastHoveredGene = -1;
     cssRenderer.domElement.style.pointerEvents = 'none';
     setTimeout(() => { canvas.style.pointerEvents = ''; }, 120);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+
+    /* Restore DNA visibility */
+    dnaGroup.visible = true;
+
     allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
     dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
   }
 
-  document.getElementById('scCancelBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    hideGeneInfo();
-  });
   document.getElementById('scConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('scConfirmBtn').disabled = true;
