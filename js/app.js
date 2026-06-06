@@ -841,30 +841,55 @@
       { name: 'Lorenzo de\' Medici', dates: '1449–1492', role: 'Signore di Firenze, mecenate delle arti, centro del potere politico.' },
       { name: 'Niccolò Machiavelli', dates: '1469–1527', role: 'Filosofo e stratega. Teorico del potere senza compromessi.' },
       { name: 'Michelangelo',         dates: '1475–1564', role: 'Scultore e pittore. Creatore della Cappella Sistina e del David.' },
+      { name: 'Raffaello Sanzio',     dates: '1483–1520', role: 'Pittore e architetto. Maestro del Rinascimento.' },
+      { name: 'Cesare Borgia',        dates: '1475–1507', role: 'Condottiero e cardinale. Ispirò Il Principe di Machiavelli.' },
+      { name: 'Lucrezia Borgia',      dates: '1480–1519', role: 'Nobildonna italiana. Figura controversa e mecenate delle arti.' },
+      { name: 'Caterina Sforza',      dates: '1463–1509', role: 'Leonessa di Romagna. Guerriera e signora di Imola e Forlì.' },
+      { name: 'Girolamo Savonarola',  dates: '1452–1498', role: 'Frate predicatore. Dominatore politico e morale di Firenze.' },
     ],
     [ /* 1600 - Pirateria */
       { name: 'Barbanera',       dates: '1680–1718', role: 'Il pirata più temuto dei Caraibi. Simbolo del terrore dei mari.' },
       { name: 'Anne Bonny',      dates: '1697–1782', role: 'Piratessa leggendaria. Sfidò le convenzioni di un\'epoca intera.' },
       { name: 'Henry Morgan',    dates: '1635–1688', role: 'Corsaro gallese, poi Governatore della Giamaica. Doppio gioco supremo.' },
       { name: 'Calico Jack',     dates: '1682–1720', role: 'Capitano pirata noto per la sua bandiera e il suo equipaggio.' },
+      { name: 'Bartholomew Roberts', dates: '1682–1722', role: 'Pirata gallese. Il pirata di maggior successo dell\'epoca d\'oro.' },
+      { name: 'Mary Read',       dates: '1685–1721', role: 'Piratessa inglese. Combatté e navigò travestita da uomo.' },
+      { name: 'Charles Vane',    dates: '1680–1721', role: 'Capitano pirata inglese. Ribelle indomabile della repubblica di Nassau.' },
+      { name: 'Stede Bonnet',    dates: '1688–1718', role: 'Il Pirata Gentiluomo. Da proprietario terriero a famigerato corsaro.' },
+      { name: 'William Kidd',    dates: '1654–1701', role: 'Corsaro scozzese. Finito al patibolo tra inganni e pirateria.' },
     ],
     [ /* 1700 - Rivoluzione Americana */
       { name: 'George Washington',  dates: '1732–1799', role: 'Generale e primo Presidente degli Stati Uniti d\'America.' },
       { name: 'Benjamin Franklin',  dates: '1706–1790', role: 'Scienziato, diplomatico e Padre Fondatore.' },
       { name: 'Thomas Jefferson',   dates: '1743–1826', role: 'Autore della Dichiarazione di Indipendenza americana.' },
       { name: 'Alexander Hamilton', dates: '1755–1804', role: 'Stratega finanziario, architetto del governo federale.' },
+      { name: 'Paul Revere',        dates: '1734–1818', role: 'Patriota e incisore. Famoso per la sua cavalcata notturna di allarme.' },
+      { name: 'Thomas Paine',       dates: '1737–1809', role: 'Filosofo politico. Autore del saggio Senso Comune che ispirò la rivolta.' },
+      { name: 'John Adams',         dates: '1735–1826', role: 'Padre Fondatore e secondo Presidente degli Stati Uniti.' },
+      { name: 'Samuel Adams',       dates: '1722–1803', role: 'Politico e filosofo. Leader carismatico dei Figli della Libertà.' },
+      { name: 'Marchese de Lafayette', dates: '1757–1834', role: 'Ufficiale francese. Eroe dei due mondi per il suo ruolo nella rivoluzione.' },
     ],
     [ /* 1800 - Rivoluzione Francese */
       { name: 'Napoleone Bonaparte', dates: '1769–1821', role: 'Generale e Imperatore. Rivoluzionò l\'Europa con armi e leggi.' },
-      { name: 'Marie Antoinette',    dates: '1755–1793', role: 'Regina di Francia. Simbolo del potere e della sua caduta.' },
+      { name: 'Marie Antoinette',    dates: '1755–1793', role: 'Regina di Francia. Simbolo del potere assoluto e della sua caduta.' },
       { name: 'Maximilien Robespierre', dates: '1758–1794', role: 'Architetto del Terrore rivoluzionario. Il volto oscuro degli ideali.' },
-      { name: 'Jean-Paul Marat',     dates: '1743–1793', role: 'Giornalista radicale e voce del popolo insorto.' },
+      { name: 'Jean-Paul Marat',     dates: '1743–1793', role: 'Giornalista radicale e voce spietata del popolo insorto.' },
+      { name: 'Georges Danton',      dates: '1759–1794', role: 'Politico e oratore. Figura chiave e carismatica della Rivoluzione.' },
+      { name: 'Camille Desmoulins',  dates: '1760–1794', role: 'Giornalista e politico. La voce della rivolta che incitò la folla.' },
+      { name: 'Olympe de Gouges',    dates: '1748–1793', role: 'Drammaturga e attivista. Pioniera dei diritti delle donne.' },
+      { name: 'Charlotte Corday',    dates: '1768–1793', role: 'Assassina di Marat. L\'angelo della morte della Rivoluzione.' },
+      { name: 'Marchese de Sade',    dates: '1740–1814', role: 'Nobile e scrittore libertino. Testimone oscuro e controverso dell\'epoca.' },
     ],
     [ /* 1900 - Rivoluzione Industriale */
       { name: 'Nikola Tesla',   dates: '1856–1943', role: 'Inventore visionario. Padre dell\'elettricità alternata.' },
       { name: 'Karl Marx',      dates: '1818–1883', role: 'Filosofo e teorico. Le sue idee cambiarono il corso della storia.' },
       { name: 'Charles Darwin', dates: '1809–1882', role: 'Naturalista. La teoria dell\'evoluzione scosse le basi del sapere.' },
       { name: 'Queen Victoria', dates: '1819–1901', role: 'Regina dell\'Impero Britannico nel suo massimo splendore.' },
+      { name: 'Thomas Edison',  dates: '1847–1931', role: 'Inventore e imprenditore. Pioniere dell\'era elettrica.' },
+      { name: 'Alexander Graham Bell', dates: '1847–1922', role: 'Scienziato e inventore. Il padre del telefono.' },
+      { name: 'Florence Nightingale', dates: '1820–1910', role: 'Infermiera britannica. Fondatrice dell\'assistenza infermieristica moderna.' },
+      { name: 'Isambard Kingdom Brunel', dates: '1806–1859', role: 'Ingegnere britannico. Rivoluzionò i trasporti e l\'ingegneria civile.' },
+      { name: 'Ada Lovelace',   dates: '1815–1852', role: 'Matematica britannica. La prima programmatrice di computer.' },
     ],
   ];
 
@@ -982,9 +1007,7 @@
     charDetailCss.position.set(0, 1000, 0);
     charViewEpoch = -1;
     cssRenderer.domElement.style.pointerEvents = 'none';
-    dnaBackArrow.style.display = 'none';
-    panelL.classList.remove('hidden-panel');
-    panelR.classList.remove('hidden-panel');
+    showTimelineView();
   }
 
   // Click + hover sui nodi
@@ -1576,14 +1599,7 @@
     if (selectedDnaGene !== -1) {
       hideGeneInfo();
     } else if (charViewEpoch !== -1) {
-      /* Se il dettaglio è visibile → torna alla lista; altrimenti chiudi tutto */
-      const detailVisible = charDetailEl && charDetailEl.style.opacity === '1'
-                            && document.getElementById('charActions').style.display !== 'none';
-      if (detailVisible) {
-        document.getElementById('charBackBtn').click();
-      } else {
-        hideCharacterView();
-      }
+      hideCharacterView();
     } else if (tlArcLine && tlArcLine.visible) {
       hideTimelineView();
     } else {
