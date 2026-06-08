@@ -944,11 +944,31 @@
   charDetailCss.position.set(0, 1000, 0); // Sposta fuori schermo
   scene.add(charDetailCss);
 
+  let charConfirmTimeout = null;
   document.getElementById('charConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('charConfirmBtn').disabled = true;
     document.getElementById('charConfirmMsg').style.display = 'block';
-    setTimeout(() => hideCharacterView(), 3000);
+    
+    // Add item to cart
+    const activeCharRow = document.querySelector('.char-row.active');
+    if (activeCharRow && charViewEpoch !== -1) {
+      const charName = activeCharRow.querySelector('strong').textContent;
+      const charRole = document.getElementById('charRole').textContent;
+      cartItems.push({
+        title: charName,
+        date: 'Personaggio Storico',
+        time: charRole.split(' - ')[0] || 'N/D',
+        price: '€ 120'
+      });
+      if (window.updateCartUI) window.updateCartUI();
+    }
+    
+    if (charConfirmTimeout) clearTimeout(charConfirmTimeout);
+    charConfirmTimeout = setTimeout(() => {
+      hideCharacterView();
+      charConfirmTimeout = null;
+    }, 3000);
   });
 
   function buildCharList(epochIdx) {
@@ -1024,6 +1044,10 @@
   }
 
   function hideCharacterView() {
+    if (charConfirmTimeout) {
+      clearTimeout(charConfirmTimeout);
+      charConfirmTimeout = null;
+    }
     charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
     charDetailEl.style.opacity = '0'; charDetailEl.style.pointerEvents = 'none';
     charListCss.position.set(0, 1000, 0);
@@ -1580,10 +1604,14 @@
     dnaLabelEls.forEach(el => { el.style.opacity = '0'; el.classList.remove('hovered'); });
   }
   function hideGeneInfo() {
+    if (typeof scConfirmTimeout !== 'undefined' && scConfirmTimeout) {
+      clearTimeout(scConfirmTimeout);
+      scConfirmTimeout = null;
+    }
     selectedDnaGene = -1;
     lastHoveredGene = -1;
     cssRenderer.domElement.style.pointerEvents = 'none';
-    setTimeout(() => { canvas.style.pointerEvents = ''; }, 120);
+    setTimeout(() => { cssRenderer.domElement.style.pointerEvents = ''; }, 120);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
 
@@ -1594,6 +1622,7 @@
     dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
   }
 
+  let scConfirmTimeout = null;
   document.getElementById('scConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('scConfirmBtn').disabled = true;
@@ -1612,7 +1641,11 @@
       window.updateCartUI();
     }
 
-    setTimeout(() => hideGeneInfo(), 3500);
+    if (typeof scConfirmTimeout !== 'undefined' && scConfirmTimeout) clearTimeout(scConfirmTimeout);
+    scConfirmTimeout = setTimeout(() => {
+      hideGeneInfo();
+      scConfirmTimeout = null;
+    }, 3500);
   });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
@@ -1641,7 +1674,7 @@
     }
   });
 
-  // Freccia indietro: gestisce showcase, DNA e timeline
+  // Freccia indietro: gestisce showcase, DNA, timeline e carrello
   dnaBackArrow.addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     if (selectedDnaGene !== -1) {
@@ -1650,6 +1683,8 @@
       hideCharacterView();
     } else if (tlArcLine && tlArcLine.visible) {
       hideTimelineView();
+    } else if (cartViewActive) {
+      hideCartView();
     } else {
       hideDNAView();
     }
@@ -2068,6 +2103,80 @@
   });
 
   /* ── CART LOGIC ── */
+  let cartViewActive = false;
+
+  let cartPreviousState = 'cards';
+  let cartPreviousGene = -1;
+  let cartPreviousEpoch = -1;
+
+  function showCartView() {
+    cartViewActive = true;
+
+    // Chiude qualsiasi interfaccia che potrebbe essere aperta dietro e ne salva lo stato
+    if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
+      cartPreviousState = 'gene';
+      cartPreviousGene = selectedDnaGene;
+      hideGeneInfo();
+    } else if (typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) {
+      cartPreviousState = 'character';
+      cartPreviousEpoch = charViewEpoch;
+      hideCharacterView();
+    } else if (typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) {
+      cartPreviousState = 'timeline';
+      hideTimelineView();
+    } else if (typeof dnaGroup !== 'undefined' && dnaGroup && dnaGroup.visible) {
+      cartPreviousState = 'dna';
+      hideDNAView();
+    } else {
+      cartPreviousState = 'cards';
+    }
+
+    panelL.classList.add('hidden-panel');
+    panelR.classList.add('hidden-panel');
+    cartPanelEl.classList.remove('hidden');
+    
+    // Il logo rimane visibile, nascondiamo solo il bottone del carrello
+    cartBtnEl.style.opacity = '0';
+    cartBtnEl.style.pointerEvents = 'none';
+    
+    // Move to center
+    cssCartPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+    cssCartPanel.scale.set(0.045, 0.045, 0.045);
+    cssCartPanel.lookAt(0, 0, 0);
+
+    dnaBackArrow.style.display = 'block';
+  }
+
+  function hideCartView() {
+    cartViewActive = false;
+    cartPanelEl.classList.add('hidden');
+    
+    // Restore previous state
+    if (cartPreviousState === 'gene') {
+      showDNAView();
+      showGeneInfo(cartPreviousGene);
+    } else if (cartPreviousState === 'character') {
+      showTimelineView();
+      showCharacterView(cartPreviousEpoch);
+    } else if (cartPreviousState === 'timeline') {
+      showTimelineView();
+    } else if (cartPreviousState === 'dna') {
+      showDNAView();
+    } else {
+      panelL.classList.remove('hidden-panel');
+      panelR.classList.remove('hidden-panel');
+      dnaBackArrow.style.display = 'none';
+    }
+    
+    cartBtnEl.style.opacity = '1';
+    cartBtnEl.style.pointerEvents = 'auto';
+
+    // Reset panel position
+    cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssCartPanel.scale.set(0.035, 0.035, 0.035);
+    cssCartPanel.lookAt(0, 1.5, 0);
+  }
+
   const cartItems = [];
   const cartBtn = document.getElementById('cartButton');
   const cartPanel = document.getElementById('cartPanel');
@@ -2079,12 +2188,16 @@
   if (cartBtn && cartPanel && cartCloseBtn) {
     cartBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      cartPanel.classList.toggle('hidden');
+      if (!cartViewActive) {
+        showCartView();
+      }
       if (window.audioEngine) window.audioEngine.playClick();
     });
     cartCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      cartPanel.classList.add('hidden');
+      if (cartViewActive) {
+        hideCartView();
+      }
       if (window.audioEngine) window.audioEngine.playClick();
     });
     // Evita che cliccando nel carrello si chiuda o interagisca col 3D
