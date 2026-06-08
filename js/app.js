@@ -528,6 +528,24 @@
   cssObjR.lookAt(0, -1, 0);
   gridGroup.add(cssObjR);
 
+  // 4) CARRELLO CSS3D (Button and Panel)
+  const cartBtnEl = document.getElementById('cartButton');
+  cartBtnEl.style.opacity = '0';
+  cartBtnEl.style.pointerEvents = 'none';
+  const cssCartBtn = new THREE.CSS3DObject(cartBtnEl);
+  const thetaCartBtn = thetaCenter + 1.0;
+  cssCartBtn.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 8.0, Math.sin(thetaCartBtn) * panelRadiusCSS);
+  cssCartBtn.scale.set(0.035, 0.035, 0.035);
+  cssCartBtn.lookAt(0, 8.0, 0);
+  gridGroup.add(cssCartBtn);
+
+  const cartPanelEl = document.getElementById('cartPanel');
+  const cssCartPanel = new THREE.CSS3DObject(cartPanelEl);
+  cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+  cssCartPanel.scale.set(0.035, 0.035, 0.035);
+  cssCartPanel.lookAt(0, 1.5, 0);
+  gridGroup.add(cssCartPanel);
+
   /* ── Piani WebGL invisibili per hit-testing affidabile ──
      Nella scene principale (NON gridGroup) con posizioni world dopo boot.
      gridGroup.position = (0,0,5), rotation.y = 0 dopo boot.
@@ -1580,6 +1598,20 @@
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('scConfirmBtn').disabled = true;
     document.getElementById('scConfirmMsg').style.display = 'block';
+
+    const gene = geneData[selectedDnaGene];
+    if (gene) {
+      const dateVal = document.getElementById('scDate').value;
+      const timeVal = document.getElementById('scTime').value;
+      cartItems.push({
+        title: gene.epoch.toUpperCase() + ' - ' + gene.year,
+        date: dateVal,
+        time: timeVal,
+        price: gene.price
+      });
+      window.updateCartUI();
+    }
+
     setTimeout(() => hideGeneInfo(), 3500);
   });
 
@@ -1852,10 +1884,12 @@
         logoEl.style.opacity = pe;
         panelL.style.opacity = pe;
         panelR.style.opacity = pe;
+        cartBtnEl.style.opacity = pe;
         // Abilita i click solo quando le schede sono completamente visibili
         if (panelProgress >= 1) {
           panelL.style.pointerEvents = "auto";
           panelR.style.pointerEvents = "auto";
+          cartBtnEl.style.pointerEvents = "auto";
         }
       }
 
@@ -2032,6 +2066,73 @@
     if (window.audioEngine) window.audioEngine.playClick();
     showCardsView();
   });
+
+  /* ── CART LOGIC ── */
+  const cartItems = [];
+  const cartBtn = document.getElementById('cartButton');
+  const cartPanel = document.getElementById('cartPanel');
+  const cartCloseBtn = document.getElementById('closeCartBtn');
+  const cartItemsContainer = document.getElementById('cartItems');
+  const cartCountEl = document.getElementById('cartCount');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  if (cartBtn && cartPanel && cartCloseBtn) {
+    cartBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cartPanel.classList.toggle('hidden');
+      if (window.audioEngine) window.audioEngine.playClick();
+    });
+    cartCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cartPanel.classList.add('hidden');
+      if (window.audioEngine) window.audioEngine.playClick();
+    });
+    // Evita che cliccando nel carrello si chiuda o interagisca col 3D
+    cartPanel.addEventListener('click', e => e.stopPropagation());
+  }
+
+  // Make updateCartUI global so it can be called from inside handlers
+  window.updateCartUI = function() {
+    if (!cartItemsContainer || !cartCountEl || !checkoutBtn) return;
+    
+    cartCountEl.textContent = cartItems.length;
+    
+    if (cartItems.length === 0) {
+      cartBtn.classList.remove('cart-has-items');
+      cartItemsContainer.innerHTML = '<div class="cart-empty">Il carrello è vuoto.</div>';
+      checkoutBtn.disabled = true;
+      return;
+    }
+    
+    cartBtn.classList.add('cart-has-items');
+    checkoutBtn.disabled = false;
+    cartItemsContainer.innerHTML = '';
+    cartItems.forEach((item, index) => {
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      el.innerHTML = `
+        <div class="cart-item-header">
+          <span class="cart-item-title">${item.title}</span>
+          <button class="cart-item-remove" data-index="${index}">X</button>
+        </div>
+        <div class="cart-item-details">
+          <span>${item.date} - ${item.time}</span>
+          <span class="cart-item-price">${item.price}</span>
+        </div>
+      `;
+      cartItemsContainer.appendChild(el);
+    });
+
+    // Add remove listeners
+    document.querySelectorAll('.cart-item-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-index'), 10);
+        cartItems.splice(idx, 1);
+        if (window.audioEngine) window.audioEngine.playClick();
+        window.updateCartUI();
+      });
+    });
+  };
 
   animate();
 })();
