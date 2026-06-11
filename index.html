@@ -180,6 +180,49 @@
     </div>
   </div>
 
+  <!-- PANNELLO PAGAMENTO -->
+  <div id="paymentPanel" class="payment-panel hidden">
+    <div class="payment-header">
+      <span class="payment-title">AUTORIZZAZIONE TRANSAZIONE</span>
+      <button id="closePaymentBtn" class="payment-close">&times;</button>
+    </div>
+    <div class="payment-body">
+      <div class="payment-total">Totale: <span id="paymentTotalAmount">€ 0</span></div>
+      <div class="payment-field">
+        <label>INTESTATARIO</label>
+        <input type="text" placeholder="NOME E COGNOME" class="payment-input">
+      </div>
+      <div class="payment-field">
+        <label>NUMERO CARTA DI CREDITO</label>
+        <input type="text" placeholder="XXXX-XXXX-XXXX-XXXX" class="payment-input">
+      </div>
+      <div class="payment-row">
+        <div class="payment-field">
+          <label>SCADENZA</label>
+          <input type="text" placeholder="MM/AA" class="payment-input">
+        </div>
+        <div class="payment-field">
+          <label>CVV</label>
+          <input type="text" placeholder="123" class="payment-input">
+        </div>
+      </div>
+    </div>
+    <div class="payment-footer">
+      <button id="confirmPaymentBtn" class="payment-confirm">CONFERMA E SINCRONIZZA</button>
+    </div>
+  </div>
+
+  <!-- PANNELLO SUCCESSO PAGAMENTO -->
+  <div id="paymentSuccessPanel" class="payment-panel hidden" style="text-align: center; justify-content: center; padding: 40px; height: 350px;">
+    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#00ffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 20px; filter: drop-shadow(0 0 10px #00ffff);">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <h2 style="color: #00ffff; font-size: 24px; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,255,255,0.6); margin-bottom: 15px;">TRANSAZIONE APPROVATA</h2>
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.6;">I fondi sono stati trasferiti con successo alle Industrie Abstergo.<br>Preparazione per la sincronizzazione genetica in corso...</p>
+    <button id="closeSuccessBtn" class="payment-confirm" style="margin-top: 25px;">CHIUDI</button>
+  </div>
+
 </div>
 
 <!-- THREE.JS CDN -->

@@ -571,6 +571,16 @@
   hitPlaneR.lookAt(0, -1, 18);
   scene.add(hitPlaneR);
 
+  const cartHitGeo = new THREE.PlaneGeometry(100 * 0.035, 100 * 0.035);
+  const hitPlaneCart = new THREE.Mesh(cartHitGeo, panelHitMat);
+  hitPlaneCart.position.set(
+    Math.cos(thetaCartBtn) * panelRadiusCSS,
+    8.0,
+    Math.sin(thetaCartBtn) * panelRadiusCSS + 5
+  );
+  hitPlaneCart.lookAt(0, 8.0, 18);
+  scene.add(hitPlaneCart);
+
   /* Raycaster dedicato ai pannelli — creato una volta sola */
   const panelRaycaster = new THREE.Raycaster();
 
@@ -913,6 +923,7 @@
 
   /* ══ VISTA PERSONAGGI — lista a sinistra, descrizione a destra, entrambi sempre visibili ══ */
   let charViewEpoch = -1;
+  let selectedCharIdx = -1;
   const charEpochLabels = ['Rinascimento','Età d\'Oro Pirateria','Rivoluzione Americana','Rivoluzione Francese','Rivoluzione Industriale'];
 
   /* Pannello SINISTRA — nomi personaggi */
@@ -951,10 +962,10 @@
     document.getElementById('charConfirmMsg').style.display = 'block';
     
     // Add item to cart
-    const activeCharRow = document.querySelector('.char-row.active');
-    if (activeCharRow && charViewEpoch !== -1) {
-      const charName = activeCharRow.querySelector('strong').textContent;
-      const charRole = document.getElementById('charRole').textContent;
+    if (charViewEpoch !== -1 && selectedCharIdx !== -1) {
+      const ch = historicalChars[charViewEpoch][selectedCharIdx];
+      const charName = ch.name;
+      const charRole = ch.role;
       cartItems.push({
         title: charName,
         date: 'Personaggio Storico',
@@ -993,12 +1004,29 @@
       const i = parseInt(row.dataset.i);
       row.addEventListener('mouseenter', () => {
         if (window.audioEngine) window.audioEngine.playHover();
-        row.style.background = 'rgba(0,255,255,.06)';
+        if (selectedCharIdx !== i) row.style.background = 'rgba(0,255,255,.06)';
         updateCharDetail(epochIdx, i, false);
       });
-      row.addEventListener('mouseleave', () => { row.style.background = ''; });
+      row.addEventListener('mouseleave', () => { 
+        if (selectedCharIdx !== i) {
+          row.style.background = ''; 
+          if (selectedCharIdx !== -1) {
+            updateCharDetail(epochIdx, selectedCharIdx, true);
+          } else {
+            document.getElementById('charName').textContent = 'Seleziona un personaggio';
+            document.getElementById('charDates').textContent = '';
+            document.getElementById('charRole').textContent  = '—';
+            document.getElementById('charActions').style.display = 'none';
+          }
+        }
+      });
       row.addEventListener('click', () => {
         if (window.audioEngine) window.audioEngine.playClick();
+        selectedCharIdx = i;
+        charListEl.querySelectorAll('.char-row').forEach(r => {
+          r.style.background = '';
+        });
+        row.style.background = 'rgba(0,255,255,.15)';
         updateCharDetail(epochIdx, i, true);
       });
     });
@@ -1031,6 +1059,7 @@
     charDetailCss.lookAt(0, 0, 18);
 
     /* Reset dettaglio */
+    selectedCharIdx = -1;
     document.getElementById('charName').textContent = 'Seleziona un personaggio';
     document.getElementById('charDates').textContent = '';
     document.getElementById('charRole').textContent  = '—';
@@ -1653,18 +1682,30 @@
     if (blockCanvasClick) return;
     if (selectedDnaGene !== -1) return;
 
-    /* Pannelli principali: raycasting su hitPlane invisibili */
-    if (hasBooted && !panelL.classList.contains('hidden-panel')) {
+    if (hasBooted) {
       panelRaycaster.setFromCamera(rawMouse, camera);
-      if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { 
-        if (window.audioEngine) window.audioEngine.playClick();
-        showDNAView(); 
-        return; 
+      
+      // Controllo click sul carrello tramite Raycaster (evita problemi di hit-test CSS3D in prospettiva)
+      if (!cartViewActive && paymentPanelEl && paymentPanelEl.classList.contains('hidden') && paymentSuccessPanelEl && paymentSuccessPanelEl.classList.contains('hidden')) {
+        if (panelRaycaster.intersectObject(hitPlaneCart).length > 0) {
+          if (window.audioEngine) window.audioEngine.playClick();
+          showCartView();
+          return;
+        }
       }
-      if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { 
-        if (window.audioEngine) window.audioEngine.playClick();
-        showTimelineView(); 
-        return; 
+
+      /* Pannelli principali: raycasting su hitPlane invisibili */
+      if (!panelL.classList.contains('hidden-panel')) {
+        if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { 
+          if (window.audioEngine) window.audioEngine.playClick();
+          showDNAView(); 
+          return; 
+        }
+        if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { 
+          if (window.audioEngine) window.audioEngine.playClick();
+          showTimelineView(); 
+          return; 
+        }
       }
     }
 
@@ -2246,6 +2287,124 @@
       });
     });
   };
+
+  /* ── PAYMENT LOGIC ── */
+  const paymentPanelEl = document.getElementById('paymentPanel');
+  const paymentSuccessPanelEl = document.getElementById('paymentSuccessPanel');
+  
+  const cssPaymentPanel = new THREE.CSS3DObject(paymentPanelEl);
+  cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+  cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
+  cssPaymentPanel.lookAt(0, 1.5, 0);
+  gridGroup.add(cssPaymentPanel);
+
+  const cssPaymentSuccessPanel = new THREE.CSS3DObject(paymentSuccessPanelEl);
+  cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+  cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
+  cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
+  gridGroup.add(cssPaymentSuccessPanel);
+
+  const closePaymentBtn = document.getElementById('closePaymentBtn');
+  const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+  const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+  const paymentTotalAmount = document.getElementById('paymentTotalAmount');
+
+  function calculateTotal() {
+    let total = 0;
+    cartItems.forEach(item => {
+      const val = parseInt(item.price.replace(/[^\d]/g, ''), 10);
+      if (!isNaN(val)) total += val;
+    });
+    return total;
+  }
+
+  function showPaymentView() {
+    cartPanelEl.classList.add('hidden');
+    paymentPanelEl.classList.remove('hidden');
+    
+    // Position it at the center like cartPanel
+    cssPaymentPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+    cssPaymentPanel.scale.set(0.045, 0.045, 0.045);
+    cssPaymentPanel.lookAt(0, 0, 0);
+
+    paymentTotalAmount.textContent = '€ ' + calculateTotal();
+  }
+
+  function hidePaymentView() {
+    paymentPanelEl.classList.add('hidden');
+    cartPanelEl.classList.remove('hidden');
+    
+    // Reset position
+    cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
+    cssPaymentPanel.lookAt(0, 1.5, 0);
+  }
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      showPaymentView();
+    });
+  }
+
+  if (closePaymentBtn) {
+    closePaymentBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      hidePaymentView();
+    });
+  }
+
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      
+      confirmPaymentBtn.textContent = "ELABORAZIONE...";
+      confirmPaymentBtn.disabled = true;
+      
+      setTimeout(() => {
+        paymentPanelEl.classList.add('hidden');
+        paymentSuccessPanelEl.classList.remove('hidden');
+        
+        // Reset payment panel position since it's hidden now
+        cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+        cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
+        cssPaymentPanel.lookAt(0, 1.5, 0);
+
+        cssPaymentSuccessPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+        cssPaymentSuccessPanel.scale.set(0.045, 0.045, 0.045);
+        cssPaymentSuccessPanel.lookAt(0, 0, 0);
+        
+        confirmPaymentBtn.textContent = "CONFERMA E SINCRONIZZA";
+        confirmPaymentBtn.disabled = false;
+        
+        // Empty cart
+        cartItems.length = 0;
+        window.updateCartUI();
+      }, 1500);
+    });
+  }
+
+  if (closeSuccessBtn) {
+    closeSuccessBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      
+      paymentSuccessPanelEl.classList.add('hidden');
+      
+      // Reset position
+      cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+      cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
+      cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
+      
+      hideCartView();
+    });
+  }
+
+  if (paymentPanelEl) paymentPanelEl.addEventListener('click', e => e.stopPropagation());
+  if (paymentSuccessPanelEl) paymentSuccessPanelEl.addEventListener('click', e => e.stopPropagation());
 
   animate();
 })();
