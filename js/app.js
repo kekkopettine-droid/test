@@ -2119,6 +2119,14 @@
         });
       }
 
+      // Animazione HUD biglietto (galleggiamento)
+      if (window.cssAnimusTicket && !document.getElementById('animusTicket').classList.contains('hidden-panel')) {
+        const ticketTime = now * 2.0;
+        window.cssAnimusTicket.position.y = Math.sin(ticketTime) * 0.4;
+        window.cssAnimusTicket.rotation.z = Math.sin(ticketTime * 0.8) * 0.03;
+        window.cssAnimusTicket.rotation.x = Math.cos(ticketTime * 1.2) * 0.04;
+      }
+
     }   // fine if (hasBooted)
   }     // fine function animate()
 
@@ -2320,10 +2328,14 @@
 
   const animusTicketEl = document.getElementById('animusTicket');
   const cssAnimusTicket = new THREE.CSS3DObject(animusTicketEl);
-  cssAnimusTicket.position.set(0, 0, -20); // Spostato ancora più indietro per la giusta prospettiva
-  cssAnimusTicket.scale.set(0.035, 0.035, 0.035); // Scala riportata in linea con gli altri pannelli
-  cssAnimusTicket.rotation.set(0, 0, 0); // Guarda dritto verso la telecamera
-  scene.add(cssAnimusTicket);
+  // Fissiamo il biglietto direttamente alla telecamera per renderlo un vero e proprio HUD 
+  // che segue sempre la visuale dell'utente.
+  cssAnimusTicket.position.set(0, 0, -20); 
+  cssAnimusTicket.scale.set(0.022, 0.022, 0.022); // Biglietto più piccolo
+  cssAnimusTicket.rotation.set(0, 0, 0); 
+  camera.add(cssAnimusTicket);
+  window.cssAnimusTicket = cssAnimusTicket; // Esportiamo per poterlo animare in animate()
+  scene.add(camera);
 
   const closePaymentBtn = document.getElementById('closePaymentBtn');
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
@@ -2466,26 +2478,19 @@
         window.updateCartUI();
 
         // --- ANIMAZIONE CHIUSURA OCCHI E WHITE ROOM ---
+        // Avvia la transizione cinematica in 3 fasi
         setTimeout(() => {
-          const eyelids = document.getElementById('eyelids');
-          if (eyelids) eyelids.classList.add('closed');
-          
-          setTimeout(() => {
+          if (window.playSyncTransition) {
+            window.playSyncTransition();
+          } else {
+            console.error("Transizione non trovata, fallback alla white room");
             transitionToWhiteRoom();
             if (syncScreenEl) syncScreenEl.classList.add('hidden-panel');
-            
-            // Riapri gli occhi
             setTimeout(() => {
-              if (eyelids) eyelids.classList.remove('closed');
-              
-              // Dopo 2.5 secondi mostra il biglietto
-              setTimeout(() => {
-                if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
-                if (window.audioEngine) window.audioEngine.playHover();
-              }, 2500);
-              
-            }, 500);
-          }, 600); // Wait for eyes to close completely
+              const animusTicketEl = document.getElementById('animusTicket');
+              if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
+            }, 1000);
+          }
         }, 2500); // 2.5 seconds of "SINCRONIZZAZIONE..."
       }, 1500);
     });
@@ -2567,6 +2572,43 @@
   if (paymentPanelEl) paymentPanelEl.addEventListener('click', e => e.stopPropagation());
   if (userInfoPanelEl) userInfoPanelEl.addEventListener('click', e => e.stopPropagation());
   if (paymentSuccessPanelEl) paymentSuccessPanelEl.addEventListener('click', e => e.stopPropagation());
+
+  // Esponi lo stato per la transizione cinematica (transition.js)
+  window.animusState = {
+    scene: scene,
+    camera: camera,
+    renderer: renderer,
+    bgGroup: bgGroup,
+    gridGroup: gridGroup,
+    transitionToWhiteRoom: transitionToWhiteRoom
+  };
+
+  // Pulsante di ritorno all'animus
+  const btnReturnAnimus = document.getElementById('btnReturnAnimus');
+  if (btnReturnAnimus) {
+    btnReturnAnimus.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      
+      const eyelidTop = document.querySelector('.eyelid-top');
+      const eyelidBottom = document.querySelector('.eyelid-bottom');
+      
+      if (eyelidTop && eyelidBottom) {
+        // Chiudi gli occhi
+        eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        eyelidTop.style.height = '50%';
+        eyelidBottom.style.height = '50%';
+        
+        // Ricarica la pagina dopo la chiusura completa
+        setTimeout(() => {
+          window.location.reload();
+        }, 1800);
+      } else {
+        window.location.reload();
+      }
+    });
+  }
 
   animate();
 })();
