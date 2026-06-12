@@ -21,6 +21,12 @@
   <div id="intro-flash"></div>
 </div>
 
+<!-- Eyelids for blink animation -->
+<div id="eyelids">
+  <div class="eyelid-top"></div>
+  <div class="eyelid-bottom"></div>
+</div>
+
 <!-- Boot splash -->
 <div id="boot">
   <div class="boot-logo">⬡ ANIMUS</div>
@@ -188,7 +194,7 @@
     <div class="payment-body" style="padding-top: 30px; gap: 20px;">
       <div class="payment-field">
         <label>NOME E COGNOME</label>
-        <input type="text" placeholder="INSERISCI I TUOI DATI" class="payment-input">
+        <input type="text" id="userNameInput" placeholder="INSERISCI I TUOI DATI" class="payment-input">
       </div>
       <div class="payment-field">
         <label>EMAIL</label>
@@ -251,6 +257,27 @@
   <!-- SCHERMATA SINCRONIZZAZIONE -->
   <div id="syncScreen" class="sync-screen hidden-panel">
     <div class="sync-text">SINCRONIZZAZIONE...</div>
+  </div>
+
+  <!-- BIGLIETTO ESPERIENZA NELLA WHITE ROOM -->
+  <div id="animusTicket" class="animus-ticket hidden-panel">
+    <div class="ticket-header">
+      <span class="ticket-logo">⬡ ABSTERGO</span>
+      <span class="ticket-status">AUTORIZZAZIONE ACCORDATA</span>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-field">
+        <label>SOGGETTO</label>
+        <div id="ticketUserName" class="ticket-value">SCONOSCIUTO</div>
+      </div>
+      <div class="ticket-field">
+        <label>ESPERIENZA ACQUISTATA</label>
+        <div id="ticketExperienceName" class="ticket-value experience-name">NESSUNA</div>
+      </div>
+    </div>
+    <div class="ticket-barcode">
+      || ||| |||| | || | ||| |||| || | |
+    </div>
   </div>
 
 </div>

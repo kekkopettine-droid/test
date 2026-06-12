@@ -2318,6 +2318,13 @@
   cssSyncScreen.lookAt(0, 0, 0);
   gridGroup.add(cssSyncScreen);
 
+  const animusTicketEl = document.getElementById('animusTicket');
+  const cssAnimusTicket = new THREE.CSS3DObject(animusTicketEl);
+  cssAnimusTicket.position.set(0, 0, -20); // Spostato ancora più indietro per la giusta prospettiva
+  cssAnimusTicket.scale.set(0.035, 0.035, 0.035); // Scala riportata in linea con gli altri pannelli
+  cssAnimusTicket.rotation.set(0, 0, 0); // Guarda dritto verso la telecamera
+  scene.add(cssAnimusTicket);
+
   const closePaymentBtn = document.getElementById('closePaymentBtn');
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
   const closeSuccessBtn = document.getElementById('closeSuccessBtn');
@@ -2438,9 +2445,48 @@
         confirmPaymentBtn.textContent = "CONFERMA E SINCRONIZZA";
         confirmPaymentBtn.disabled = false;
         
+        // Save ticket info before emptying cart
+        const userNameInput = document.getElementById('userNameInput');
+        const ticketUserName = document.getElementById('ticketUserName');
+        const ticketExperienceName = document.getElementById('ticketExperienceName');
+        
+        if (ticketUserName) {
+          ticketUserName.textContent = userNameInput && userNameInput.value.trim() ? userNameInput.value.toUpperCase() : 'SCONOSCIUTO';
+        }
+        if (ticketExperienceName) {
+          if (cartItems.length > 0) {
+            ticketExperienceName.textContent = cartItems.map(item => item.title).join(' + ').toUpperCase();
+          } else {
+            ticketExperienceName.textContent = 'NESSUNA';
+          }
+        }
+        
         // Empty cart
         cartItems.length = 0;
         window.updateCartUI();
+
+        // --- ANIMAZIONE CHIUSURA OCCHI E WHITE ROOM ---
+        setTimeout(() => {
+          const eyelids = document.getElementById('eyelids');
+          if (eyelids) eyelids.classList.add('closed');
+          
+          setTimeout(() => {
+            transitionToWhiteRoom();
+            if (syncScreenEl) syncScreenEl.classList.add('hidden-panel');
+            
+            // Riapri gli occhi
+            setTimeout(() => {
+              if (eyelids) eyelids.classList.remove('closed');
+              
+              // Dopo 2.5 secondi mostra il biglietto
+              setTimeout(() => {
+                if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
+                if (window.audioEngine) window.audioEngine.playHover();
+              }, 2500);
+              
+            }, 500);
+          }, 600); // Wait for eyes to close completely
+        }, 2500); // 2.5 seconds of "SINCRONIZZAZIONE..."
       }, 1500);
     });
   }
@@ -2459,6 +2505,63 @@
       
       hideCartView();
     });
+  }
+
+  /* ── WHITE ROOM TRANSITION ── */
+  function transitionToWhiteRoom() {
+    bgGroup.visible = false;
+    gridGroup.visible = false;
+    
+    // Cambia il colore di sfondo e la nebbia ad un bianco luminoso/grigio chiaro
+    renderer.setClearColor(0xe6ecef, 1);
+    scene.fog = new THREE.FogExp2(0xe6ecef, 0.012);
+    
+    const whiteRoomGroup = new THREE.Group();
+    scene.add(whiteRoomGroup);
+    
+    // Griglie orizzontali in stile stanza della simulazione (sopra e sotto)
+    const gridHelper = new THREE.GridHelper(200, 100, 0xffffff, 0xdddddd);
+    gridHelper.position.y = -10;
+    whiteRoomGroup.add(gridHelper);
+
+    const gridHelperTop = new THREE.GridHelper(200, 100, 0xffffff, 0xdddddd);
+    gridHelperTop.position.y = 10;
+    whiteRoomGroup.add(gridHelperTop);
+    
+    // Linee luminose verticali e orizzontali sparse per dare senso di infinito digitale
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+    for (let i = 0; i < 80; i++) {
+      const x = (Math.random() - 0.5) * 150;
+      const z = (Math.random() - 0.5) * 150;
+      
+      // Linee verticali
+      const geo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, -20, z),
+        new THREE.Vector3(x, 20, z)
+      ]);
+      whiteRoomGroup.add(new THREE.Line(geo, lineMat));
+      
+      // Alcune linee orizzontali che fluttuano
+      if (Math.random() > 0.5) {
+        const y = (Math.random() - 0.5) * 20;
+        const x2 = (Math.random() - 0.5) * 150;
+        const geoH = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, y, z),
+          new THREE.Vector3(x2, y, z)
+        ]);
+        whiteRoomGroup.add(new THREE.Line(geoH, lineMat));
+      }
+    }
+
+    // Luce extra per far risaltare il bianco
+    const ambient = new THREE.AmbientLight(0xffffff, 1.8);
+    whiteRoomGroup.add(ambient);
+
+    // Modifica gli effetti CSS post processing (vignettatura e scanlines)
+    const scanlines = document.getElementById('scanlines');
+    if(scanlines) scanlines.style.opacity = '0.05';
+    const vignette = document.getElementById('vignette');
+    if(vignette) vignette.style.background = 'radial-gradient(ellipse 110% 90% at 50% 55%, transparent 50%, rgba(255, 255, 255, 0.5) 100%)';
   }
 
   if (paymentPanelEl) paymentPanelEl.addEventListener('click', e => e.stopPropagation());
