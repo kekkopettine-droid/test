@@ -180,6 +180,31 @@
     </div>
   </div>
 
+  <!-- PANNELLO INFO UTENTE -->
+  <div id="userInfoPanel" class="payment-panel hidden">
+    <div class="payment-header">
+      <span class="payment-title">DATI UTENTE</span>
+    </div>
+    <div class="payment-body" style="padding-top: 30px; gap: 20px;">
+      <div class="payment-field">
+        <label>NOME E COGNOME</label>
+        <input type="text" placeholder="INSERISCI I TUOI DATI" class="payment-input">
+      </div>
+      <div class="payment-field">
+        <label>EMAIL</label>
+        <input type="text" placeholder="nome@dominio.com" class="payment-input">
+      </div>
+      <div class="payment-field">
+        <label>NUMERO DI TELEFONO</label>
+        <input type="text" placeholder="+39 000 000 0000" class="payment-input">
+      </div>
+    </div>
+    <!-- Footer vuoto per mantenere lo stesso formato e altezza del pannello pagamento -->
+    <div class="payment-footer" style="visibility: hidden; pointer-events: none;">
+      <button class="payment-confirm">N/A</button>
+    </div>
+  </div>
+
   <!-- PANNELLO PAGAMENTO -->
   <div id="paymentPanel" class="payment-panel hidden">
     <div class="payment-header">
@@ -221,6 +246,11 @@
     <h2 style="color: #00ffff; font-size: 24px; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,255,255,0.6); margin-bottom: 15px;">TRANSAZIONE APPROVATA</h2>
     <p style="color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.6;">I fondi sono stati trasferiti con successo alle Industrie Abstergo.<br>Preparazione per la sincronizzazione genetica in corso...</p>
     <button id="closeSuccessBtn" class="payment-confirm" style="margin-top: 25px;">CHIUDI</button>
+  </div>
+
+  <!-- SCHERMATA SINCRONIZZAZIONE -->
+  <div id="syncScreen" class="sync-screen hidden-panel">
+    <div class="sync-text">SINCRONIZZAZIONE...</div>
   </div>
 
 </div>

@@ -2290,6 +2290,7 @@
 
   /* ── PAYMENT LOGIC ── */
   const paymentPanelEl = document.getElementById('paymentPanel');
+  const userInfoPanelEl = document.getElementById('userInfoPanel');
   const paymentSuccessPanelEl = document.getElementById('paymentSuccessPanel');
   
   const cssPaymentPanel = new THREE.CSS3DObject(paymentPanelEl);
@@ -2298,11 +2299,24 @@
   cssPaymentPanel.lookAt(0, 1.5, 0);
   gridGroup.add(cssPaymentPanel);
 
+  const cssUserInfoPanel = new THREE.CSS3DObject(userInfoPanelEl);
+  cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+  cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
+  cssUserInfoPanel.lookAt(0, 1.5, 0);
+  gridGroup.add(cssUserInfoPanel);
+
   const cssPaymentSuccessPanel = new THREE.CSS3DObject(paymentSuccessPanelEl);
   cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
   cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
   cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
   gridGroup.add(cssPaymentSuccessPanel);
+
+  const syncScreenEl = document.getElementById('syncScreen');
+  const cssSyncScreen = new THREE.CSS3DObject(syncScreenEl);
+  cssSyncScreen.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+  cssSyncScreen.scale.set(0.045, 0.045, 0.045);
+  cssSyncScreen.lookAt(0, 0, 0);
+  gridGroup.add(cssSyncScreen);
 
   const closePaymentBtn = document.getElementById('closePaymentBtn');
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
@@ -2321,9 +2335,17 @@
   function showPaymentView() {
     cartPanelEl.classList.add('hidden');
     paymentPanelEl.classList.remove('hidden');
+    userInfoPanelEl.classList.remove('hidden');
     
-    // Position it at the center like cartPanel
-    cssPaymentPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+    // Position User Info on the left
+    const thetaUserInfo = thetaCenter - 0.35;
+    cssUserInfoPanel.position.set(Math.cos(thetaUserInfo) * panelRadiusCSS, 0, Math.sin(thetaUserInfo) * panelRadiusCSS);
+    cssUserInfoPanel.scale.set(0.045, 0.045, 0.045);
+    cssUserInfoPanel.lookAt(0, 0, 0);
+
+    // Position Payment on the right
+    const thetaPayment = thetaCenter + 0.35;
+    cssPaymentPanel.position.set(Math.cos(thetaPayment) * panelRadiusCSS, 0, Math.sin(thetaPayment) * panelRadiusCSS);
     cssPaymentPanel.scale.set(0.045, 0.045, 0.045);
     cssPaymentPanel.lookAt(0, 0, 0);
 
@@ -2332,12 +2354,17 @@
 
   function hidePaymentView() {
     paymentPanelEl.classList.add('hidden');
+    userInfoPanelEl.classList.add('hidden');
     cartPanelEl.classList.remove('hidden');
     
-    // Reset position
+    // Reset positions
     cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
     cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
     cssPaymentPanel.lookAt(0, 1.5, 0);
+
+    cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
+    cssUserInfoPanel.lookAt(0, 1.5, 0);
   }
 
   if (checkoutBtn) {
@@ -2366,16 +2393,47 @@
       
       setTimeout(() => {
         paymentPanelEl.classList.add('hidden');
-        paymentSuccessPanelEl.classList.remove('hidden');
+        userInfoPanelEl.classList.add('hidden');
         
-        // Reset payment panel position since it's hidden now
+        // Reset payment panel positions since they are hidden now
         cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
         cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
         cssPaymentPanel.lookAt(0, 1.5, 0);
 
-        cssPaymentSuccessPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
-        cssPaymentSuccessPanel.scale.set(0.045, 0.045, 0.045);
-        cssPaymentSuccessPanel.lookAt(0, 0, 0);
+        cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+        cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
+        cssUserInfoPanel.lookAt(0, 1.5, 0);
+
+        // Hide everything from the curved display
+        const panelL = document.getElementById('panelL');
+        const panelR = document.getElementById('panelR');
+        const logo = document.getElementById('abstergoLogo');
+        const cartBtn = document.getElementById('cartButton');
+        const dnaView = document.getElementById('floatingTimeline');
+        const globalTimeline = document.querySelector('.global-timeline');
+        
+        if (panelL) panelL.classList.add('hidden-panel');
+        if (panelR) panelR.classList.add('hidden-panel');
+        if (logo) logo.classList.add('hidden-panel');
+        if (cartBtn) cartBtn.style.opacity = '0';
+        if (dnaView) dnaView.classList.add('hidden-panel');
+        if (globalTimeline) globalTimeline.classList.add('hidden-panel');
+        
+        if (typeof tlNodeEls !== 'undefined') {
+          tlNodeEls.forEach(el => el.style.opacity = '0');
+        }
+        if (typeof tlTickObjs !== 'undefined') {
+          tlTickObjs.forEach(obj => obj.visible = false);
+        }
+        if (typeof tlArcLine !== 'undefined') {
+          tlArcLine.visible = false;
+          if (tlArcLine.userData && tlArcLine.userData.glow) {
+            tlArcLine.userData.glow.visible = false;
+          }
+        }
+
+        // Show sync screen
+        if (syncScreenEl) syncScreenEl.classList.remove('hidden-panel');
         
         confirmPaymentBtn.textContent = "CONFERMA E SINCRONIZZA";
         confirmPaymentBtn.disabled = false;
@@ -2404,6 +2462,7 @@
   }
 
   if (paymentPanelEl) paymentPanelEl.addEventListener('click', e => e.stopPropagation());
+  if (userInfoPanelEl) userInfoPanelEl.addEventListener('click', e => e.stopPropagation());
   if (paymentSuccessPanelEl) paymentSuccessPanelEl.addEventListener('click', e => e.stopPropagation());
 
   animate();
