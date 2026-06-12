@@ -2522,6 +2522,7 @@
     scene.fog = new THREE.FogExp2(0xe6ecef, 0.012);
     
     const whiteRoomGroup = new THREE.Group();
+    window.animusState.whiteRoomGroup = whiteRoomGroup; // Salvo per poterla rimuovere
     scene.add(whiteRoomGroup);
     
     // Griglie orizzontali in stile stanza della simulazione (sopra e sotto)
@@ -2583,6 +2584,46 @@
     transitionToWhiteRoom: transitionToWhiteRoom
   };
 
+  // Funzione per tornare indietro dopo l'acquisto
+  function returnFromWhiteRoom() {
+    if (window.animusState.whiteRoomGroup) {
+      scene.remove(window.animusState.whiteRoomGroup);
+      window.animusState.whiteRoomGroup = null;
+    }
+
+    // Ripristina sfondo e nebbia originali
+    renderer.setClearColor(0x1a1a1a, 1);
+    scene.fog = new THREE.FogExp2(0x1a1a1a, 0.025);
+
+    // Ripristina gruppi della stanza
+    bgGroup.visible = true;
+    gridGroup.visible = true;
+
+    // Ripristina post processing
+    const scanlines = document.getElementById('scanlines');
+    if(scanlines) scanlines.style.opacity = '1';
+    const vignette = document.getElementById('vignette');
+    if(vignette) vignette.style.background = 'radial-gradient(ellipse 110% 90% at 50% 55%, transparent 35%, rgba(0, 0, 0, 0.6) 100%)';
+
+    // Nascondi biglietto
+    const animusTicketEl = document.getElementById('animusTicket');
+    if (animusTicketEl) animusTicketEl.classList.add('hidden-panel');
+
+    // Mostra HUD
+    const hudContainer = document.getElementById('hud-container');
+    if (hudContainer) hudContainer.style.display = 'block';
+
+    // Resetta bottone pagamento se l'utente vuole comprare di nuovo
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.textContent = "CONFERMA SINCRONIZZAZIONE";
+      confirmPaymentBtn.disabled = false;
+    }
+
+    // Nascondi il pannello di pagamento ed esci dalla visuale carrello
+    hidePaymentView();
+    hideCartView();
+  }
+
   // Pulsante di ritorno all'animus
   const btnReturnAnimus = document.getElementById('btnReturnAnimus');
   if (btnReturnAnimus) {
@@ -2594,18 +2635,24 @@
       const eyelidBottom = document.querySelector('.eyelid-bottom');
       
       if (eyelidTop && eyelidBottom) {
-        // Chiudi gli occhi
+        // Chiudi gli occhi lentamente
         eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
         eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
         eyelidTop.style.height = '50%';
         eyelidBottom.style.height = '50%';
         
-        // Ricarica la pagina dopo la chiusura completa
+        // Quando lo schermo è nero, ripristina la scena
         setTimeout(() => {
-          window.location.reload();
-        }, 1800);
+          returnFromWhiteRoom();
+          
+          // Riapri gli occhi
+          eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          eyelidTop.style.height = '0%';
+          eyelidBottom.style.height = '0%';
+        }, 1600);
       } else {
-        window.location.reload();
+        returnFromWhiteRoom();
       }
     });
   }
