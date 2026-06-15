@@ -7,11 +7,69 @@
      RENDERER & SCENE
   ══════════════════════════════════════════════ */
   const canvas   = document.getElementById('threeCanvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  // Sfondo grigio neutro per contrasto
-  renderer.setClearColor(0x1a1a1a, 1);
+
+  /* Creazione resiliente del renderer WebGL: se intro.js occupa ancora
+     l'unico contesto disponibile, ritentiamo finché non viene rilasciato. */
+  let renderer;
+  function createRenderer() {
+    try {
+      return new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+  renderer = createRenderer();
+  if (!renderer) {
+    // Forza rilascio contesti precedenti se possibile (intro canvas)
+    const introCV = document.querySelector('#intro-sequence canvas');
+    if (introCV) {
+      const gl = introCV.getContext('webgl') || introCV.getContext('webgl2');
+      if (gl && gl.getExtension) {
+        const ext = gl.getExtension('WEBGL_lose_context');
+        if (ext) ext.loseContext();
+      }
+    }
+    // Retry sincrono dopo il rilascio
+    renderer = createRenderer();
+    if (!renderer) {
+      // Ultimo tentativo: aspetta che il contesto si liberi
+      console.warn('[Animus] WebGL context non disponibile, attendo rilascio...');
+      const retryInterval = setInterval(() => {
+        renderer = createRenderer();
+        if (renderer) {
+          clearInterval(retryInterval);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setClearColor(0x1a1a1a, 1);
+        }
+      }, 200);
+    }
+  }
+  if (renderer) {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x1a1a1a, 1);
+  }
+
+  /* Gestione perdita/ripristino contesto WebGL */
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('[Animus] WebGL context perso, in attesa di ripristino...');
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    console.info('[Animus] WebGL context ripristinato.');
+    if (renderer) {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x1a1a1a, 1);
+    }
+  });
 
   const cssRenderer = new THREE.CSS3DRenderer();
   cssRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -19,17 +77,25 @@
   cssRenderer.domElement.style.top = '0';
   cssRenderer.domElement.style.left = '0';
   cssRenderer.domElement.style.zIndex = '5';
-  cssRenderer.domElement.style.pointerEvents = 'none';
+  cssRenderer.domElement.style.pointerEvents = 'auto';
   document.body.appendChild(cssRenderer.domElement);
 
   /* Quando i pannelli gene sono aperti, qualsiasi click sul cssRenderer chiude —
      il CSS3D hit-testing è inaffidabile per elementi inclinati in prospettiva */
   cssRenderer.domElement.addEventListener('click', (e) => {
+    // Se il click origina dall'interno di un pannello interattivo, non chiudere
+    if (e.target.closest('.sc-panel') || e.target.closest('.char-detail-panel') ||
+        e.target.closest('.cart-panel') || e.target.closest('.payment-panel') ||
+        e.target.closest('.cart-btn') || e.target.closest('.tl-node-item') ||
+        e.target.closest('.char-row') || e.target.closest('.dna-back-arrow') ||
+        e.target.closest('.timeline-node') || e.target.closest('.btn-return-animus')) {
+      return;
+    }
+    
     /* Chiude i pannelli gene se aperti (tranne PRENOTA) */
     if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
       const id = e.target && e.target.id;
       if (id === 'scConfirmBtn') return;
-      if (id === 'charConfirmBtn' || id === 'charBackBtn') return; /* non interferire con char view */
       hideGeneInfo();
     }
   });
@@ -578,6 +644,7 @@
     8.0,
     Math.sin(thetaCartBtn) * panelRadiusCSS + 5
   );
+  // Orientato verso la camera (z=18), come hitPlaneL/hitPlaneR — fix click mancati
   hitPlaneCart.lookAt(0, 8.0, 18);
   scene.add(hitPlaneCart);
 
@@ -1068,7 +1135,6 @@
 
     charListEl.style.opacity   = '1'; charListEl.style.pointerEvents   = 'auto';
     charDetailEl.style.opacity = '1'; charDetailEl.style.pointerEvents = 'auto';
-    cssRenderer.domElement.style.pointerEvents = 'auto';
     dnaBackArrow.style.display = 'block';
   }
 
@@ -1082,7 +1148,6 @@
     charListCss.position.set(0, 1000, 0);
     charDetailCss.position.set(0, 1000, 0);
     charViewEpoch = -1;
-    cssRenderer.domElement.style.pointerEvents = 'none';
     showTimelineView();
   }
 
@@ -1477,6 +1542,7 @@
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
     dnaGuideTimeouts = [];
     dnaGuideEls.forEach((el, i) => {
+      el.style.display = '';
       el.style.opacity = '0';
       dnaGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
     });
@@ -1500,7 +1566,7 @@
     { year: '1500', epoch: 'Rinascimento',
       price: '€ 480', duration: '2 ORE',
       tagline: 'Arte, potere e cospirazioni.',
-      desc: 'Un\'epoca di straordinario fervore intellettuale e artistico, in cui le grandi famiglie si contendono il controllo degli stati attraverso alleanze, tradimenti e veleni. Sotto la superficie del rinnovamento culturale, antiche fratellanze segrete muovono le loro pedine per dominare il destino dell\'umanità.' },
+      desc: 'Un\'epoca di straordinario fervore intellettuale e artistico, in cui le grandi famiglie si contendono il controllo degli stati attraverso alleanze, tradimenti e veleni. Sotto la superficie del rinnovamento culturale, antiche fratellanze segrete muovono le loro pedine per destinare il futuro dell\'umanità.' },
     { year: '1600', epoch: "Età d'Oro della Pirateria",
       price: '€ 390', duration: '2 ORE',
       tagline: 'Libertà, rischio e mare aperto.',
@@ -1598,7 +1664,6 @@
   function showGeneInfo(s) {
     selectedDnaGene = s;
     canvas.style.pointerEvents = 'none';
-    cssRenderer.domElement.style.pointerEvents = 'auto';
     const g = geneData[s];
     document.getElementById('scEpoch').textContent    = `${g.epoch.toUpperCase()} · ${g.year}`;
     document.getElementById('scTagline').textContent  = g.tagline;
@@ -1629,7 +1694,9 @@
 
     scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
     scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
-    dnaGuideEls.forEach(el => { el.style.opacity = '0'; });
+    dnaGuideTimeouts.forEach(t => clearTimeout(t));
+    dnaGuideTimeouts = [];
+    dnaGuideEls.forEach(el => { el.style.opacity = '0'; el.style.display = 'none'; });
     dnaLabelEls.forEach(el => { el.style.opacity = '0'; el.classList.remove('hovered'); });
   }
   function hideGeneInfo() {
@@ -1639,8 +1706,6 @@
     }
     selectedDnaGene = -1;
     lastHoveredGene = -1;
-    cssRenderer.domElement.style.pointerEvents = 'none';
-    setTimeout(() => { cssRenderer.domElement.style.pointerEvents = ''; }, 120);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
 
@@ -1648,7 +1713,7 @@
     dnaGroup.visible = true;
 
     allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
-    dnaGuideEls.forEach(el => { el.style.opacity = '1'; });
+    dnaGuideEls.forEach(el => { el.style.display = ''; el.style.opacity = '1'; });
   }
 
   let scConfirmTimeout = null;
@@ -1735,7 +1800,7 @@
      RESIZE
   ══════════════════════════════════════════ */
   window.addEventListener('resize', ()=>{
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (renderer) renderer.setSize(window.innerWidth, window.innerHeight);
     cssRenderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
@@ -1876,7 +1941,7 @@
     panelR.style.borderColor = hoverR ? 'rgba(0,255,255,0.9)' : '';
     panelR.style.boxShadow   = hoverR ? 'inset 0 0 60px rgba(0,255,255,0.25)' : '';
 
-    renderer.render(scene, camera);
+    if (renderer) renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
 
     // ── ANIMAZIONI POST-BOOT ──
@@ -2253,6 +2318,17 @@
     cartPanel.addEventListener('click', e => e.stopPropagation());
   }
 
+  // Aggiungi click listeners per i nodi della timeline HTML (#floatingTimeline)
+  const htmlTimelineNodes = document.querySelectorAll('#floatingTimeline .timeline-node');
+  htmlTimelineNodes.forEach((node, idx) => {
+    node.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      // Mostra le info del frammento genetico corrispondente (stesso indice)
+      showGeneInfo(idx);
+    });
+  });
+
   // Make updateCartUI global so it can be called from inside handlers
   window.updateCartUI = function() {
     if (!cartItemsContainer || !cartCountEl || !checkoutBtn) return;
@@ -2518,7 +2594,7 @@
     gridGroup.visible = false;
     
     // Cambia il colore di sfondo e la nebbia ad un bianco luminoso/grigio chiaro
-    renderer.setClearColor(0xe6ecef, 1);
+    if (renderer) renderer.setClearColor(0xe6ecef, 1);
     scene.fog = new THREE.FogExp2(0xe6ecef, 0.012);
     
     const whiteRoomGroup = new THREE.Group();
@@ -2592,7 +2668,7 @@
     }
 
     // Ripristina sfondo e nebbia originali
-    renderer.setClearColor(0x1a1a1a, 1);
+    if (renderer) renderer.setClearColor(0x1a1a1a, 1);
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.025);
 
     // Ripristina gruppi della stanza
@@ -2605,13 +2681,20 @@
     const vignette = document.getElementById('vignette');
     if(vignette) vignette.style.background = 'radial-gradient(ellipse 110% 90% at 50% 55%, transparent 35%, rgba(0, 0, 0, 0.6) 100%)';
 
-    // Nascondi biglietto
+    // Nascondi biglietto e sync screen
     const animusTicketEl = document.getElementById('animusTicket');
     if (animusTicketEl) animusTicketEl.classList.add('hidden-panel');
+    if (syncScreenEl) syncScreenEl.classList.add('hidden-panel');
 
-    // Mostra HUD
+    // Mostra HUD e ripristina logo
     const hudContainer = document.getElementById('hud-container');
-    if (hudContainer) hudContainer.style.display = 'block';
+    if (hudContainer) {
+      hudContainer.style.display = 'block';
+      hudContainer.style.filter = ''; // Rimuove eventuale blur residuo dalla transizione
+    }
+    
+    const logo = document.getElementById('abstergoLogo');
+    if (logo) logo.classList.remove('hidden-panel');
 
     // Resetta bottone pagamento se l'utente vuole comprare di nuovo
     if (confirmPaymentBtn) {
@@ -2619,9 +2702,80 @@
       confirmPaymentBtn.disabled = false;
     }
 
-    // Nascondi il pannello di pagamento ed esci dalla visuale carrello
-    hidePaymentView();
-    hideCartView();
+    // ── Reset completo di TUTTI gli stati di navigazione ──
+    // Nascondi pannelli di pagamento
+    paymentPanelEl.classList.add('hidden');
+    userInfoPanelEl.classList.add('hidden');
+    paymentSuccessPanelEl.classList.add('hidden');
+    cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
+    cssPaymentPanel.lookAt(0, 1.5, 0);
+    cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
+    cssUserInfoPanel.lookAt(0, 1.5, 0);
+    cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
+    cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
+
+    // Nascondi carrello e resetta stato
+    cartViewActive = false;
+    cartPreviousState = 'cards';
+    cartPreviousGene = -1;
+    cartPreviousEpoch = -1;
+    cartPanelEl.classList.add('hidden');
+    cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssCartPanel.scale.set(0.035, 0.035, 0.035);
+    cssCartPanel.lookAt(0, 1.5, 0);
+
+    // Nascondi pannelli gene (booking)
+    selectedDnaGene = -1;
+    lastHoveredGene = -1;
+    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
+    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+
+    // Nascondi pannelli personaggio
+    charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
+    charDetailEl.style.opacity = '0'; charDetailEl.style.pointerEvents = 'none';
+    charListCss.position.set(0, 1000, 0);
+    charDetailCss.position.set(0, 1000, 0);
+    charViewEpoch = -1;
+
+    // Nascondi DNA
+    dnaGroup.visible = false;
+    dnaGuideEls.forEach(el => { el.style.opacity = '0'; });
+    dnaLabelEls.forEach(el => { el.style.opacity = '0'; });
+
+    // Nascondi timeline
+    if (tlArcLine) {
+      tlArcLine.visible = false;
+      if (tlArcLine.userData && tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
+    }
+    if (tlTickObjs) tlTickObjs.forEach(t => { t.visible = false; });
+    if (tlNodeEls) tlNodeEls.forEach((el, s) => {
+      el.style.opacity = '0'; el.style.pointerEvents = 'none';
+      if (tlNodeCsss && tlNodeCsss[s]) tlNodeCsss[s].position.y = 1000;
+    });
+    if (tlGuideEl) tlGuideEl.forEach(el => { el.style.opacity = '0'; });
+    if (tlDnaGroups) tlDnaGroups.forEach((g, s) => { g.visible = false; if (tlDnaHovers) tlDnaHovers[s] = false; });
+
+    // Ripristina la vista principale: pannelli L e R visibili
+    panelL.classList.remove('hidden-panel');
+    panelR.classList.remove('hidden-panel');
+    panelL.style.opacity = '1';
+    panelR.style.opacity = '1';
+    panelL.style.pointerEvents = 'auto';
+    panelR.style.pointerEvents = 'auto';
+    
+    // Ripristina carrello e logo visibili
+    cartBtnEl.style.opacity = '1';
+    cartBtnEl.style.pointerEvents = 'auto';
+    logoEl.style.opacity = '1';
+    
+    // Nascondi freccia indietro (siamo nella vista Cards)
+    dnaBackArrow.style.display = 'none';
+    
+    // Ripristina canvas pointer-events
+    canvas.style.pointerEvents = '';
   }
 
   // Pulsante di ritorno all'animus

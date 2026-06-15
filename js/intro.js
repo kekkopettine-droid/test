@@ -75,7 +75,28 @@
   seq.appendChild(threeCanvas);
 
   /* ── RENDERER ── */
-  const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas: threeCanvas,
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance',
+      failIfMajorPerformanceCaveat: false
+    });
+  } catch (e) {
+    console.warn('[Intro] WebGL non disponibile, salto intro:', e.message);
+    introActive = false;
+    window.introIsActive = false;
+    seq.style.display = 'none';
+    ['boot', 'hud-container', 'vignette', 'scanlines'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+    if (mainCV) { mainCV.style.opacity = '1'; mainCV.style.pointerEvents = ''; }
+    domObs.disconnect();
+    return;
+  }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;

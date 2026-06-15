@@ -205,6 +205,7 @@ body {
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(255,255,255,0.6), inset 0 0 4px rgba(255,255,255,0.2);
   transition: all 0.3s ease;
+  pointer-events: none;
 }
 .tl-node-item:hover .tl-node-dot,
 .tl-node-item.active .tl-node-dot {
@@ -219,6 +220,7 @@ body {
   letter-spacing: 0.12em;
   text-shadow: 0 0 8px rgba(255,255,255,0.6);
   transition: color 0.3s;
+  pointer-events: none;
 }
 .tl-node-item:hover .tl-node-year,
 .tl-node-item.active .tl-node-year {
@@ -472,6 +474,7 @@ body {
   box-shadow: 0 0 10px #00ffff, inset 0 0 5px #00ffff;
   transition: all 0.3s ease;
   position: relative;
+  pointer-events: none;
 }
 .timeline-node:hover .node-dot, .timeline-node.active .node-dot {
   background: #00ffff;
@@ -484,6 +487,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.1em;
   transition: all 0.3s ease;
+  pointer-events: none;
 }
 .timeline-node:hover .node-label, .timeline-node.active .node-label {
   color: #ffffff;
@@ -750,6 +754,7 @@ body {
   width: 24px;
   height: 24px;
   filter: drop-shadow(0 0 5px #ffffff);
+  pointer-events: none;
 }
 @keyframes cartPulse {
   0%, 100% {
@@ -781,6 +786,7 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 10px #ffffff;
+  pointer-events: none;
 }
 
 .cart-panel {
