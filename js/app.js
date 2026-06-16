@@ -9,7 +9,7 @@
   const canvas   = document.getElementById('threeCanvas');
 
   /* Creazione resiliente del renderer WebGL: se intro.js occupa ancora
-     l'unico contesto disponibile, ritentiamo finché non viene rilasciato. */
+     l'unico contesto disponibile, aspettiamo il segnale di rilascio. */
   let renderer;
   function createRenderer() {
     try {
@@ -24,37 +24,44 @@
       return null;
     }
   }
+
+  function initRenderer(r) {
+    r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    r.setSize(window.innerWidth, window.innerHeight);
+    r.setClearColor(0x1a1a1a, 1);
+  }
+
   renderer = createRenderer();
-  if (!renderer) {
-    // Forza rilascio contesti precedenti se possibile (intro canvas)
-    const introCV = document.querySelector('#intro-sequence canvas');
-    if (introCV) {
-      const gl = introCV.getContext('webgl') || introCV.getContext('webgl2');
-      if (gl && gl.getExtension) {
-        const ext = gl.getExtension('WEBGL_lose_context');
-        if (ext) ext.loseContext();
+  if (renderer) {
+    initRenderer(renderer);
+  } else if (window.introIsActive) {
+    /* L'intro sta usando il contesto WebGL — aspettiamo il suo rilascio
+       invece di creare contesti in loop (che causa errori). */
+    console.info('[Animus] In attesa che intro.js rilasci il contesto WebGL...');
+    let retryCount = 0;
+    const MAX_RETRIES = 50;
+
+    function tryCreateAfterRelease() {
+      renderer = createRenderer();
+      if (renderer) {
+        initRenderer(renderer);
+        return;
+      }
+      retryCount++;
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(tryCreateAfterRelease, 300);
+      } else {
+        console.error('[Animus] Impossibile creare il contesto WebGL dopo ' + MAX_RETRIES + ' tentativi.');
       }
     }
-    // Retry sincrono dopo il rilascio
-    renderer = createRenderer();
-    if (!renderer) {
-      // Ultimo tentativo: aspetta che il contesto si liberi
-      console.warn('[Animus] WebGL context non disponibile, attendo rilascio...');
-      const retryInterval = setInterval(() => {
-        renderer = createRenderer();
-        if (renderer) {
-          clearInterval(retryInterval);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          renderer.setClearColor(0x1a1a1a, 1);
-        }
-      }, 200);
-    }
-  }
-  if (renderer) {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x1a1a1a, 1);
+
+    window.addEventListener('introContextReleased', function onRelease() {
+      window.removeEventListener('introContextReleased', onRelease);
+      /* Piccolo ritardo per dare tempo al browser di riciclare il contesto */
+      setTimeout(tryCreateAfterRelease, 100);
+    });
+  } else {
+    console.error('[Animus] WebGL non disponibile su questo dispositivo.');
   }
 
   /* Gestione perdita/ripristino contesto WebGL */
@@ -637,7 +644,7 @@
   hitPlaneR.lookAt(0, -1, 18);
   scene.add(hitPlaneR);
 
-  const cartHitGeo = new THREE.PlaneGeometry(100 * 0.035, 100 * 0.035);
+  const cartHitGeo = new THREE.PlaneGeometry(160 * 0.035, 160 * 0.035);
   const hitPlaneCart = new THREE.Mesh(cartHitGeo, panelHitMat);
   hitPlaneCart.position.set(
     Math.cos(thetaCartBtn) * panelRadiusCSS,
@@ -1300,7 +1307,7 @@
   
   // Hitbox invisibili per facilitare la selezione col mouse (calibrata)
   const hitBoxes = [];
-  const hitBoxGeo = new THREE.SphereGeometry(0.85, 8, 8);
+  const hitBoxGeo = new THREE.SphereGeometry(1.2, 8, 8);
   const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
 
   const gSphSpecial = new THREE.SphereGeometry(0.065, 16, 12);
@@ -1743,16 +1750,53 @@
   });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
+
+  /* Helper: proietta un punto 3D sullo schermo e ritorna la distanza in pixel
+     dal click. Se l'oggetto è dietro la camera, ritorna Infinity. */
+  function screenDistFromClick(worldPos, clickX, clickY) {
+    const projected = worldPos.clone().project(camera);
+    if (projected.z > 1) return Infinity; // dietro la camera
+    const sx = (projected.x * 0.5 + 0.5) * window.innerWidth;
+    const sy = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+    const dx = sx - clickX;
+    const dy = sy - clickY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   window.addEventListener('click', e => {
     if (blockCanvasClick) return;
     if (selectedDnaGene !== -1) return;
 
+    /* Coordinate NDC calcolate dall'evento click. */
+    const clickNDC = new THREE.Vector2(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
+    );
+
+    /* Forza aggiornamento delle matrici mondo prima del raycasting,
+       altrimenti gli hitbox invisibili o in gruppi animati possono
+       avere matrici stale. */
+    scene.updateMatrixWorld(true);
+
     if (hasBooted) {
-      panelRaycaster.setFromCamera(rawMouse, camera);
+      panelRaycaster.setFromCamera(clickNDC, camera);
       
-      // Controllo click sul carrello tramite Raycaster (evita problemi di hit-test CSS3D in prospettiva)
+      /* ── Carrello: raycaster primario + fallback screen-space ── */
       if (!cartViewActive && paymentPanelEl && paymentPanelEl.classList.contains('hidden') && paymentSuccessPanelEl && paymentSuccessPanelEl.classList.contains('hidden')) {
-        if (panelRaycaster.intersectObject(hitPlaneCart).length > 0) {
+        let cartClicked = panelRaycaster.intersectObject(hitPlaneCart).length > 0;
+
+        /* Fallback: proietta la posizione world del bottone carrello
+           sullo schermo e controlla se il click è vicino (entro 50px). */
+        if (!cartClicked) {
+          const cartWorldPos = new THREE.Vector3();
+          cssCartBtn.getWorldPosition(cartWorldPos);
+          const dist = screenDistFromClick(cartWorldPos, e.clientX, e.clientY);
+          if (dist < 50) cartClicked = true;
+        }
+
+        if (cartClicked) {
+          e.stopPropagation();
+          e.preventDefault();
           if (window.audioEngine) window.audioEngine.playClick();
           showCartView();
           return;
@@ -1774,11 +1818,52 @@
       }
     }
 
-    /* Geni DNA */
-    if (dnaGroup.visible && lastHoveredGene !== -1) {
-      showGeneInfo(lastHoveredGene);
+    /* ── Geni DNA: raycaster primario + fallback screen-space ── */
+    if (dnaGroup.visible) {
+      /* Metodo 1: raycasting diretto sugli hitbox */
+      dnaRaycaster.setFromCamera(clickNDC, camera);
+      const geneHits = dnaRaycaster.intersectObjects(hitBoxes);
+      if (geneHits.length > 0) {
+        const hitParent = geneHits[0].object.parent;
+        for (let s = 0; s < NUM_SECTIONS; s++) {
+          if (specialGenes[s].includes(hitParent)) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (window.audioEngine) window.audioEngine.playClick();
+            showGeneInfo(s);
+            return;
+          }
+        }
+      }
+
+      /* Metodo 2 (fallback): proietta ogni gene sphere sullo schermo e
+         controlla la distanza in pixel. Questo funziona anche quando il
+         raycaster fallisce per via della rotazione continua del DNA o
+         della curva del display (gene 1900 in particolare). */
+      let closestGene = -1;
+      let closestDist = 100; // soglia in pixel (aumentata per touch/high-DPI)
+      for (let s = 0; s < NUM_SECTIONS; s++) {
+        const idx = specialGeneIndices[s];
+        // Controlla entrambe le sfere (filamento 1 e filamento 2)
+        for (const sph of [sphArr1[idx], sphArr2[idx]]) {
+          const worldPos = new THREE.Vector3();
+          sph.getWorldPosition(worldPos);
+          const dist = screenDistFromClick(worldPos, e.clientX, e.clientY);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestGene = s;
+          }
+        }
+      }
+      if (closestGene !== -1) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (window.audioEngine) window.audioEngine.playClick();
+        showGeneInfo(closestGene);
+        return;
+      }
     }
-  });
+  }, true); // USE CAPTURE PHASE! Supera qualsiasi stopPropagation dei figli.
 
   // Freccia indietro: gestisce showcase, DNA, timeline e carrello
   dnaBackArrow.addEventListener('click', () => {

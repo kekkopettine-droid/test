@@ -1801,7 +1801,17 @@
     /* Cleanup */
     introActive = false;
     cancelAnimationFrame(rafHandle);
+    /* Rilascia completamente il contesto WebGL prima di dispose
+       così il browser lo rende disponibile per app.js */
+    try {
+      const gl = renderer.getContext();
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    } catch (_) { /* ignore */ }
     renderer.dispose();
+    renderer = null;
+    /* Segnala ad app.js che il contesto è stato rilasciato */
+    window.dispatchEvent(new Event('introContextReleased'));
     domObs.disconnect();
     window.removeEventListener('wheel',      onWheel);
     window.removeEventListener('touchstart', onTouchStart);
@@ -1810,6 +1820,7 @@
 
   /* ── RESIZE ── */
   window.addEventListener('resize', () => {
+    if (!renderer) return;
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
