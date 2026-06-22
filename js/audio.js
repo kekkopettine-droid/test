@@ -165,27 +165,118 @@ class AnimusAudio {
     if (this.ctx.state === 'suspended') return;
 
     const t = this.ctx.currentTime;
-    
+
     // 6 micro-beep elaborazione dati
     for(let i=0; i<6; i++) {
         const time = t + (i * 0.05);
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
+
         osc.type = 'sine';
         // Frequenze precise, fredde
         osc.frequency.setValueAtTime(4000 + (Math.random() * 500), time);
-        
+
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(0.05, time + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.035);
-        
+
         osc.connect(gain);
         gain.connect(this.masterFilter);
-        
+
         osc.start(time);
         osc.stop(time + 0.035);
     }
+  }
+
+  playSyncSequence() {
+    if (this.ctx.state === 'suspended') return;
+    const t = this.ctx.currentTime;
+    // Sustained hum
+    const hum = this.ctx.createOscillator();
+    const humGain = this.ctx.createGain();
+    hum.type = 'sine'; hum.frequency.value = 80;
+    humGain.gain.setValueAtTime(0, t);
+    humGain.gain.linearRampToValueAtTime(0.08, t + 0.3);
+    humGain.gain.linearRampToValueAtTime(0.06, t + 2.5);
+    humGain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
+    hum.connect(humGain); humGain.connect(this.masterFilter);
+    hum.start(t); hum.stop(t + 3.0);
+    // Scan beeps
+    for (let i = 0; i < 5; i++) {
+      const time = t + 0.3 + i * 0.42;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 2200 + i * 180;
+      g.gain.setValueAtTime(0, time);
+      g.gain.linearRampToValueAtTime(0.07, time + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + 0.08);
+      o.connect(g); g.connect(this.masterFilter);
+      o.start(time); o.stop(time + 0.08);
+    }
+  }
+
+  playSedation() {
+    if (this.ctx.state === 'suspended') return;
+    const t = this.ctx.currentTime;
+    // Slow heartbeat-style pulses (two-tone: lub + dub, decelerating)
+    const beats = [[0.3, 0.16], [0.55, 0.16], [1.2, 0.15], [1.4, 0.15], [2.3, 0.13], [2.45, 0.13], [3.5, 0.10]];
+    beats.forEach(([delay, vol]) => {
+      const time = t + delay;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 55;
+      g.gain.setValueAtTime(0, time);
+      g.gain.linearRampToValueAtTime(vol, time + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + 0.25);
+      o.connect(g); g.connect(this.masterGain);
+      o.start(time); o.stop(time + 0.3);
+    });
+    // Lowpass filter descends (ovattamento)
+    this.masterFilter.frequency.setValueAtTime(18000, t);
+    this.masterFilter.frequency.linearRampToValueAtTime(400, t + 3.8);
+  }
+
+  playTunnel() {
+    if (this.ctx.state === 'suspended') return;
+    const t = this.ctx.currentTime;
+    // Restore filter
+    this.masterFilter.frequency.setValueAtTime(18000, t);
+    // Whoosh burst (noise)
+    const bufSz = this.ctx.sampleRate * 0.8;
+    const buf = this.ctx.createBuffer(1, bufSz, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSz; i++) data[i] = (Math.random() * 2 - 1) * (1 - i/bufSz);
+    const ns = this.ctx.createBufferSource(); ns.buffer = buf;
+    const nf = this.ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 2000; nf.Q.value = 0.5;
+    const ng = this.ctx.createGain();
+    ng.gain.setValueAtTime(0.35, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+    ns.connect(nf); nf.connect(ng); ng.connect(this.masterGain);
+    ns.start(t);
+    // Sustained data-stream tone (rising)
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + 6.0);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.04, t + 0.5);
+    g.gain.linearRampToValueAtTime(0.04, t + 5.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 6.5);
+    const f2 = this.ctx.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 800;
+    o.connect(f2); f2.connect(g); g.connect(this.masterFilter);
+    o.start(t); o.stop(t + 6.5);
+  }
+
+  playWhiteArrive() {
+    if (this.ctx.state === 'suspended') return;
+    const t = this.ctx.currentTime;
+    this.masterFilter.frequency.setValueAtTime(18000, t);
+    // Bright reverberant ping
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(3800, t); o.frequency.exponentialRampToValueAtTime(2200, t + 2.0);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.18, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+    o.connect(g); g.connect(this.masterFilter);
+    o.start(t); o.stop(t + 2.5);
+    // Sub impact
+    const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
+    o2.type = 'sine'; o2.frequency.value = 60;
+    g2.gain.setValueAtTime(0.3, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+    o2.connect(g2); g2.connect(this.masterGain);
+    o2.start(t); o2.stop(t + 0.8);
   }
 }
 

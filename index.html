@@ -7,7 +7,7 @@
 
 <!-- IMPORT DEI FILE CSS -->
 <link rel="stylesheet" href="css/intro.css">
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 
 </head>
 <body>
@@ -256,7 +256,21 @@
 
   <!-- SCHERMATA SINCRONIZZAZIONE -->
   <div id="syncScreen" class="sync-screen hidden-panel">
-    <div class="sync-text">SINCRONIZZAZIONE...</div>
+    <div class="sync-inner">
+      <div class="sync-header">⬡ ABSTERGO · ANIMUS 3.28</div>
+      <div class="sync-title">SINCRONIZZAZIONE GENETICA</div>
+      <div class="sync-progress-wrap">
+        <div class="sync-bar"><div class="sync-bar-fill" id="syncBarFill"></div></div>
+        <div class="sync-pct-text" id="syncPctText">0%</div>
+      </div>
+      <div class="sync-rows">
+        <div class="sync-row sr1"><span>ANALISI DNA</span><span class="srv ok">✓ COMPLETATA</span></div>
+        <div class="sync-row sr2"><span>ESTRAZIONE MEMORIA</span><span class="srv ok">✓ TROVATA</span></div>
+        <div class="sync-row sr3"><span>CALIBRAZIONE ANIMUS</span><span class="srv pulse">...</span></div>
+        <div class="sync-row sr4"><span>ACCESSO GENETICO</span><span class="srv pulse2">---</span></div>
+      </div>
+      <div class="sync-dna-ticker" id="syncDnaTicker"></div>
+    </div>
   </div>
 
   <!-- BIGLIETTO ESPERIENZA NELLA WHITE ROOM -->
@@ -300,10 +314,10 @@
 <script src="js/intro.js"></script>
 
 <!-- ANIMUS TRANSITION SEQUENCE -->
-<script src="js/transition.js"></script>
+<script src="js/transition.js?v=5"></script>
 
 <!-- APP PRINCIPALE -->
-<script src="js/app.js?v=3"></script>
+<script src="js/app.js?v=9"></script>
 
 </body>
 </html>

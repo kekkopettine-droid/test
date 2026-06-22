@@ -1064,21 +1064,89 @@ body {
   justify-content: center;
   width: 800px;
   height: 400px;
-  background: transparent;
   pointer-events: none;
+  background: transparent;
 }
-.sync-text {
-  color: #00ffff;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 52px;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.2);
-  animation: syncBlink 1.2s infinite ease-in-out;
+.sync-inner {
+  width: 680px;
+  text-align: center;
+  font-family: Consolas, "Lucida Console", monospace;
+  color: rgba(0,230,204,0.9);
 }
-@keyframes syncBlink {
-  0%, 100% { opacity: 0.2; filter: drop-shadow(0 0 5px rgba(0,255,255,0.3)); }
-  50% { opacity: 1; filter: drop-shadow(0 0 25px rgba(0,255,255,1)); }
+.sync-header {
+  font-size: 11px;
+  letter-spacing: 6px;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+.sync-title {
+  font-size: 28px;
+  letter-spacing: 8px;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(0,230,204,0.9), 0 0 40px rgba(0,230,204,0.5);
+  margin-bottom: 20px;
+}
+.sync-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.sync-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(0,230,204,0.12);
+  overflow: hidden;
+  border-radius: 2px;
+}
+.sync-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: rgba(0,230,204,0.85);
+  box-shadow: 0 0 10px rgba(0,230,204,0.7), 0 0 20px rgba(0,230,204,0.4);
+  transition: width 2.5s cubic-bezier(0.1,0.9,0.2,1);
+}
+.sync-pct-text {
+  font-size: 12px;
+  letter-spacing: 2px;
+  min-width: 42px;
+  text-align: right;
+}
+.sync-rows {
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+}
+.sync-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  opacity: 0;
+  animation: syncRowIn 0.4s ease both;
+  border-bottom: 1px solid rgba(0,230,204,0.07);
+}
+.sr1 { animation-delay: 0.1s; }
+.sr2 { animation-delay: 0.5s; }
+.sr3 { animation-delay: 0.9s; }
+.sr4 { animation-delay: 1.4s; }
+.srv.ok { color: #00E8CC; }
+.srv.pulse { animation: syncPulse 0.8s infinite; }
+.srv.pulse2 { animation: syncPulse 1.2s infinite; }
+.sync-dna-ticker {
+  font-size: 8px;
+  letter-spacing: 5px;
+  opacity: 0.22;
+  overflow: hidden;
+  white-space: nowrap;
+}
+@keyframes syncRowIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes syncPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 1.0; }
 }
 
 /* ── ANIMAZIONE OCCHI (EYELIDS) ── */
@@ -1097,11 +1165,11 @@ body {
   transition: height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 .eyelid-top {
-  box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+  box-shadow: 0 20px 60px rgba(0,0,0,1), 0 8px 20px rgba(0,0,0,1);
 }
 .eyelid-bottom {
   margin-top: auto;
-  box-shadow: 0 -15px 40px rgba(0,0,0,0.9);
+  box-shadow: 0 -20px 60px rgba(0,0,0,1), 0 -8px 20px rgba(0,0,0,1);
 }
 
 .animus-white-flash {

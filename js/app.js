@@ -793,25 +793,75 @@
   const TL_ARC_START = Math.PI * (205 / 180);
   const TL_ARC_LEN   = Math.PI * (130 / 180);
 
-  // Tubo spesso (linea olografica) — usa TubeGeometry per avere spessore reale
+  // Linea timeline — particelle stile DNA (ciano, breathing, scanner)
   (function() {
-    const pts = [];
-    for (let i = 0; i <= 100; i++) {
-      const phi = panelArcStart + (i / 100) * arcLength;
-      pts.push(new THREE.Vector3(Math.cos(phi) * TL_R, TL_Y, Math.sin(phi) * TL_R));
+    // Soft circular texture (come pTex, ma creata localmente)
+    const tlTC = document.createElement('canvas');
+    tlTC.width = tlTC.height = 32;
+    const tlTCx = tlTC.getContext('2d');
+    const tlTGr = tlTCx.createRadialGradient(16,16,0, 16,16,16);
+    tlTGr.addColorStop(0,   'rgba(255,255,255,1)');
+    tlTGr.addColorStop(0.4, 'rgba(255,255,255,0.8)');
+    tlTGr.addColorStop(1,   'rgba(255,255,255,0)');
+    tlTCx.fillStyle = tlTGr;
+    tlTCx.beginPath(); tlTCx.arc(16,16,16,0,Math.PI*2); tlTCx.fill();
+    const tlTex = new THREE.CanvasTexture(tlTC);
+
+    const TL_LINE_PTS = 700;
+    const tlPos = new Float32Array(TL_LINE_PTS * 3);
+    const tlOff = new Float32Array(TL_LINE_PTS);
+    const tlT   = new Float32Array(TL_LINE_PTS);
+    for (let i = 0; i < TL_LINE_PTS; i++) {
+      const t   = i / (TL_LINE_PTS - 1);
+      const phi = panelArcStart + t * arcLength;
+      tlPos[i*3]   = Math.cos(phi) * TL_R;
+      tlPos[i*3+1] = TL_Y;
+      tlPos[i*3+2] = Math.sin(phi) * TL_R;
+      tlOff[i] = Math.random() * Math.PI * 2;
+      tlT[i]   = t;
     }
-    const curve = new THREE.CatmullRomCurve3(pts);
-    const tubeGeo = new THREE.TubeGeometry(curve, 200, 0.07, 8, false);
-    const tubeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
-    tlArcLine = new THREE.Mesh(tubeGeo, tubeMat);
+    const tlLineGeo = new THREE.BufferGeometry();
+    tlLineGeo.setAttribute('position', new THREE.BufferAttribute(tlPos, 3));
+    tlLineGeo.setAttribute('aOffset',  new THREE.BufferAttribute(tlOff, 1));
+
+    const tlVS = `
+      uniform float uTime;
+      attribute float aOffset;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        float breath = sin(uTime * 2.5 + aOffset) * 0.5 + 0.5;
+        float size   = 2.8 + breath * 1.2;
+        vec3 pos = position;
+        if (fract(aOffset * 17.31) > 0.97)
+          pos.y += sin(uTime * 9.0 + aOffset * 4.0) * 0.05;
+        vColor = vec3(0.05, 0.91, 0.80);
+        vAlpha = 0.55 + breath * 0.35;
+        vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position  = projectionMatrix * mvPos;
+        gl_PointSize = size * (38.0 / -mvPos.z);
+      }
+    `;
+    const tlFS = `
+      uniform sampler2D uTex;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        vec4 tex = texture2D(uTex, gl_PointCoord);
+        if (tex.a < 0.01) discard;
+        gl_FragColor = vec4(vColor * tex.rgb, tex.a * vAlpha);
+      }
+    `;
+    const tlLineMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uTex: { value: tlTex } },
+      vertexShader: tlVS, fragmentShader: tlFS,
+      blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+    });
+    tlArcLine = new THREE.Points(tlLineGeo, tlLineMat);
     tlArcLine.visible = false;
     gridGroup.add(tlArcLine);
-    const glowGeo = new THREE.TubeGeometry(curve, 200, 0.18, 8, false);
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
-    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-    glowMesh.visible = false;
-    gridGroup.add(glowMesh);
-    tlArcLine.userData.glow = glowMesh;
+
+    tlArcLine.userData.lineMat = tlLineMat;
   })();
 
   // Dati storici per ciascun nodo (5 personaggi AC)
@@ -911,25 +961,44 @@
     mg.rotation.y = Math.atan2(-Math.cos(phi), -Math.sin(phi));
     mg.visible = false;
 
-    // Due onde sinusoidali piatte che scorrono (stile schermata analisi Animus)
+    // Doppia elica stile particelle — stesso look del DNA principale
     const MN = 2, MSEGS = 80, MAMP = 0.18, MH = 2.0, MDEPTH = 0.04;
     const mArr1 = new Float32Array((MSEGS + 1) * 3);
     const mArr2 = new Float32Array((MSEGS + 1) * 3);
-    const MRUNGS = MN * 6;
+    const MRUNGS = MN * 9; /* più aste per densità */
     const mArrR = new Float32Array((MRUNGS + 1) * 6);
+
+    /* Particelle sui filamenti */
+    const MPTS = 160;
+    const mPts = new Float32Array(MPTS * 3);
+    const mPtsGeo = new THREE.BufferGeometry();
+    mPtsGeo.setAttribute('position', new THREE.BufferAttribute(mPts, 3));
+    const mPtsMat = new THREE.PointsMaterial({ color: 0x00e8cc, size: 0.055, sizeAttenuation: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    mg.add(new THREE.Points(mPtsGeo, mPtsMat));
+
+    /* Anellini luminosi sui geni (pochi punti più grandi) */
+    const MRINGS = 12;
+    const mRingPts = new Float32Array(MRINGS * 3);
+    const mRingGeo = new THREE.BufferGeometry();
+    mRingGeo.setAttribute('position', new THREE.BufferAttribute(mRingPts, 3));
+    const mRingMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.11, sizeAttenuation: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+    mg.add(new THREE.Points(mRingGeo, mRingMat));
 
     const mGeo1 = new THREE.BufferGeometry(); mGeo1.setAttribute('position', new THREE.BufferAttribute(mArr1, 3));
     const mGeo2 = new THREE.BufferGeometry(); mGeo2.setAttribute('position', new THREE.BufferAttribute(mArr2, 3));
     const mGeoR = new THREE.BufferGeometry(); mGeoR.setAttribute('position', new THREE.BufferAttribute(mArrR, 3));
 
-    mg.add(new THREE.Line(mGeo1, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
-    mg.add(new THREE.Line(mGeo2, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })));
-    mg.add(new THREE.LineSegments(mGeoR, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mg.add(new THREE.Line(mGeo1, new THREE.LineBasicMaterial({ color: 0x00e8cc, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mg.add(new THREE.Line(mGeo2, new THREE.LineBasicMaterial({ color: 0x00e8cc, transparent: true, opacity: 0.40, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mg.add(new THREE.LineSegments(mGeoR, new THREE.LineBasicMaterial({ color: 0x00d4bb, transparent: true, opacity: 0.30, blending: THREE.AdditiveBlending, depthWrite: false })));
 
     mg.userData.mArr1 = mArr1; mg.userData.mArr2 = mArr2; mg.userData.mArrR = mArrR;
     mg.userData.mGeo1 = mGeo1; mg.userData.mGeo2 = mGeo2; mg.userData.mGeoR = mGeoR;
+    mg.userData.mPts = mPts; mg.userData.mPtsGeo = mPtsGeo;
+    mg.userData.mRingPts = mRingPts; mg.userData.mRingGeo = mRingGeo;
     mg.userData.MN = MN; mg.userData.MSEGS = MSEGS; mg.userData.MAMP = MAMP;
     mg.userData.MH = MH; mg.userData.MDEPTH = MDEPTH; mg.userData.MRUNGS = MRUNGS;
+    mg.userData.MPTS = MPTS; mg.userData.MRINGS = MRINGS;
     mg.userData.phase = s * 0.8; // Fase iniziale diversa per ogni nodo
 
     gridGroup.add(mg);
@@ -1249,74 +1318,319 @@
   dnaGroup.visible = false;
   gridGroup.add(dnaGroup);
 
-  // Materiali DNA — eliche: glow a 3 strati (core bianco + glow + tinta cyan)
-  const matSA  = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0,  blending: THREE.AdditiveBlending, depthWrite: false });
-  const matSB  = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matSC  = new THREE.LineBasicMaterial({ color: 0x55bbff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matRung = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5,  blending: THREE.AdditiveBlending, depthWrite: false });
+  // ── PLEXUS BACKGROUND NETWORK ──
+  const plexusGroup = new THREE.Group();
+  dnaGroup.add(plexusGroup);
 
-  // Nodi: sfere compatte bianche luminose
-  const matSph1 = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const matSph2 = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
-
-  // Geometrie aggiornabili ogni frame
-  const STRAND_SEGS = 200;
-  const NUM_RUNGS   = DNA_TURNS * 9;
-  const arr1     = new Float32Array((STRAND_SEGS + 1) * 3);
-  const arr2     = new Float32Array((STRAND_SEGS + 1) * 3);
-  const arrRungs = new Float32Array((NUM_RUNGS  + 1) * 6);
-
-  const geo1 = new THREE.BufferGeometry(); geo1.setAttribute('position', new THREE.BufferAttribute(arr1, 3));
-  const geo2 = new THREE.BufferGeometry(); geo2.setAttribute('position', new THREE.BufferAttribute(arr2, 3));
-  // 3 layer di glow per elica: core + glow + tinta
-  dnaGroup.add(new THREE.Line(geo1, matSA));
-  dnaGroup.add(new THREE.Line(geo1, matSB));
-  dnaGroup.add(new THREE.Line(geo1, matSC));
-  dnaGroup.add(new THREE.Line(geo2, matSA));
-  dnaGroup.add(new THREE.Line(geo2, matSB));
-  dnaGroup.add(new THREE.Line(geo2, matSC));
-
-  const geoRungs = new THREE.BufferGeometry(); geoRungs.setAttribute('position', new THREE.BufferAttribute(arrRungs, 3));
-
-  // Rungs: cilindro bianco esterno + core cyan sottile = effetto "cavo energetico"
-  const rungCylGeo = new THREE.CylinderGeometry(0.028, 0.028, 1, 7, 1);
-  const rungCylMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.80, blending: THREE.AdditiveBlending, depthWrite: false });
-  const rungCorGeo = new THREE.CylinderGeometry(0.011, 0.011, 1, 6, 1);
-  const rungCorMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 1.0,  blending: THREE.AdditiveBlending, depthWrite: false });
-  const rungCyls = [], rungCors = [];
-  for (let i = 0; i <= NUM_RUNGS; i++) {
-    const cyl = new THREE.Mesh(rungCylGeo, rungCylMat); dnaGroup.add(cyl); rungCyls.push(cyl);
-    const cor = new THREE.Mesh(rungCorGeo, rungCorMat); dnaGroup.add(cor); rungCors.push(cor);
+  const PLEXUS_NODES = 150;
+  const plexusPts = new Float32Array(PLEXUS_NODES * 3);
+  const plexusVel = [];
+  for (let i = 0; i < PLEXUS_NODES; i++) {
+    const angle = panelArcStart + Math.random() * arcLength;
+    const radius = r_dna - 3 + Math.random() * 6;
+    const y = (Math.random() - 0.5) * 14;
+    plexusPts[i*3]   = Math.cos(angle) * radius;
+    plexusPts[i*3+1] = y;
+    plexusPts[i*3+2] = Math.sin(angle) * radius;
+    plexusVel.push(new THREE.Vector3(
+      (Math.random() - 0.5) * 0.008,
+      (Math.random() - 0.5) * 0.008,
+      (Math.random() - 0.5) * 0.008
+    ));
   }
+  const plexusGeo = new THREE.BufferGeometry();
+  plexusGeo.setAttribute('position', new THREE.BufferAttribute(plexusPts, 3));
 
-  // Nodi piccoli e nitidi
-  const gSph = new THREE.SphereGeometry(0.05, 8, 6);
+  // Soft circular texture for particles and plexus nodes
+  const pCanvas = document.createElement('canvas');
+  pCanvas.width = 64; pCanvas.height = 64;
+  const pCtx = pCanvas.getContext('2d');
+  const pGrad = pCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  pGrad.addColorStop(0, 'rgba(255,255,255,1)');
+  pGrad.addColorStop(0.15, 'rgba(200,255,255,0.9)');
+  pGrad.addColorStop(0.4, 'rgba(0,200,200,0.3)');
+  pGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  pCtx.fillStyle = pGrad;
+  pCtx.fillRect(0, 0, 64, 64);
+  const pTex = new THREE.CanvasTexture(pCanvas);
+
+  // Ring texture for "anellini" particles
+  const ringCanvas = document.createElement('canvas');
+  ringCanvas.width = 64; ringCanvas.height = 64;
+  const ringCtx = ringCanvas.getContext('2d');
+  ringCtx.clearRect(0, 0, 64, 64);
+  ringCtx.beginPath();
+  ringCtx.arc(32, 32, 24, 0, Math.PI * 2);
+  ringCtx.lineWidth = 4;
+  ringCtx.strokeStyle = 'rgba(0,255,240,0.9)';
+  ringCtx.shadowColor = 'rgba(0,255,240,0.6)';
+  ringCtx.shadowBlur = 8;
+  ringCtx.stroke();
+  const ringTex = new THREE.CanvasTexture(ringCanvas);
+
+  const plexusNodeMat = new THREE.PointsMaterial({
+    map: pTex, color: 0x00ddcc, size: 0.25, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  });
+  const plexusNodes = new THREE.Points(plexusGeo, plexusNodeMat);
+  plexusGroup.add(plexusNodes);
+
+  const MAX_PLEXUS_LINES = PLEXUS_NODES * 10;
+  const plexusLineGeo = new THREE.BufferGeometry();
+  const plexusLinePos = new Float32Array(MAX_PLEXUS_LINES * 2 * 3);
+  plexusLineGeo.setAttribute('position', new THREE.BufferAttribute(plexusLinePos, 3));
+  plexusLineGeo.setDrawRange(0, 0);
+
+  const plexusLineMat = new THREE.LineBasicMaterial({
+    color: 0x00ccbb, transparent: true, opacity: 0.14,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const plexusLines = new THREE.LineSegments(plexusLineGeo, plexusLineMat);
+  plexusGroup.add(plexusLines);
+
+  // ── HOLOGRAPHIC PARTICLE DNA (dots + rings + ambient) ──
+  const PARTICLE_COUNT = 24000;
+  const RING_COUNT     = 2000;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos    = new Float32Array(PARTICLE_COUNT * 3);
+  const pOffset = new Float32Array(PARTICLE_COUNT);
+  const pType   = new Float32Array(PARTICLE_COUNT); // 0=strand1, 1=strand2, 2=rung, 3=ambient
+  const pT      = new Float32Array(PARTICLE_COUNT); // position along helix [0..1]
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const rnd = Math.random();
+    if (rnd < 0.30)      pType[i] = 0.0; // strand 1
+    else if (rnd < 0.60) pType[i] = 1.0; // strand 2
+    else if (rnd < 0.92) pType[i] = 2.0; // rungs / base pairs
+    else                 pType[i] = 3.0; // ambient floaters
+    pT[i]      = Math.random();
+    pOffset[i] = Math.random() * Math.PI * 2;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('aOffset',  new THREE.BufferAttribute(pOffset, 1));
+  pGeo.setAttribute('aType',    new THREE.BufferAttribute(pType, 1));
+  pGeo.setAttribute('aT',       new THREE.BufferAttribute(pT, 1));
+
+  const pShaderMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:      { value: 0 },
+      uTex:       { value: pTex },
+      uScanner:   { value: 0 },
+      uHoveredT:  { value: -1.0 },
+      uSelectedT: { value: -1.0 }
+    },
+    vertexShader: `
+      uniform float uTime;
+      uniform float uScanner;
+      uniform float uHoveredT;
+      uniform float uSelectedT;
+      attribute float aOffset;
+      attribute float aType;
+      attribute float aT;
+      varying float vAlpha;
+      varying vec3  vColor;
+      varying float vScanGlow;
+      void main() {
+        vec3 pos = position;
+
+        // Breathing: each particle pulses at its own phase
+        float breath = sin(uTime * 2.5 + aOffset) * 0.5 + 0.5;
+        float size = 1.8 + breath * 1.2;
+
+        // Type-specific sizing
+        if (aType < 0.5)      size *= 1.2;          // strand 1: medium dots
+        else if (aType < 1.5) size *= 1.3;          // strand 2: slightly larger
+        else if (aType < 2.5) size *= 0.7;          // rungs: small dense dots
+        else                  size *= 0.8 + breath; // ambient: variable
+
+        // Micro-glitch: occasional jitter on ~5% of particles
+        if (fract(aOffset * 17.31) > 0.95) {
+          pos.x += sin(uTime * 8.0 + aOffset * 3.0) * 0.06;
+          pos.y += cos(uTime * 9.0 + aOffset * 5.0) * 0.06;
+          pos.z += sin(uTime * 7.0 + aOffset * 7.0) * 0.06;
+        }
+
+        // Ambient floaters drift slowly
+        if (aType > 2.5) {
+          pos.x += sin(uTime * 0.4 + aOffset) * 0.3;
+          pos.y += cos(uTime * 0.5 + aOffset * 1.3) * 0.3;
+          pos.z += sin(uTime * 0.6 + aOffset * 0.7) * 0.3;
+        }
+
+        // Scanner beam distance
+        float scanDist = abs(aT - uScanner);
+        if (scanDist > 0.5) scanDist = 1.0 - scanDist;
+        float scanGlow = smoothstep(0.025, 0.0, scanDist);
+        vScanGlow = scanGlow;
+        size += scanGlow * 2.5;
+
+        // Hover / selection highlight
+        float highlight = 0.0;
+        if (uHoveredT >= 0.0 && abs(aT - uHoveredT) < 0.05) highlight = 0.7;
+        if (uSelectedT >= 0.0 && abs(aT - uSelectedT) < 0.05) highlight = 1.0;
+        size += highlight * 2.5;
+
+        // Color: teal base → white on highlight/scan
+        vec3 teal  = vec3(0.05, 0.85, 0.75);
+        vec3 white = vec3(0.9, 1.0, 1.0);
+        float brightFactor = clamp(highlight + scanGlow * 0.8 + breath * 0.15, 0.0, 1.0);
+        vColor = mix(teal, white, brightFactor);
+
+        // Alpha: depth-based fading + highlight
+        vAlpha = 0.7 + breath * 0.3 + highlight * 0.4 + scanGlow * 0.5;
+        if (aType > 2.5) vAlpha *= 0.4; // ambient is subtle
+
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+
+        // Size attenuation: closer = bigger + brighter, farther = dimmer
+        gl_PointSize = size * (38.0 / -mvPosition.z);
+
+        // Depth-based alpha fade
+        float depthFade = clamp(1.0 - (-mvPosition.z - 5.0) / 40.0, 0.35, 1.0);
+        vAlpha *= depthFade;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uTex;
+      varying float vAlpha;
+      varying vec3  vColor;
+      varying float vScanGlow;
+      void main() {
+        vec4 texColor = texture2D(uTex, gl_PointCoord);
+        if (texColor.a < 0.01) discard;
+        vec3 finalColor = vColor;
+        // Scanner beam adds bright white flash
+        finalColor += vec3(0.6, 0.8, 0.8) * vScanGlow;
+        gl_FragColor = vec4(finalColor, texColor.a * vAlpha);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const particleDna = new THREE.Points(pGeo, pShaderMat);
+  dnaGroup.add(particleDna);
+
+  // Bloom layer: same geometry, larger + dimmer for soft glow
+  const pBloomMat = pShaderMat.clone();
+  pBloomMat.uniforms = {
+    uTime:      { value: 0 },
+    uTex:       { value: pTex },
+    uScanner:   { value: 0 },
+    uHoveredT:  { value: -1.0 },
+    uSelectedT: { value: -1.0 }
+  };
+  pBloomMat.vertexShader = pBloomMat.vertexShader.replace(
+    'gl_PointSize = size * (38.0',
+    'gl_PointSize = size * (110.0'
+  );
+  pBloomMat.fragmentShader = pBloomMat.fragmentShader.replace(
+    'texColor.a * vAlpha',
+    'texColor.a * vAlpha * 0.20'
+  );
+  const particleBloom = new THREE.Points(pGeo, pBloomMat);
+  dnaGroup.add(particleBloom);
+
+  // ── RING PARTICLES (anellini / circles vuoti) ──
+  const ringGeo = new THREE.BufferGeometry();
+  const ringPos    = new Float32Array(RING_COUNT * 3);
+  const ringOffset = new Float32Array(RING_COUNT);
+  const ringT      = new Float32Array(RING_COUNT);
+  const ringType   = new Float32Array(RING_COUNT); // 0=strand1, 1=strand2
+  for (let i = 0; i < RING_COUNT; i++) {
+    ringType[i]   = Math.random() < 0.5 ? 0.0 : 1.0;
+    ringT[i]      = Math.random();
+    ringOffset[i] = Math.random() * Math.PI * 2;
+  }
+  ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3));
+  ringGeo.setAttribute('aOffset',  new THREE.BufferAttribute(ringOffset, 1));
+  ringGeo.setAttribute('aT',       new THREE.BufferAttribute(ringT, 1));
+  ringGeo.setAttribute('aType',    new THREE.BufferAttribute(ringType, 1));
+
+  const ringShaderMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:      { value: 0 },
+      uRingTex:   { value: ringTex },
+      uScanner:   { value: 0 },
+      uHoveredT:  { value: -1.0 },
+      uSelectedT: { value: -1.0 }
+    },
+    vertexShader: `
+      uniform float uTime;
+      uniform float uScanner;
+      uniform float uHoveredT;
+      uniform float uSelectedT;
+      attribute float aOffset;
+      attribute float aT;
+      attribute float aType;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        vec3 pos = position;
+        float breath = sin(uTime * 1.8 + aOffset * 2.0) * 0.5 + 0.5;
+        float size = 4.5 + breath * 4.0 + (aType > 0.5 ? 2.0 : 0.0);
+
+        float scanDist = abs(aT - uScanner);
+        if (scanDist > 0.5) scanDist = 1.0 - scanDist;
+        float scanGlow = smoothstep(0.03, 0.0, scanDist);
+        size += scanGlow * 4.0;
+
+        float highlight = 0.0;
+        if (uHoveredT >= 0.0 && abs(aT - uHoveredT) < 0.05) highlight = 0.6;
+        if (uSelectedT >= 0.0 && abs(aT - uSelectedT) < 0.05) highlight = 1.0;
+        size += highlight * 3.0;
+
+        vColor = mix(vec3(0.0, 0.7, 0.6), vec3(0.8, 1.0, 1.0), clamp(highlight + scanGlow + breath * 0.2, 0.0, 1.0));
+        vAlpha = 0.5 + breath * 0.3 + highlight * 0.3 + scanGlow * 0.4;
+
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        gl_PointSize = size * (30.0 / -mvPosition.z);
+        float depthFade = clamp(1.0 - (-mvPosition.z - 5.0) / 40.0, 0.3, 1.0);
+        vAlpha *= depthFade;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uRingTex;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        vec4 texColor = texture2D(uRingTex, gl_PointCoord);
+        if (texColor.a < 0.01) discard;
+        gl_FragColor = vec4(vColor, texColor.a * vAlpha);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const ringParticles = new THREE.Points(ringGeo, ringShaderMat);
+  dnaGroup.add(ringParticles);
+
+  // ── INVISIBLE HITBOX SPHERES (raycasting preserved identically) ──
+  const NUM_RUNGS   = DNA_TURNS * 9;
+  const matSph1 = new THREE.MeshBasicMaterial({ visible: false });
+  const matSph2 = new THREE.MeshBasicMaterial({ visible: false });
+  const gSph = new THREE.SphereGeometry(0.05, 4, 4);
   const sphArr1 = [], sphArr2 = [];
   for (let i = 0; i <= NUM_RUNGS; i++) {
     const s1 = new THREE.Mesh(gSph, matSph1); dnaGroup.add(s1); sphArr1.push(s1);
     const s2 = new THREE.Mesh(gSph, matSph2); dnaGroup.add(s2); sphArr2.push(s2);
   }
 
-  // 5 geni specifici interattivi (1 per ogni antenato)
   const NUM_SECTIONS = 5;
   const specialGeneIndices = [15, 21, 27, 33, 39];
   const specialGenes = specialGeneIndices.map(i => [sphArr1[i], sphArr2[i]]);
 
-  // Diamo un colore azzurro olografico emettitore ai 5 geni selezionabili per spiccare
-  const matSphSpecial = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: false, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
-  
-  // Hitbox invisibili per facilitare la selezione col mouse (calibrata)
+  const matSphSpecial = new THREE.MeshBasicMaterial({ visible: false });
+
   const hitBoxes = [];
   const hitBoxGeo = new THREE.SphereGeometry(1.2, 8, 8);
   const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
 
-  const gSphSpecial = new THREE.SphereGeometry(0.065, 16, 12);
   specialGenes.forEach(pair => {
-    pair[0].geometry = gSphSpecial;
-    pair[1].geometry = gSphSpecial;
-    pair[0].material = matSphSpecial;
-    pair[1].material = matSphSpecial;
-
     const hb1 = new THREE.Mesh(hitBoxGeo, hitBoxMat);
     pair[0].add(hb1);
     hitBoxes.push(hb1);
@@ -1326,73 +1640,109 @@
     hitBoxes.push(hb2);
   });
 
-  // Aggiungiamo i 5 reticoli HUD rotanti a forma di diamante per evidenziare i geni
   const reticleArr1 = [], reticleArr2 = [];
   const reticleGeo = new THREE.RingGeometry(0.14, 0.17, 48, 1);
   for (let s = 0; s < NUM_SECTIONS; s++) {
-    const rMat1 = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const rMat1 = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const r1 = new THREE.Mesh(reticleGeo, rMat1);
     dnaGroup.add(r1);
     reticleArr1.push(r1);
 
-    const rMat2 = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const rMat2 = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const r2 = new THREE.Mesh(reticleGeo, rMat2);
     dnaGroup.add(r2);
     reticleArr2.push(r2);
   }
 
-  // Flusso particellare olografico sulle eliche (stream di pixel dati)
-  const partCount = 80;
-  const partGeo1 = new THREE.BufferGeometry();
-  const partGeo2 = new THREE.BufferGeometry();
-  const arrParts1 = new Float32Array(partCount * 3);
-  const arrParts2 = new Float32Array(partCount * 3);
-  partGeo1.setAttribute('position', new THREE.BufferAttribute(arrParts1, 3));
-  partGeo2.setAttribute('position', new THREE.BufferAttribute(arrParts2, 3));
-  
-  const partMat = new THREE.PointsMaterial({
-    color: 0x00ffff,
-    size: 0.16,
+  // ── ASTE (base pairs) — linee che collegano i due filamenti ──
+  /* ── Aste come colonne dense di particelle uniformi — look linea solida ── */
+  const rungCount    = NUM_RUNGS + 1;
+  const RUNG_PTS_PER = 16;  /* densità alta → illusione di linea continua */
+  const rungPtCount  = rungCount * RUNG_PTS_PER;
+  const rungPosArr   = new Float32Array(rungPtCount * 3);
+  const rungOffArr   = new Float32Array(rungPtCount); /* phase offset per breathing */
+  const rungTArr     = new Float32Array(rungPtCount); /* T lungo l'elica per scanner */
+  const rungFArr     = new Float32Array(rungPtCount); /* F lungo l'asta (0..1) per bell */
+
+  for (let i = 0; i < rungCount; i++) {
+    const tHelix = i / NUM_RUNGS;
+    for (let p = 0; p < RUNG_PTS_PER; p++) {
+      const idx = i * RUNG_PTS_PER + p;
+      rungOffArr[idx] = Math.random() * Math.PI * 2;
+      rungTArr[idx]   = tHelix;
+      rungFArr[idx]   = p / (RUNG_PTS_PER - 1);
+    }
+  }
+
+  const rungGeo = new THREE.BufferGeometry();
+  rungGeo.setAttribute('position', new THREE.BufferAttribute(rungPosArr, 3));
+  rungGeo.setAttribute('aOffset',  new THREE.BufferAttribute(rungOffArr, 1));
+  rungGeo.setAttribute('aT',       new THREE.BufferAttribute(rungTArr,   1));
+  rungGeo.setAttribute('aF',       new THREE.BufferAttribute(rungFArr,   1));
+
+  const rungMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:      { value: 0 },
+      uTex:       { value: pTex },
+      uScanner:   { value: 0 },
+      uHoveredT:  { value: -1.0 },
+      uSelectedT: { value: -1.0 },
+    },
+    vertexShader: `
+      uniform float uTime;
+      uniform float uScanner;
+      uniform float uHoveredT;
+      uniform float uSelectedT;
+      attribute float aOffset;
+      attribute float aT;
+      attribute float aF;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        float breath = sin(uTime * 2.5 + aOffset) * 0.5 + 0.5;
+        float size   = 5.0 + breath * 1.5;
+
+        float scanDist = abs(aT - uScanner);
+        if (scanDist > 0.5) scanDist = 1.0 - scanDist;
+        float scanGlow = smoothstep(0.025, 0.0, scanDist);
+        size += scanGlow * 4.0;
+
+        float highlight = 0.0;
+        if (uHoveredT  >= 0.0 && abs(aT - uHoveredT)  < 0.05) highlight = 0.8;
+        if (uSelectedT >= 0.0 && abs(aT - uSelectedT) < 0.05) highlight = 1.0;
+        size += highlight * 4.0;
+
+        vec3 teal  = vec3(0.05, 0.88, 0.78);
+        vec3 white = vec3(0.9, 1.0, 1.0);
+        vColor = mix(teal, white, clamp(highlight + scanGlow * 0.8, 0.0, 1.0));
+        vAlpha = 0.55 + breath * 0.25 + highlight * 0.4 + scanGlow * 0.5;
+
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        gl_Position  = projectionMatrix * mvPos;
+        gl_PointSize = size * (38.0 / -mvPos.z);
+        float depthFade = clamp(1.0 - (-mvPos.z - 5.0) / 40.0, 0.3, 1.0);
+        vAlpha *= depthFade;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uTex;
+      varying float vAlpha;
+      varying vec3  vColor;
+      void main() {
+        vec4 tex = texture2D(uTex, gl_PointCoord);
+        if (tex.a < 0.01) discard;
+        gl_FragColor = vec4(vColor * tex.rgb, tex.a * vAlpha);
+      }
+    `,
     transparent: true,
-    opacity: 0.9,
     blending: THREE.AdditiveBlending,
-    depthWrite: false
+    depthWrite: false,
   });
-  const partSys1 = new THREE.Points(partGeo1, partMat); dnaGroup.add(partSys1);
-  const partSys2 = new THREE.Points(partGeo2, partMat); dnaGroup.add(partSys2);
 
-  // Gabbia di contenimento cilindrica olografica curva
-  const cagePts = [];
-  const numVerticals = 8;
-  const steps = 40;
-  for (let i = 0; i < steps; i++) {
-    const t1 = i / steps;
-    const t2 = (i + 1) / steps;
-    const phi1 = panelArcStart + t1 * arcLength;
-    const phi2 = panelArcStart + t2 * arcLength;
-    
-    // Anello superiore
-    cagePts.push(new THREE.Vector3(Math.cos(phi1) * r_dna, 1.5, Math.sin(phi1) * r_dna));
-    cagePts.push(new THREE.Vector3(Math.cos(phi2) * r_dna, 1.5, Math.sin(phi2) * r_dna));
-    
-    // Anello inferiore
-    cagePts.push(new THREE.Vector3(Math.cos(phi1) * r_dna, -1.5, Math.sin(phi1) * r_dna));
-    cagePts.push(new THREE.Vector3(Math.cos(phi2) * r_dna, -1.5, Math.sin(phi2) * r_dna));
-  }
-  for (let i = 0; i <= numVerticals; i++) {
-    const t = i / numVerticals;
-    const phi = panelArcStart + t * arcLength;
-    const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-    // Linee verticali della gabbia
-    cagePts.push(new THREE.Vector3(cx, 1.5, cz));
-    cagePts.push(new THREE.Vector3(cx, -1.5, cz));
-  }
-  const cageGeo = new THREE.BufferGeometry().setFromPoints(cagePts);
-  const cageMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
-  const cageLine = new THREE.LineSegments(cageGeo, cageMat);
-  dnaGroup.add(cageLine);
+  const rungPoints = new THREE.Points(rungGeo, rungMat);
+  dnaGroup.add(rungPoints);
 
-  // Linea di scansione laser olografica (curva che sale e scende)
+  // Scanner beam line (follows the helix arc)
   const sweepPts = [];
   const dnaSweepSegs = 60;
   for (let i = 0; i <= dnaSweepSegs; i++) {
@@ -1401,9 +1751,13 @@
     sweepPts.push(new THREE.Vector3(Math.cos(phi) * r_dna, 0, Math.sin(phi) * r_dna));
   }
   const sweepLineGeo = new THREE.BufferGeometry().setFromPoints(sweepPts);
-  const matSweepLine = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, linewidth: 3 });
+  const matSweepLine = new THREE.LineBasicMaterial({ color: 0x44ffdd, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
   const sweepLine = new THREE.Line(sweepLineGeo, matSweepLine);
   dnaGroup.add(sweepLine);
+
+  // Scanner phase tracking
+  let scannerPhase = 0;
+  let prevDnaTime = performance.now();
 
 
   const sectionData = [
@@ -1455,36 +1809,29 @@
 
   // Aggiorna posizioni con la fase corrente (effetto "spiedo")
   function updateDNA(phase) {
-    for (let i = 0; i <= STRAND_SEGS; i++) {
-      const t  = i / STRAND_SEGS;
-      const phi = panelArcStart + t * arcLength;
-      const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
-      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-      const vO = Math.sin(ha) * DNA_RAD;
-      arr1[i*3]=cx; arr1[i*3+1]=vO;  arr1[i*3+2]=cz;
-      arr2[i*3]=cx; arr2[i*3+1]=-vO; arr2[i*3+2]=cz;
-    }
-    geo1.attributes.position.needsUpdate = true;
-    geo2.attributes.position.needsUpdate = true;
-
+    // ── 1. HITBOX SPHERES (same math as original — curved arc) ──
     for (let i = 0; i <= NUM_RUNGS; i++) {
-      const t  = i / NUM_RUNGS;
+      const t   = i / NUM_RUNGS;
       const phi = panelArcStart + t * arcLength;
       const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
-      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-      const vO = Math.sin(ha) * DNA_RAD;
-      const ri = i * 6;
-      arrRungs[ri]=cx; arrRungs[ri+1]=vO;  arrRungs[ri+2]=cz;
-      arrRungs[ri+3]=cx; arrRungs[ri+4]=-vO; arrRungs[ri+5]=cz;
+      const cx  = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const vO  = Math.sin(ha) * DNA_RAD;
       sphArr1[i].position.set(cx, vO,  cz);
       sphArr2[i].position.set(cx, -vO, cz);
-      const rungH = Math.max(Math.abs(vO) * 2, 0.01);
-      rungCyls[i].position.set(cx, 0, cz);
-      rungCyls[i].scale.set(1, rungH, 1);
-      rungCors[i].position.set(cx, 0, cz);
-      rungCors[i].scale.set(1, rungH, 1);
     }
-    geoRungs.attributes.position.needsUpdate = true;
+
+    // Aggiorna aste: ogni asta collega sphArr1[i] a sphArr2[i]
+    for (let i = 0; i < rungCount; i++) {
+      const p1 = sphArr1[i].position, p2 = sphArr2[i].position;
+      for (let p = 0; p < RUNG_PTS_PER; p++) {
+        const f   = p / (RUNG_PTS_PER - 1);
+        const idx = (i * RUNG_PTS_PER + p) * 3;
+        rungPosArr[idx]     = p1.x + (p2.x - p1.x) * f;
+        rungPosArr[idx + 1] = p1.y + (p2.y - p1.y) * f;
+        rungPosArr[idx + 2] = p1.z + (p2.z - p1.z) * f;
+      }
+    }
+    rungGeo.attributes.position.needsUpdate = true;
 
     // Riposiziona i 5 reticoli HUD rotanti esattamente sui 5 geni speciali
     for (let s = 0; s < NUM_SECTIONS; s++) {
@@ -1493,20 +1840,136 @@
       reticleArr2[s].position.copy(sphArr2[idx].position);
     }
 
-    // Particelle di dati olografici fluenti lungo i due filamenti dell'elica
-    const flowTime = Date.now() * 0.0012;
-    for (let i = 0; i < partCount; i++) {
-      const t = ((i / partCount) + flowTime) % 1.0;
-      const phi = panelArcStart + t * arcLength;
-      const ha  = t * Math.PI * 2 * DNA_TURNS + phase;
-      const cx = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
-      const vO = Math.sin(ha) * DNA_RAD;
-      
-      arrParts1[i * 3] = cx; arrParts1[i * 3 + 1] = vO; arrParts1[i * 3 + 2] = cz;
-      arrParts2[i * 3] = cx; arrParts2[i * 3 + 1] = -vO; arrParts2[i * 3 + 2] = cz;
+    // ── 2. SHADER UNIFORMS ──
+    const now = performance.now();
+    const dt  = now - prevDnaTime;
+    prevDnaTime = now;
+    const uTime = now * 0.001;
+
+    scannerPhase = (scannerPhase + dt * 0.00012) % 1.0;
+
+    // Compute hover/selection T values
+    let hoverT = -1.0, selT = -1.0;
+    if (lastHoveredGene !== -1) hoverT = specialGeneIndices[lastHoveredGene] / NUM_RUNGS;
+    if (selectedDnaGene !== -1) selT   = specialGeneIndices[selectedDnaGene] / NUM_RUNGS;
+
+    // Update all shader uniforms
+    pShaderMat.uniforms.uTime.value      = uTime;
+    pShaderMat.uniforms.uScanner.value   = scannerPhase;
+    pShaderMat.uniforms.uHoveredT.value  = hoverT;
+    pShaderMat.uniforms.uSelectedT.value = selT;
+    pBloomMat.uniforms.uTime.value       = uTime;
+    pBloomMat.uniforms.uScanner.value    = scannerPhase;
+    pBloomMat.uniforms.uHoveredT.value   = hoverT;
+    pBloomMat.uniforms.uSelectedT.value  = selT;
+    ringShaderMat.uniforms.uTime.value      = uTime;
+    ringShaderMat.uniforms.uScanner.value   = scannerPhase;
+    ringShaderMat.uniforms.uHoveredT.value  = hoverT;
+    ringShaderMat.uniforms.uSelectedT.value = selT;
+    rungMat.uniforms.uTime.value            = uTime;
+    rungMat.uniforms.uScanner.value         = scannerPhase;
+    rungMat.uniforms.uHoveredT.value        = hoverT;
+    rungMat.uniforms.uSelectedT.value       = selT;
+
+    // ── 3. PARTICLE POSITIONS (dots on strands + rungs + ambient) ──
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const t    = pT[i];
+      const type = pType[i];
+      const phi  = panelArcStart + t * arcLength;
+      const ha   = t * Math.PI * 2 * DNA_TURNS + phase;
+      const cx   = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const vO   = Math.sin(ha) * DNA_RAD;
+
+      if (type < 0.5) {
+        // Strand 1: particles cluster around the first strand with slight spread
+        const spread = Math.sin(i * 11.0) * 0.08;
+        pPos[i*3]   = cx + Math.cos(phi + 0.01) * spread;
+        pPos[i*3+1] = vO + Math.sin(i * 13.0) * 0.08;
+        pPos[i*3+2] = cz + Math.sin(phi + 0.01) * spread;
+      } else if (type < 1.5) {
+        // Strand 2: cluster around second strand
+        const spread = Math.cos(i * 17.0) * 0.08;
+        pPos[i*3]   = cx + Math.cos(phi - 0.01) * spread;
+        pPos[i*3+1] = -vO + Math.cos(i * 19.0) * 0.08;
+        pPos[i*3+2] = cz + Math.sin(phi - 0.01) * spread;
+      } else if (type < 2.5) {
+        // Rungs: interpolate between strand1 and strand2 at same phi
+        const lerp = Math.sin(i * 77.7) * 0.5 + 0.5;
+        pPos[i*3]   = cx + Math.sin(i * 31.1) * 0.03;
+        pPos[i*3+1] = vO * lerp + (-vO) * (1 - lerp);
+        pPos[i*3+2] = cz + Math.cos(i * 41.1) * 0.03;
+      } else {
+        // Ambient floaters: scattered near the helix
+        const aR   = r_dna + Math.sin(i * 12.3) * 2.5;
+        const aPhi = panelArcStart + t * arcLength + Math.cos(i * 7.7) * 0.15;
+        pPos[i*3]   = Math.cos(aPhi) * aR;
+        pPos[i*3+1] = Math.sin(i * 14.5) * 3.0;
+        pPos[i*3+2] = Math.sin(aPhi) * aR;
+      }
     }
-    partGeo1.attributes.position.needsUpdate = true;
-    partGeo2.attributes.position.needsUpdate = true;
+    pGeo.attributes.position.needsUpdate = true;
+
+    // ── 4. RING PARTICLE POSITIONS ──
+    for (let i = 0; i < RING_COUNT; i++) {
+      const t    = ringT[i];
+      const type = ringType[i];
+      const phi  = panelArcStart + t * arcLength;
+      const ha   = t * Math.PI * 2 * DNA_TURNS + phase;
+      const cx   = Math.cos(phi) * r_dna, cz = Math.sin(phi) * r_dna;
+      const vO   = Math.sin(ha) * DNA_RAD;
+      const spread = Math.sin(i * 23.0) * 0.06;
+
+      if (type < 0.5) {
+        ringPos[i*3]   = cx + Math.cos(phi) * spread;
+        ringPos[i*3+1] = vO + Math.cos(i * 29.0) * 0.06;
+        ringPos[i*3+2] = cz + Math.sin(phi) * spread;
+      } else {
+        ringPos[i*3]   = cx + Math.cos(phi) * spread;
+        ringPos[i*3+1] = -vO + Math.sin(i * 31.0) * 0.06;
+        ringPos[i*3+2] = cz + Math.sin(phi) * spread;
+      }
+    }
+    ringGeo.attributes.position.needsUpdate = true;
+
+    // ── 5. PLEXUS NETWORK ──
+    const plexusPositions = plexusGeo.attributes.position.array;
+    for (let i = 0; i < PLEXUS_NODES; i++) {
+      plexusPositions[i*3]   += plexusVel[i].x;
+      plexusPositions[i*3+1] += plexusVel[i].y;
+      plexusPositions[i*3+2] += plexusVel[i].z;
+
+      const radius = Math.sqrt(plexusPositions[i*3]*plexusPositions[i*3] + plexusPositions[i*3+2]*plexusPositions[i*3+2]);
+      if (radius > r_dna + 4 || radius < r_dna - 4) {
+        plexusVel[i].x *= -1;
+        plexusVel[i].z *= -1;
+      }
+      if (plexusPositions[i*3+1] > 10 || plexusPositions[i*3+1] < -10) {
+        plexusVel[i].y *= -1;
+      }
+    }
+    plexusGeo.attributes.position.needsUpdate = true;
+
+    // Connect nearby plexus nodes with lines
+    const linePts = plexusLineGeo.attributes.position.array;
+    let lineIdx = 0;
+    const maxLineVerts = MAX_PLEXUS_LINES * 2 * 3;
+    for (let i = 0; i < PLEXUS_NODES && lineIdx < maxLineVerts - 6; i++) {
+      for (let j = i + 1; j < PLEXUS_NODES && lineIdx < maxLineVerts - 6; j++) {
+        const dx = plexusPositions[i*3]   - plexusPositions[j*3];
+        const dy = plexusPositions[i*3+1] - plexusPositions[j*3+1];
+        const dz = plexusPositions[i*3+2] - plexusPositions[j*3+2];
+        if (dx*dx + dy*dy + dz*dz < 18.0) {
+          linePts[lineIdx++] = plexusPositions[i*3];
+          linePts[lineIdx++] = plexusPositions[i*3+1];
+          linePts[lineIdx++] = plexusPositions[i*3+2];
+          linePts[lineIdx++] = plexusPositions[j*3];
+          linePts[lineIdx++] = plexusPositions[j*3+1];
+          linePts[lineIdx++] = plexusPositions[j*3+2];
+        }
+      }
+    }
+    plexusLineGeo.setDrawRange(0, lineIdx / 3);
+    plexusLineGeo.attributes.position.needsUpdate = true;
   }
 
   let dnaPhase = 0;
@@ -1602,10 +2065,9 @@
 
   // Materiali DNA da dissolvere durante l'animazione
   const dnaFadeMats = [
-    { mat: matSA,        base: 1.0  }, { mat: matSB,        base: 0.45 },
-    { mat: matSC,        base: 0.22 }, { mat: rungCylMat,   base: 0.80 },
-    { mat: rungCorMat,   base: 1.0  }, { mat: matSph1,      base: 1.0  },
-    { mat: matSph2,      base: 1.0  }, { mat: matSphSpecial, base: 0.9 },
+    { mat: matSph1,      base: 1.0  },
+    { mat: matSph2,      base: 1.0  },
+    { mat: matSphSpecial, base: 0.9 },
   ];
 
   // (showcase group rimosso — il gene si evidenzia in place)
@@ -2164,39 +2626,14 @@
         }
         updateDNA(dnaPhase);
 
-        // Animazione dei nodi nucleotidici (ottaedri wireframe)
-        const tempScale = new THREE.Vector3();
-        for (let i = 0; i <= NUM_RUNGS; i++) {
-          const s = specialGeneIndices.indexOf(i);
-          let targetScale = 0.8; // Geni normali più piccoli
-          
-          if (s !== -1) {
-            // È un gene speciale selezionabile: respira a idle
-            targetScale = 1.0 + 0.15 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
-
-            if (selectedDnaGene === s) {
-              targetScale = 4.5;
-            } else if (hoveredGene === s) {
-              targetScale = 1.8;
-            }
-          }
-          
-          tempScale.set(targetScale, targetScale, targetScale);
-          sphArr1[i].scale.lerp(tempScale, 0.15);
-          sphArr2[i].scale.lerp(tempScale, 0.15);
-        }
-
-        // Pulsazione opacità sfere selezionabili
-        matSphSpecial.opacity = 0.7 + 0.25 * Math.abs(Math.sin(now * 1.8));
-
         // Animazione dei 5 reticoli HUD a diamante (rotazione, scala e pulsazione)
         const tempRScale = new THREE.Vector3();
         for (let s = 0; s < NUM_SECTIONS; s++) {
           const isTarget = (hoveredGene === s || selectedDnaGene === s);
 
-          // Scala reticolo — proporzionale alla sfera, non va oltre 1.8
+          // Scala reticolo
           const idleRScale = 1.0 + 0.2 * Math.abs(Math.sin(now * 1.8 + s * 0.9));
-          const targetRScaleVal = isTarget ? 1.9 : idleRScale;
+          const targetRScaleVal = isTarget ? 2.2 : idleRScale;
           tempRScale.set(targetRScaleVal, targetRScaleVal, targetRScaleVal);
           reticleArr1[s].scale.lerp(tempRScale, 0.15);
           reticleArr2[s].scale.lerp(tempRScale, 0.15);
@@ -2211,21 +2648,22 @@
           const spinSpeed = isTarget ? 4.0 : 1.4;
           const spinAngle = now * spinSpeed;
           reticleArr1[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), spinAngle));
-          reticleArr2[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -spinAngle)); // rotazione inversa
+          reticleArr2[s].quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -spinAngle));
         }
 
         // Animazione scorrimento sweep laser (curva di scansione Y)
         if (sweepLine && matSweepLine) {
+          // Sweep follows the scanner phase vertically
           sweepLine.position.y = Math.sin(now * 2.5) * 1.5;
-          matSweepLine.opacity = 0.5 + 0.3 * Math.cos(now * 5.0);
+          matSweepLine.opacity = 0.3 + 0.4 * Math.cos(now * 5.0);
         }
 
         // Effetto glitch/jitter di desincronizzazione Animus su dnaGroup
-        if (Math.random() < 0.015) {
+        if (Math.random() < 0.012) {
           dnaGroup.position.set(
-            (Math.random() - 0.5) * 0.25,
-            (Math.random() - 0.5) * 0.08,
-            (Math.random() - 0.5) * 0.25
+            (Math.random() - 0.5) * 0.15,
+            (Math.random() - 0.5) * 0.05,
+            (Math.random() - 0.5) * 0.15
           );
         } else {
           dnaGroup.position.lerp(new THREE.Vector3(0, 0, 0), 0.25);
@@ -2234,6 +2672,11 @@
 
       // (animazione booking rimossa — gene si evidenzia in place)
 
+      // Linea timeline DNA — aggiorna scanner e breathing
+      if (tlArcLine && tlArcLine.visible && tlArcLine.userData.lineMat) {
+        tlArcLine.userData.lineMat.uniforms.uTime.value = now * 0.001;
+      }
+
       // Mini DNA sulla timeline: onde sinusoidali scorrevoli + scala su hover
       if (tlDnaGroups && tlArcLine && tlArcLine.visible) {
         const tV = new THREE.Vector3();
@@ -2241,7 +2684,8 @@
           g.userData.phase = (g.userData.phase || s * 0.8) + 0.04;
           const ph = g.userData.phase;
           const { mArr1, mArr2, mArrR, mGeo1, mGeo2, mGeoR,
-                  MN, MSEGS, MAMP, MH, MDEPTH, MRUNGS } = g.userData;
+                  mPts, mPtsGeo, mRingPts, mRingGeo,
+                  MN, MSEGS, MAMP, MH, MDEPTH, MRUNGS, MPTS, MRINGS } = g.userData;
 
           if (mGeo1) {
             for (let i = 0; i <= MSEGS; i++) {
@@ -2261,6 +2705,34 @@
               mArrR[ri+3] = x; mArrR[ri+4] = -Math.sin(a) * MAMP; mArrR[ri+5] = Math.cos(a) * MDEPTH;
             }
             mGeoR.attributes.position.needsUpdate = true;
+
+            /* Particelle sui filamenti */
+            if (mPts && MPTS) {
+              for (let i = 0; i < MPTS; i++) {
+                const t  = i / (MPTS - 1);
+                const a  = t * Math.PI * 2 * MN + ph;
+                const x  = (t - 0.5) * MH;
+                const sc = Math.sin(i * 7.3) * 0.025;
+                if (i % 2 === 0) {
+                  mPts[i*3] = x; mPts[i*3+1] =  Math.sin(a) * MAMP + sc; mPts[i*3+2] = Math.cos(a) * MDEPTH;
+                } else {
+                  mPts[i*3] = x; mPts[i*3+1] = -Math.sin(a) * MAMP + sc; mPts[i*3+2] = Math.cos(a) * MDEPTH;
+                }
+              }
+              mPtsGeo.attributes.position.needsUpdate = true;
+            }
+
+            /* Anellini luminosi (ogni ~2 aste) */
+            if (mRingPts && MRINGS) {
+              for (let i = 0; i < MRINGS; i++) {
+                const t = i / (MRINGS - 1);
+                const a = t * Math.PI * 2 * MN + ph;
+                const x = (t - 0.5) * MH;
+                const side = i % 2 === 0 ? 1 : -1;
+                mRingPts[i*3] = x; mRingPts[i*3+1] = side * Math.sin(a) * MAMP; mRingPts[i*3+2] = Math.cos(a) * MDEPTH;
+              }
+              mRingGeo.attributes.position.needsUpdate = true;
+            }
           }
 
           const ts = tlDnaHovers[s] ? 2.2 : 1.4;
