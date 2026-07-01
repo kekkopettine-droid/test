@@ -7,7 +7,7 @@
 
 <!-- IMPORT DEI FILE CSS -->
 <link rel="stylesheet" href="css/intro.css">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=4">
 
 </head>
 <body>
@@ -45,6 +45,8 @@
   <div class="abstergo-container" id="abstergoLogo">
     <!-- Freccia indietro (visibile solo nella vista DNA) -->
     <button id="dnaBackArrow" class="dna-back-arrow">&#9664;</button>
+    <!-- Freccia indietro per tornare all'intro text -->
+    <button id="experiencesBackArrow" class="dna-back-arrow" style="display: none;">&#9664;</button>
     <!-- Logo SVG inline: nessuna dipendenza da file immagine -->
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="660" height="175"
          style="filter: drop-shadow(0 0 12px rgba(255,255,255,0.85));">
@@ -129,64 +131,30 @@
 
   <!-- SCHERMATA DI BENVENUTO / CARICAMENTO -->
   <div id="welcomeScreen" class="welcome-screen">
+    <svg class="welcome-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="700" height="185"
+         style="filter: drop-shadow(0 0 25px rgba(255,255,255,0.9)); margin-bottom: 40px;">
+      <g transform="translate(14, 9) scale(0.20)">
+        <path d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301" fill="rgba(255,255,255,0.75)" />
+        <path d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557" fill="rgba(255,255,255,0.95)" />
+        <path d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006" fill="rgba(255,255,255,0.55)" />
+      </g>
+      <line x1="102" y1="15" x2="102" y2="80" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+      <text x="116" y="52" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="700" letter-spacing="1" fill="#ffffff">Abstergo</text>
+      <text x="117" y="74" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="2" fill="rgba(255,255,255,0.75)">Industries</text>
+    </svg>
+    <div class="welcome-title">BENVENUTO NELL'ANIMUS</div>
+  </div>
 
-    <!-- Header: logo + brand -->
-    <div class="ws-header">
-      <div class="ws-logo-row">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="38" height="38"
-             style="flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,255,255,0.8));">
-          <g transform="translate(4,4) scale(0.46)">
-            <path d="M214.902 47.301 C198.522 73.203,184.322 95.656,183.347 97.197 C182.372 98.739,180.634 101.490,179.484 103.312 C178.334 105.134,176.483 108.057,175.370 109.809 C174.258 111.561,164.284 127.325,153.206 144.841 C142.129 162.357,126.214 187.521,117.839 200.761 C109.465 214.001,102.557 224.979,102.489 225.157 C102.390 225.416,112.043 225.466,151.966 225.415 L201.566 225.350 215.386 203.822 C222.986 191.981,238.989 167.045,250.946 148.408 C262.904 129.771,273.057 113.949,273.510 113.248 C273.962 112.548,275.725 109.813,277.429 107.171 L280.525 102.367 262.832 51.884 C253.100 24.119,245.036 1.133,244.911 0.805 C244.713 0.282,241.005 6.027,214.902 47.301" fill="rgba(255,255,255,0.78)" />
-            <path d="M247.575 176.557 L222.687 218.317 241.172 248.075 C251.338 264.443,270.849 295.863,284.530 317.898 L309.402 357.962 354.707 357.962 L400.012 357.962 399.647 357.389 C399.446 357.073,370.769 306.885,335.919 245.860 C301.070 184.834,272.536 134.880,272.510 134.851 C272.484 134.822,261.263 153.589,247.575 176.557" fill="rgba(255,255,255,0.97)" />
-            <path d="M34.749 257.006 C28.069 268.181,17.575 285.714,11.429 295.968 C5.283 306.221,0.255 314.677,0.255 314.758 C0.255 314.838,60.503 314.904,134.140 314.904 C207.777 314.904,268.025 314.840,268.025 314.761 C268.025 314.681,261.213 303.417,252.886 289.729 C244.559 276.040,233.915 258.535,229.232 250.828 L220.718 236.815 133.807 236.751 L46.896 236.687 34.749 257.006" fill="rgba(255,255,255,0.55)" />
-          </g>
-        </svg>
-        <div class="ws-brand">
-          <div class="ws-brand-name">ABSTERGO INDUSTRIES</div>
-          <div class="ws-brand-tag">DIVISIONE ANIMUS · TECNOLOGIA GENETICA</div>
-        </div>
-        <div class="ws-corner-marks">
-          <span class="ws-cm ws-cm-tl"></span>
-          <span class="ws-cm ws-cm-tr"></span>
-        </div>
-      </div>
-      <div class="ws-divider"></div>
+  <!-- PANNELLO INTRODUTTIVO (Mostrato dopo il boot) -->
+  <div class="panel" id="introTextPanel" style="width: 700px; text-align: center; pointer-events: none; opacity: 0;">
+    <div class="panel-header" style="justify-content: center; margin-bottom: 20px;">
+      <span class="header-text" style="font-size: 26px;">PROGETTO ANIMUS</span>
     </div>
-
-    <!-- Titolo principale -->
-    <div class="ws-headline">L'ANIMUS È PRONTO</div>
-
-    <!-- Descrizione -->
-    <div class="ws-desc">
-      Abstergo Industries ha sviluppato l'Animus: un sistema di simulazione genetica capace di estrarre dal DNA le memorie dei tuoi antenati e tradurle in un'esperienza immersiva totale. Rivivere la storia non è più fantasia — è ora accessibile a chiunque.
+    <div class="panel-text" style="font-size: 18px; line-height: 1.8; margin-bottom: 30px;">
+      Abstergo Industries ti dà il benvenuto in una nuova era della scoperta. Ti offriamo l'opportunità esclusiva di provare l'Animus, un macchinario rivoluzionario in grado di decodificare il DNA e farti rivivere i ricordi del passato in prima persona.<br><br>
+      Scegli tra due tipologie di esperienze immersive, prenota il tuo biglietto e sarai invitato presso le nostre strutture per iniziare il tuo viaggio nel tempo.
     </div>
-
-    <!-- Le due esperienze -->
-    <div class="ws-cards">
-      <div class="ws-card">
-        <div class="ws-card-icon">◈</div>
-        <div class="ws-card-title">PERCORSO GENETICO</div>
-        <div class="ws-card-text">Il tuo DNA custodisce memorie di antenati vissuti secoli fa. Luoghi, battaglie, momenti fondanti della tua stirpe: l'Animus li decodifica e te li restituisce in prima persona.</div>
-      </div>
-      <div class="ws-card-sep"></div>
-      <div class="ws-card">
-        <div class="ws-card-icon">⬡</div>
-        <div class="ws-card-title">PERSONAGGIO STORICO</div>
-        <div class="ws-card-text">Entra nella mente di grandi figure della storia. Corti reali, rivoluzioni, laboratori segreti: l'Animus ricrea ogni dettaglio con fedeltà assoluta, dall'interno.</div>
-      </div>
-    </div>
-
-    <!-- Footer call-to-action -->
-    <div class="ws-footer">
-      Scegli la tua esperienza, acquista il biglietto di accesso e vieni a trovarci.<br>
-      Il personale Abstergo ti attende nella nostra sede per la sincronizzazione con l'Animus.
-    </div>
-
-    <!-- Progress bar (si riempie durante la lettura) -->
-    <div class="ws-progress-wrap">
-      <div class="ws-progress-bar"></div>
-    </div>
-
+    <button id="btnExploreExperiences" class="btn-back" style="align-self: center; font-size: 18px; padding: 14px 40px; margin: 0 auto; display: block;">ESPLORA LE ESPERIENZE</button>
   </div>
 
   <!-- FLOATING TIMELINE -->

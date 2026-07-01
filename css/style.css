@@ -724,172 +724,34 @@ body {
 .welcome-screen {
   display: flex;
   flex-direction: column;
-  width: 1000px;
-  height: 600px;
-  background: rgba(0, 8, 18, 0.55);
-  border: 1px solid rgba(0, 200, 190, 0.18);
-  border-radius: 3px;
-  transition: opacity 0.8s ease-in-out;
-  pointer-events: none;
-  padding: 28px 34px 22px;
-  box-sizing: border-box;
-  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
-  backdrop-filter: blur(2px);
-}
-
-/* ── Header ── */
-.ws-header { margin-bottom: 14px; }
-
-.ws-logo-row {
-  display: flex;
   align-items: center;
-  gap: 13px;
-  margin-bottom: 11px;
-  position: relative;
+  justify-content: center;
+  width: 800px;
+  height: 400px;
+  background: transparent;
+  border: none;
+  transition: opacity 1s ease-in-out;
+  pointer-events: none;
 }
 
-.ws-brand { flex: 1; }
-
-.ws-brand-name {
-  font-size: 15px;
+.welcome-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 42px;
   font-weight: 700;
-  letter-spacing: 0.22em;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255,255,255,0.65);
+  letter-spacing: 0.15em;
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6);
+  transform: translateX(-60px);
 }
 
-.ws-brand-tag {
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  color: rgba(0, 210, 195, 0.65);
-  margin-top: 3px;
+.welcome-logo {
+  animation: logoBlink 2s infinite ease-in-out;
 }
 
-.ws-corner-marks { position: relative; width: 28px; height: 28px; flex-shrink: 0; }
-.ws-cm {
-  position: absolute;
-  width: 10px; height: 10px;
-  border-color: rgba(0,210,195,0.45);
-  border-style: solid;
-}
-.ws-cm-tl { top:0; right:0; border-width:1px 1px 0 0; }
-.ws-cm-tr { bottom:0; right:0; border-width:0 1px 1px 0; }
-
-.ws-divider {
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(0,210,195,0.45) 15%,
-    rgba(255,255,255,0.25) 50%,
-    rgba(0,210,195,0.45) 85%,
-    transparent 100%);
-}
-
-/* ── Headline ── */
-.ws-headline {
-  font-size: 38px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #ffffff;
-  text-shadow: 0 0 24px rgba(255,255,255,0.75), 0 0 50px rgba(0,255,240,0.35);
-  text-align: center;
-  margin: 12px 0 10px;
-  animation: wsHeadlinePulse 3s ease-in-out infinite;
-}
-
-@keyframes wsHeadlinePulse {
-  0%, 100% { text-shadow: 0 0 24px rgba(255,255,255,0.75), 0 0 50px rgba(0,255,240,0.35); }
-  50%       { text-shadow: 0 0 36px rgba(255,255,255,0.95), 0 0 80px rgba(0,255,240,0.55); }
-}
-
-/* ── Descrizione ── */
-.ws-desc {
-  font-size: 13px;
-  line-height: 1.7;
-  color: rgba(195, 235, 250, 0.78);
-  text-align: center;
-  letter-spacing: 0.04em;
-  margin-bottom: 16px;
-  padding: 0 10px;
-}
-
-/* ── Schede esperienze ── */
-.ws-cards {
-  display: flex;
-  border: 1px solid rgba(0,210,195,0.18);
-  border-radius: 3px;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-}
-
-.ws-card {
-  flex: 1;
-  padding: 14px 18px;
-  background: rgba(0, 25, 38, 0.40);
-}
-
-.ws-card:first-child { border-right: 1px solid rgba(0,210,195,0.18); }
-
-.ws-card-sep { display: none; }
-
-.ws-card-icon {
-  font-size: 20px;
-  color: rgba(0, 210, 195, 0.88);
-  text-shadow: 0 0 10px rgba(0,210,195,0.5);
-  margin-bottom: 5px;
-}
-
-.ws-card-title {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #ffffff;
-  margin-bottom: 6px;
-}
-
-.ws-card-text {
-  font-size: 11.5px;
-  line-height: 1.65;
-  color: rgba(175, 220, 240, 0.70);
-  letter-spacing: 0.03em;
-}
-
-/* ── Footer ── */
-.ws-footer {
-  font-size: 11px;
-  color: rgba(195, 235, 255, 0.50);
-  text-align: center;
-  letter-spacing: 0.05em;
-  margin-top: 12px;
-  line-height: 1.7;
-}
-
-/* ── Progress bar ── */
-.ws-progress-wrap {
-  height: 2px;
-  background: rgba(0,210,195,0.10);
-  border-radius: 1px;
-  margin-top: 12px;
-  overflow: hidden;
-}
-
-.ws-progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, rgba(0,210,195,0.6), rgba(0,240,220,0.9));
-  box-shadow: 0 0 8px rgba(0,210,195,0.6);
-  animation: wsProgressFill 5.5s linear forwards;
-  animation-play-state: paused;
-}
-
-.welcome-screen.ws-active .ws-progress-bar {
-  animation-play-state: running;
-}
-
-@keyframes wsProgressFill {
-  from { width: 0%; }
-  to   { width: 100%; }
+@keyframes logoBlink {
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 35px rgba(255,255,255,1)); }
 }
 
 /* ── CARRELLO (CART) UI ── */

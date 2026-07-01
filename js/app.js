@@ -601,6 +601,73 @@
   cssObjR.lookAt(0, -1, 0);
   gridGroup.add(cssObjR);
 
+  // PANNELLO INTRODUTTIVO CENTRALE
+  const introTextEl = document.getElementById('introTextPanel');
+  introTextEl.style.opacity = '0';
+  const cssIntroText = new THREE.CSS3DObject(introTextEl);
+  cssIntroText.position.set(Math.cos(thetaCenter) * panelRadiusCSS, -1, Math.sin(thetaCenter) * panelRadiusCSS);
+  cssIntroText.scale.set(0.035, 0.035, 0.035);
+  cssIntroText.lookAt(0, -1, 0);
+  gridGroup.add(cssIntroText);
+
+  document.getElementById('btnExploreExperiences').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.audioEngine) window.audioEngine.playClick();
+    
+    // Fade out intro
+    introTextEl.style.transition = "opacity 0.5s ease";
+    introTextEl.style.opacity = '0';
+    introTextEl.style.pointerEvents = 'none';
+
+    setTimeout(() => {
+      window.experiencesRevealed = true;
+      // Fade in panels
+      panelL.style.transition = "opacity 0.5s ease";
+      panelR.style.transition = "opacity 0.5s ease";
+      cartBtnEl.style.transition = "opacity 0.5s ease";
+      
+      panelL.style.opacity = '1';
+      panelR.style.opacity = '1';
+      cartBtnEl.style.opacity = '1';
+
+      panelL.style.pointerEvents = "auto";
+      panelR.style.pointerEvents = "auto";
+      cartBtnEl.style.pointerEvents = "auto";
+    }, 500);
+  });
+
+  const exBackBtn = document.getElementById('experiencesBackArrow');
+  if (exBackBtn) {
+    exBackBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      
+      const panelL = document.getElementById('panelL');
+      const panelR = document.getElementById('panelR');
+      const cartBtnEl = document.getElementById('cartButton');
+      
+      if (panelL) {
+        panelL.style.opacity = '0';
+        panelL.style.pointerEvents = "none";
+      }
+      if (panelR) {
+        panelR.style.opacity = '0';
+        panelR.style.pointerEvents = "none";
+      }
+      if (cartBtnEl) {
+        cartBtnEl.style.opacity = '0';
+        cartBtnEl.style.pointerEvents = "none";
+      }
+      
+      window.experiencesRevealed = false;
+      
+      if (introTextEl) {
+        introTextEl.style.opacity = '1';
+        introTextEl.style.pointerEvents = 'auto';
+      }
+    });
+  }
+
   // 4) CARRELLO CSS3D (Button and Panel)
   const cartBtnEl = document.getElementById('cartButton');
   cartBtnEl.style.opacity = '0';
@@ -2329,7 +2396,7 @@
       }
 
       /* Pannelli principali: raycasting su hitPlane invisibili */
-      if (!panelL.classList.contains('hidden-panel')) {
+      if (window.experiencesRevealed && !panelL.classList.contains('hidden-panel')) {
         if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { 
           if (window.audioEngine) window.audioEngine.playClick();
           showDNAView(); 
@@ -2435,7 +2502,6 @@
     isWelcoming = false;
     welcomeStartTime = 0;
     welcomeEl.style.opacity = '0';
-    welcomeEl.classList.remove('ws-active');
     ledProgress = 0;
     panelProgress = 0;
     logoEl.style.opacity = '0';
@@ -2476,8 +2542,7 @@
             if (!hasBooted && !isWelcoming) {
               isWelcoming = true;
               welcomeStartTime = Date.now();
-              welcomeEl.style.opacity = '1';
-              welcomeEl.classList.add('ws-active');
+              welcomeEl.style.opacity = '1'; // Fade in
             }
           }
         }
@@ -2485,13 +2550,12 @@
       
       if (isWelcoming) {
         const elapsed = Date.now() - welcomeStartTime;
-        if (elapsed > 5500) {
-          welcomeEl.style.opacity = '0';
+        if (elapsed > 2800) {
+          welcomeEl.style.opacity = '0'; // Fade out
         }
-        if (elapsed > 6500) {
+        if (elapsed > 3500) {
           isWelcoming = false;
           hasBooted = true;
-          welcomeEl.classList.remove('ws-active');
           eMouse.set(0, 0);
         }
       }
@@ -2510,6 +2574,7 @@
       logoEl.style.opacity = 0;
       panelL.style.opacity = 0;
       panelR.style.opacity = 0;
+      if (introTextEl) introTextEl.style.opacity = 0;
     } else if (ledProgress < 1) {
       ledProgress += 0.1; // LED si accendono molto più velocemente
       if (ledProgress >= 1) {
@@ -2538,12 +2603,21 @@
     }
 
     /* Raycasting pannelli — usa rawMouse (posizione reale, non smorzata) */
-    if (hasBooted && !panelL.classList.contains('hidden-panel')) {
+    if (hasBooted && window.experiencesRevealed && !panelL.classList.contains('hidden-panel')) {
       panelRaycaster.setFromCamera(rawMouse, camera);
       hoverL = panelRaycaster.intersectObject(hitPlaneL).length > 0;
       hoverR = panelRaycaster.intersectObject(hitPlaneR).length > 0;
     } else {
       hoverL = false; hoverR = false;
+    }
+
+    const exBtnCheck = document.getElementById('experiencesBackArrow');
+    if (exBtnCheck) {
+      if (window.experiencesRevealed && !panelL.classList.contains('hidden-panel')) {
+        if (exBtnCheck.style.display !== 'block') exBtnCheck.style.display = 'block';
+      } else {
+        if (exBtnCheck.style.display !== 'none') exBtnCheck.style.display = 'none';
+      }
     }
 
     const targetScaleL = hoverL ? 0.042 : 0.035;
@@ -2638,14 +2712,21 @@
         panelProgress = Math.min(1, panelProgress + 0.06); // Più veloce
         const pe = 1 - Math.pow(1 - panelProgress, 3);
         logoEl.style.opacity = pe;
-        panelL.style.opacity = pe;
-        panelR.style.opacity = pe;
-        cartBtnEl.style.opacity = pe;
-        // Abilita i click solo quando le schede sono completamente visibili
-        if (panelProgress >= 1) {
-          panelL.style.pointerEvents = "auto";
-          panelR.style.pointerEvents = "auto";
-          cartBtnEl.style.pointerEvents = "auto";
+        
+        if (!window.experiencesRevealed) {
+          introTextEl.style.opacity = pe;
+          if (panelProgress >= 1) {
+            introTextEl.style.pointerEvents = "auto";
+          }
+        } else {
+          panelL.style.opacity = pe;
+          panelR.style.opacity = pe;
+          cartBtnEl.style.opacity = pe;
+          if (panelProgress >= 1) {
+            panelL.style.pointerEvents = "auto";
+            panelR.style.pointerEvents = "auto";
+            cartBtnEl.style.pointerEvents = "auto";
+          }
         }
       }
 

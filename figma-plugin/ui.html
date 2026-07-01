@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #030310; color: #d0c8b0;
+  font-family: 'Courier New', monospace;
+  font-size: 11px; padding: 16px;
+}
+.header {
+  border-bottom: 1px solid #1c2440;
+  padding-bottom: 12px; margin-bottom: 16px;
+}
+.header h1 { font-size: 15px; color: #ff8820; letter-spacing: 5px; }
+.header p  { font-size: 9px; color: #4a4038; letter-spacing: 2px; margin-top: 4px; }
+
+.action {
+  border: 1px solid #1c2440; border-left: 3px solid #ff8820;
+  margin-bottom: 10px; padding: 12px 14px;
+  background: rgba(255,136,32,.02);
+}
+.action-num   { font-size: 8px; color: #4a4038; letter-spacing: 2px; margin-bottom: 3px; }
+.action-title { font-size: 13px; color: #ff8820; letter-spacing: 3px; margin-bottom: 4px; }
+.action-desc  { font-size: 9px; color: #8a8070; line-height: 1.6; margin-bottom: 10px; }
+
+.btn {
+  display: block; width: 100%;
+  background: rgba(255,136,32,.06); border: 1px solid rgba(255,136,32,.4);
+  color: #ff8820; font-family: 'Courier New', monospace;
+  font-size: 10px; letter-spacing: 3px; padding: 8px 0;
+  cursor: pointer; text-align: center; text-transform: uppercase;
+  transition: all .15s;
+}
+.btn:hover  { background: rgba(255,136,32,.16); border-color: #ff8820; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.log {
+  margin-top: 14px; border: 1px solid #1c2440;
+  background: #000; padding: 8px 10px;
+  font-size: 9px; min-height: 64px; max-height: 90px;
+  overflow-y: auto; letter-spacing: 1px;
+}
+.log-line { margin-bottom: 2px; color: #58f2a5; }
+.log-line::before { content: '> '; color: #4a4038; }
+.log-err  { color: #ff3020 !important; }
+
+.footer {
+  margin-top: 12px; font-size: 8px; color: #4a4038;
+  letter-spacing: 2px; text-align: center;
+  border-top: 1px solid #1c2440; padding-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NERV DS BUILDER</h1>
+  <p>MAGI SYSTEM — DESIGN PROTOCOL v2.0</p>
+</div>
+
+<div class="action">
+  <div class="action-num">01 / FOUNDATION</div>
+  <div class="action-title">DESIGN SYSTEM</div>
+  <div class="action-desc">
+    Variabili colore &amp; tipografia · Color styles · Text styles
+  </div>
+  <button class="btn" id="btn-ds" onclick="run('design-system')">
+    EXECUTE DESIGN SYSTEM
+  </button>
+</div>
+
+<div class="action">
+  <div class="action-num">02 / LIBRARY</div>
+  <div class="action-title">COMPONENTS</div>
+  <div class="action-desc">
+    Crea sulla pagina corrente la libreria componenti (12): Hub Card · Status Dot · Store Button · Terminal Tab · MAGI Pip · Catapult Slot · Toggle Switch · Weapon/Armor Option · Monolith · Pilot Panel · MAGI Core Card. Idempotente — non duplica i componenti già presenti.
+  </div>
+  <button class="btn" id="btn-comp" onclick="run('components')">
+    BUILD COMPONENTS
+  </button>
+</div>
+
+<div class="action">
+  <div class="action-num">03 / PROTOTYPE</div>
+  <div class="action-title">PROTOTYPE FRAMES</div>
+  <div class="action-desc">
+    Ricrea il sito sulla pagina corrente: Hub completa, Terminal con i 4 tab (OPS · MAGI-HUB · PILOT-SYNC · TACTICAL) e Store con le 5 sezioni (Hero · Assembly · Specs · Configurator · Acquisition), tutti collegati da navigazione cliccabile. I componenti mancanti vengono creati al volo.
+  </div>
+  <button class="btn" id="btn-proto" onclick="run('prototype')">
+    GENERATE PROTOTYPE
+  </button>
+</div>
+
+<div class="log" id="log">
+  <div class="log-line">SISTEMA PRONTO — SELEZIONA UN'AZIONE</div>
+</div>
+
+<div class="footer">NERV SYSTEM // CLASSIFICATO LIVELLO A // &copy; GEHIRN</div>
+
+<script>
+const buttons = ['btn-ds','btn-comp','btn-proto'];
+
+function run(type) {
+  buttons.forEach(id => document.getElementById(id).disabled = true);
+  addLog('Avvio ' + type.toUpperCase().replace('-',' ') + '...');
+  parent.postMessage({ pluginMessage: { type } }, '*');
+}
+
+function addLog(msg, isErr) {
+  const log = document.getElementById('log');
+  const el = document.createElement('div');
+  el.className = 'log-line' + (isErr ? ' log-err' : '');
+  el.textContent = msg;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+window.onmessage = (e) => {
+  const msg = e.data.pluginMessage;
+  if (!msg) return;
+  if (msg.type === 'log')   addLog(msg.text);
+  if (msg.type === 'error') addLog(msg.text, true);
+  if (msg.type === 'done')  buttons.forEach(id => document.getElementById(id).disabled = false);
+};
+</script>
+</body>
+</html>
