@@ -612,12 +612,42 @@
   cssCartBtn.lookAt(0, 8.0, 0);
   gridGroup.add(cssCartBtn);
 
+  const ticketBtnEl = document.getElementById('ticketButton');
+  if (ticketBtnEl) {
+    ticketBtnEl.style.opacity = '0';
+    ticketBtnEl.style.pointerEvents = 'none';
+    window.cssTicketBtn = new THREE.CSS3DObject(ticketBtnEl);
+    const thetaTicketBtn = thetaCenter + 1.15;
+    window.cssTicketBtn.position.set(Math.cos(thetaTicketBtn) * panelRadiusCSS, 8.0, Math.sin(thetaTicketBtn) * panelRadiusCSS);
+    window.cssTicketBtn.scale.set(0.035, 0.035, 0.035);
+    window.cssTicketBtn.lookAt(0, 8.0, 0);
+    gridGroup.add(window.cssTicketBtn);
+
+    ticketBtnEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.audioEngine) window.audioEngine.playClick();
+      if (typeof showTicketsView === 'function') {
+        showTicketsView();
+      }
+    });
+  }
+
   const cartPanelEl = document.getElementById('cartPanel');
   const cssCartPanel = new THREE.CSS3DObject(cartPanelEl);
   cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
   cssCartPanel.scale.set(0.035, 0.035, 0.035);
   cssCartPanel.lookAt(0, 1.5, 0);
   gridGroup.add(cssCartPanel);
+
+  const ticketsPanelEl = document.getElementById('ticketsPanel');
+  let cssTicketsPanel = null;
+  if (ticketsPanelEl) {
+    cssTicketsPanel = new THREE.CSS3DObject(ticketsPanelEl);
+    cssTicketsPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+    cssTicketsPanel.scale.set(0.035, 0.035, 0.035);
+    cssTicketsPanel.lookAt(0, 1.5, 0);
+    gridGroup.add(cssTicketsPanel);
+  }
 
   /* ── Piani WebGL invisibili per hit-testing affidabile ──
      Nella scene principale (NON gridGroup) con posizioni world dopo boot.
@@ -654,6 +684,16 @@
   // Orientato verso la camera (z=18), come hitPlaneL/hitPlaneR — fix click mancati
   hitPlaneCart.lookAt(0, 8.0, 18);
   scene.add(hitPlaneCart);
+
+  const hitPlaneTicket = new THREE.Mesh(cartHitGeo, panelHitMat);
+  const thetaTicketBtn = thetaCenter + 1.15;
+  hitPlaneTicket.position.set(
+    Math.cos(thetaTicketBtn) * panelRadiusCSS,
+    8.0,
+    Math.sin(thetaTicketBtn) * panelRadiusCSS + 5
+  );
+  hitPlaneTicket.lookAt(0, 8.0, 18);
+  scene.add(hitPlaneTicket);
 
   /* Raycaster dedicato ai pannelli — creato una volta sola */
   const panelRaycaster = new THREE.Raycaster();
@@ -2245,15 +2285,15 @@
       
       /* ── Carrello: raycaster primario + fallback screen-space ── */
       if (!cartViewActive && paymentPanelEl && paymentPanelEl.classList.contains('hidden') && paymentSuccessPanelEl && paymentSuccessPanelEl.classList.contains('hidden')) {
-        let cartClicked = panelRaycaster.intersectObject(hitPlaneCart).length > 0;
-
-        /* Fallback: proietta la posizione world del bottone carrello
-           sullo schermo e controlla se il click è vicino (entro 50px). */
-        if (!cartClicked) {
-          const cartWorldPos = new THREE.Vector3();
-          cssCartBtn.getWorldPosition(cartWorldPos);
-          const dist = screenDistFromClick(cartWorldPos, e.clientX, e.clientY);
-          if (dist < 50) cartClicked = true;
+        let cartClicked = false;
+        if (cartBtnEl && cartBtnEl.style.opacity === '1') {
+          cartClicked = panelRaycaster.intersectObject(hitPlaneCart).length > 0;
+          if (!cartClicked) {
+            const cartWorldPos = new THREE.Vector3();
+            cssCartBtn.getWorldPosition(cartWorldPos);
+            const dist = screenDistFromClick(cartWorldPos, e.clientX, e.clientY);
+            if (dist < 50) cartClicked = true;
+          }
         }
 
         if (cartClicked) {
@@ -2262,6 +2302,29 @@
           if (window.audioEngine) window.audioEngine.playClick();
           showCartView();
           return;
+        }
+
+        let ticketClicked = false;
+        const tBtn = document.getElementById('ticketButton');
+        if (tBtn && tBtn.style.opacity === '1') {
+          ticketClicked = panelRaycaster.intersectObject(hitPlaneTicket).length > 0;
+          if (!ticketClicked && window.cssTicketBtn) {
+            const ticketWorldPos = new THREE.Vector3();
+            window.cssTicketBtn.getWorldPosition(ticketWorldPos);
+            const dist = screenDistFromClick(ticketWorldPos, e.clientX, e.clientY);
+            if (dist < 50) ticketClicked = true;
+          }
+        }
+
+        if (ticketClicked) {
+          const tBtn = document.getElementById('ticketButton');
+          if (tBtn && tBtn.classList.contains('has-ticket')) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (window.audioEngine) window.audioEngine.playClick();
+            if (typeof showTicketsView === 'function') showTicketsView();
+            return;
+          }
         }
       }
 
@@ -2338,6 +2401,8 @@
       hideTimelineView();
     } else if (cartViewActive) {
       hideCartView();
+    } else if (typeof ticketsViewActive !== 'undefined' && ticketsViewActive) {
+      hideTicketsView();
     } else {
       hideDNAView();
     }
@@ -2370,6 +2435,7 @@
     isWelcoming = false;
     welcomeStartTime = 0;
     welcomeEl.style.opacity = '0';
+    welcomeEl.classList.remove('ws-active');
     ledProgress = 0;
     panelProgress = 0;
     logoEl.style.opacity = '0';
@@ -2410,7 +2476,8 @@
             if (!hasBooted && !isWelcoming) {
               isWelcoming = true;
               welcomeStartTime = Date.now();
-              welcomeEl.style.opacity = '1'; // Fade in
+              welcomeEl.style.opacity = '1';
+              welcomeEl.classList.add('ws-active');
             }
           }
         }
@@ -2418,12 +2485,13 @@
       
       if (isWelcoming) {
         const elapsed = Date.now() - welcomeStartTime;
-        if (elapsed > 2800) {
-          welcomeEl.style.opacity = '0'; // Fade out
+        if (elapsed > 5500) {
+          welcomeEl.style.opacity = '0';
         }
-        if (elapsed > 3500) {
+        if (elapsed > 6500) {
           isWelcoming = false;
           hasBooted = true;
+          welcomeEl.classList.remove('ws-active');
           eMouse.set(0, 0);
         }
       }
@@ -2741,13 +2809,7 @@
         });
       }
 
-      // Animazione HUD biglietto (galleggiamento)
-      if (window.cssAnimusTicket && !document.getElementById('animusTicket').classList.contains('hidden-panel')) {
-        const ticketTime = now * 2.0;
-        window.cssAnimusTicket.position.y = Math.sin(ticketTime) * 0.4;
-        window.cssAnimusTicket.rotation.z = Math.sin(ticketTime * 0.8) * 0.03;
-        window.cssAnimusTicket.rotation.x = Math.cos(ticketTime * 1.2) * 0.04;
-      }
+      // Animazione HUD biglietto (rimossa per adattare il biglietto al display curvo statico)
 
     }   // fine if (hasBooted)
   }     // fine function animate()
@@ -2782,6 +2844,10 @@
 
   function showCartView() {
     cartViewActive = true;
+    
+    if (typeof ticketsViewActive !== 'undefined' && ticketsViewActive) {
+      if (typeof hideTicketsView === 'function') hideTicketsView();
+    }
 
     // Chiude qualsiasi interfaccia che potrebbe essere aperta dietro e ne salva lo stato
     if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
@@ -2809,6 +2875,12 @@
     // Il logo rimane visibile, nascondiamo solo il bottone del carrello
     cartBtnEl.style.opacity = '0';
     cartBtnEl.style.pointerEvents = 'none';
+    
+    const ticketBtnEl = document.getElementById('ticketButton');
+    if (ticketBtnEl) {
+      ticketBtnEl.style.opacity = '0';
+      ticketBtnEl.style.pointerEvents = 'none';
+    }
     
     // Move to center
     cssCartPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
@@ -2842,18 +2914,81 @@
     cartBtnEl.style.opacity = '1';
     cartBtnEl.style.pointerEvents = 'auto';
 
+    const ticketBtnEl = document.getElementById('ticketButton');
+    if (ticketBtnEl && ticketBtnEl.classList.contains('has-ticket')) {
+      ticketBtnEl.style.opacity = '1';
+      ticketBtnEl.style.pointerEvents = 'auto';
+    }
+
     // Reset panel position
     cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
     cssCartPanel.scale.set(0.035, 0.035, 0.035);
     cssCartPanel.lookAt(0, 1.5, 0);
   }
 
+  let ticketsViewActive = false;
+
+  window.showTicketsView = function() {
+    ticketsViewActive = true;
+    if (cartViewActive) hideCartView();
+    
+    panelL.classList.add('hidden-panel');
+    panelR.classList.add('hidden-panel');
+    const ticketsPanelEl = document.getElementById('ticketsPanel');
+    if (ticketsPanelEl) ticketsPanelEl.classList.remove('hidden');
+    
+    cartBtnEl.style.opacity = '0';
+    cartBtnEl.style.pointerEvents = 'none';
+    
+    const ticketBtnEl = document.getElementById('ticketButton');
+    if (ticketBtnEl) {
+      ticketBtnEl.style.opacity = '0';
+      ticketBtnEl.style.pointerEvents = 'none';
+    }
+    
+    if (cssTicketsPanel) {
+      cssTicketsPanel.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 0, Math.sin(thetaCenter) * panelRadiusCSS);
+      cssTicketsPanel.scale.set(0.045, 0.045, 0.045);
+      cssTicketsPanel.lookAt(0, 0, 0);
+    }
+    dnaBackArrow.style.display = 'block';
+  }
+
+  window.hideTicketsView = function() {
+    ticketsViewActive = false;
+    const ticketsPanelEl = document.getElementById('ticketsPanel');
+    if (ticketsPanelEl) ticketsPanelEl.classList.add('hidden');
+    
+    panelL.classList.remove('hidden-panel');
+    panelR.classList.remove('hidden-panel');
+    dnaBackArrow.style.display = 'none';
+    
+    cartBtnEl.style.opacity = '1';
+    cartBtnEl.style.pointerEvents = 'auto';
+
+    const ticketBtnEl = document.getElementById('ticketButton');
+    if (ticketBtnEl && ticketBtnEl.classList.contains('has-ticket')) {
+      ticketBtnEl.style.opacity = '1';
+      ticketBtnEl.style.pointerEvents = 'auto';
+    }
+
+    if (cssTicketsPanel) {
+      cssTicketsPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
+      cssTicketsPanel.scale.set(0.035, 0.035, 0.035);
+      cssTicketsPanel.lookAt(0, 1.5, 0);
+    }
+  }
+
   const cartItems = [];
+  const purchasedTickets = [];
   const cartBtn = document.getElementById('cartButton');
   const cartPanel = document.getElementById('cartPanel');
   const cartCloseBtn = document.getElementById('closeCartBtn');
+  const closeTicketsBtn = document.getElementById('closeTicketsBtn');
   const cartItemsContainer = document.getElementById('cartItems');
+  const ticketsListContainer = document.getElementById('ticketsList');
   const cartCountEl = document.getElementById('cartCount');
+  const ticketCountEl = document.getElementById('ticketCount');
   const checkoutBtn = document.getElementById('checkoutBtn');
 
   if (cartBtn && cartPanel && cartCloseBtn) {
@@ -2873,6 +3008,20 @@
     });
     // Evita che cliccando nel carrello si chiuda o interagisca col 3D
     cartPanel.addEventListener('click', e => e.stopPropagation());
+  }
+  
+  if (closeTicketsBtn) {
+    closeTicketsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (ticketsViewActive) {
+        hideTicketsView();
+      }
+      if (window.audioEngine) window.audioEngine.playClick();
+    });
+  }
+  
+  if (ticketsPanelEl) {
+    ticketsPanelEl.addEventListener('click', e => e.stopPropagation());
   }
 
   // Aggiungi click listeners per i nodi della timeline HTML (#floatingTimeline)
@@ -2929,6 +3078,97 @@
     });
   };
 
+  window.updateTicketsUI = function() {
+    const tBtn = document.getElementById('ticketButton');
+    if (tBtn) {
+      if (purchasedTickets.length > 0) {
+        tBtn.classList.add('cart-has-items');
+      } else {
+        tBtn.classList.remove('cart-has-items');
+      }
+    }
+
+    if (ticketCountEl) {
+      ticketCountEl.textContent = purchasedTickets.length.toString();
+    }
+    
+    if (!ticketsListContainer) return;
+    
+    if (purchasedTickets.length === 0) {
+      ticketsListContainer.innerHTML = '<div class="cart-empty">Nessun biglietto acquistato.</div>';
+      return;
+    }
+    
+    ticketsListContainer.innerHTML = '';
+    purchasedTickets.forEach((item, index) => {
+      const el = document.createElement('div');
+      el.className = 'cart-item ticket-item';
+      el.innerHTML = `
+        <div class="cart-item-header">
+          <span class="cart-item-title">${item.title}</span>
+        </div>
+        <div class="cart-item-details">
+          <span>${item.date} - ${item.time}</span>
+          <span class="cart-item-price">ACQUISTATO</span>
+        </div>
+      `;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.audioEngine) window.audioEngine.playClick();
+        
+        // Chiudi il pannello dei biglietti
+        if (typeof hideTicketsView === 'function') hideTicketsView();
+        
+        // Popola i dati del biglietto animus
+        const animusTicketEl = document.getElementById('animusTicket');
+        const expNameEl = document.getElementById('ticketExperienceName');
+        const uNameEl = document.getElementById('ticketUserName');
+        
+        if (expNameEl) expNameEl.textContent = item.title;
+        
+        const nameInput = document.getElementById('userName');
+        const surnameInput = document.getElementById('userSurname');
+        let fullName = 'SCONOSCIUTO';
+        if (nameInput && surnameInput) {
+          const n = nameInput.value.trim();
+          const s = surnameInput.value.trim();
+          if (n || s) fullName = (n + ' ' + s).trim();
+        }
+        if (uNameEl) uNameEl.textContent = fullName.toUpperCase();
+        
+        // Mostra il biglietto e nascondi gli altri pannelli per adattarlo allo schermo curvo
+        if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
+        
+        const btnRet = document.getElementById('btnReturnAnimus');
+        if (btnRet) btnRet.style.display = 'none';
+        
+        const btnCloseTicket = document.getElementById('closeTicketBtn');
+        if (btnCloseTicket) {
+          btnCloseTicket.style.display = 'block';
+        }
+        
+        // Nascondi i bottoni HUD per evitare click accidentali e overlap
+        const cartBtn = document.getElementById('cartButton');
+        if (cartBtn) { cartBtn.style.opacity = '0'; cartBtn.style.pointerEvents = 'none'; }
+        const tBtn = document.getElementById('ticketButton');
+        if (tBtn) { tBtn.style.opacity = '0'; tBtn.style.pointerEvents = 'none'; }
+        const dnaBackArrow = document.getElementById('dnaBackArrow');
+        if (dnaBackArrow) dnaBackArrow.style.display = 'none';
+        
+        const panelL = document.getElementById('panelL');
+        const panelR = document.getElementById('panelR');
+        const dnaView = document.getElementById('floatingTimeline');
+        const globalTimeline = document.querySelector('.global-timeline');
+        
+        if (panelL) panelL.classList.add('hidden-panel');
+        if (panelR) panelR.classList.add('hidden-panel');
+        if (dnaView) dnaView.classList.add('hidden-panel');
+        if (globalTimeline) globalTimeline.classList.add('hidden-panel');
+      });
+      ticketsListContainer.appendChild(el);
+    });
+  };
+
   /* ── PAYMENT LOGIC ── */
   const paymentPanelEl = document.getElementById('paymentPanel');
   const userInfoPanelEl = document.getElementById('userInfoPanel');
@@ -2961,13 +3201,12 @@
 
   const animusTicketEl = document.getElementById('animusTicket');
   const cssAnimusTicket = new THREE.CSS3DObject(animusTicketEl);
-  // Fissiamo il biglietto direttamente alla telecamera per renderlo un vero e proprio HUD 
-  // che segue sempre la visuale dell'utente.
-  cssAnimusTicket.position.set(0, 0, -20); 
-  cssAnimusTicket.scale.set(0.022, 0.022, 0.022); // Biglietto più piccolo
-  cssAnimusTicket.rotation.set(0, 0, 0); 
-  camera.add(cssAnimusTicket);
-  window.cssAnimusTicket = cssAnimusTicket; // Esportiamo per poterlo animare in animate()
+  // Fissiamo il biglietto allo schermo curvo come gli altri pannelli, allineato alle linee (Y=1.5)
+  cssAnimusTicket.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 1.5, Math.sin(thetaCenter) * panelRadiusCSS);
+  cssAnimusTicket.scale.set(0.038, 0.038, 0.038); 
+  cssAnimusTicket.lookAt(0, 1.5, 0); 
+  gridGroup.add(cssAnimusTicket);
+  window.cssAnimusTicket = cssAnimusTicket; 
   scene.add(camera);
 
   const closePaymentBtn = document.getElementById('closePaymentBtn');
@@ -2990,7 +3229,7 @@
     userInfoPanelEl.classList.remove('hidden');
     
     // Position User Info on the left
-    const thetaUserInfo = thetaCenter - 0.35;
+    const thetaUserInfo = thetaCenter - 0.28;
     cssUserInfoPanel.position.set(Math.cos(thetaUserInfo) * panelRadiusCSS, 0, Math.sin(thetaUserInfo) * panelRadiusCSS);
     cssUserInfoPanel.scale.set(0.045, 0.045, 0.045);
     cssUserInfoPanel.lookAt(0, 0, 0);
@@ -3087,6 +3326,12 @@
         // Show sync screen
         if (syncScreenEl) syncScreenEl.classList.remove('hidden-panel');
         
+        const btnRet = document.getElementById('btnReturnAnimus');
+        if (btnRet) btnRet.style.display = 'block';
+        
+        const btnCloseTicket = document.getElementById('closeTicketBtn');
+        if (btnCloseTicket) btnCloseTicket.style.display = 'none';
+        
         confirmPaymentBtn.textContent = "CONFERMA E SINCRONIZZA";
         confirmPaymentBtn.disabled = false;
         
@@ -3106,9 +3351,19 @@
           }
         }
         
+        // Add to purchased tickets
+        purchasedTickets.push(...cartItems);
+        window.updateTicketsUI();
+        
         // Empty cart
         cartItems.length = 0;
         window.updateCartUI();
+
+        const ticketBtnEl = document.getElementById('ticketButton');
+        if (ticketBtnEl) {
+          ticketBtnEl.classList.add('has-ticket');
+          ticketBtnEl.style.display = 'flex';
+        }
 
         // --- ANIMAZIONE CHIUSURA OCCHI E WHITE ROOM ---
         // Avvia la transizione cinematica in 3 fasi
@@ -3218,6 +3473,50 @@
   };
 
   // Funzione per tornare indietro dopo l'acquisto
+  window.closeTicketView = function(e) {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (window.audioEngine) window.audioEngine.playClick();
+    const animusTicketEl = document.getElementById('animusTicket');
+    if (animusTicketEl) animusTicketEl.classList.add('hidden-panel');
+    
+    // Ripristina i bottoni HUD
+    const cartBtnEl = document.getElementById('cartButton');
+    if (cartBtnEl) {
+      cartBtnEl.style.opacity = '1';
+      cartBtnEl.style.pointerEvents = 'auto';
+    }
+    const tBtn = document.getElementById('ticketButton');
+    if (tBtn && tBtn.classList.contains('has-ticket')) {
+      tBtn.style.opacity = '1';
+      tBtn.style.pointerEvents = 'auto';
+    }
+
+    // Forza la chiusura di eventuali viste WebGL rimaste in sottofondo
+    if (typeof hideTimelineView === 'function' && typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) hideTimelineView();
+    if (typeof hideDNAView === 'function' && typeof dnaGroup !== 'undefined' && dnaGroup && dnaGroup.visible) hideDNAView();
+    if (typeof hideGeneInfo === 'function' && selectedDnaGene !== -1) hideGeneInfo();
+    if (typeof hideCharacterView === 'function' && typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) hideCharacterView();
+    
+    // Ripristina ESATTAMENTE il Main Menu (solo panelL e panelR)
+    const panelL = document.getElementById('panelL');
+    const panelR = document.getElementById('panelR');
+    const dnaView = document.getElementById('floatingTimeline');
+    const globalTimeline = document.querySelector('.global-timeline');
+    const dnaBackArrow = document.getElementById('dnaBackArrow');
+    
+    if (panelL) panelL.classList.remove('hidden-panel');
+    if (panelR) panelR.classList.remove('hidden-panel');
+    if (dnaView) dnaView.classList.add('hidden-panel');
+    if (globalTimeline) globalTimeline.classList.add('hidden-panel');
+    if (dnaBackArrow) dnaBackArrow.style.display = 'none';
+  };
+
+  const closeTicketBtn = document.getElementById('closeTicketBtn');
+  if (closeTicketBtn) closeTicketBtn.addEventListener('click', window.closeTicketView);
+
   function returnFromWhiteRoom() {
     if (window.animusState.whiteRoomGroup) {
       scene.remove(window.animusState.whiteRoomGroup);
@@ -3242,6 +3541,12 @@
     const animusTicketEl = document.getElementById('animusTicket');
     if (animusTicketEl) animusTicketEl.classList.add('hidden-panel');
     if (syncScreenEl) syncScreenEl.classList.add('hidden-panel');
+    
+    const closeTicketBtn = document.getElementById('closeTicketBtn');
+    if (closeTicketBtn) {
+      closeTicketBtn.removeEventListener('click', window.closeTicketView);
+      closeTicketBtn.addEventListener('click', window.closeTicketView);
+    }
 
     // Mostra HUD e ripristina logo
     const hudContainer = document.getElementById('hud-container');
@@ -3326,6 +3631,12 @@
     // Ripristina carrello e logo visibili
     cartBtnEl.style.opacity = '1';
     cartBtnEl.style.pointerEvents = 'auto';
+    
+    const ticketBtnEl = document.getElementById('ticketButton');
+    if (ticketBtnEl && ticketBtnEl.classList.contains('has-ticket')) {
+      ticketBtnEl.style.opacity = '1';
+      ticketBtnEl.style.pointerEvents = 'auto';
+    }
     logoEl.style.opacity = '1';
     
     // Nascondi freccia indietro (siamo nella vista Cards)
