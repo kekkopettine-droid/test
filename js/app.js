@@ -1117,57 +1117,27 @@
     [ /* 1500 - Rinascimento */
       { name: 'Leonardo da Vinci',   dates: '1452–1519', role: 'Artista, scienziato e inventore. Mente universale del Rinascimento.' },
       { name: 'Lorenzo de\' Medici', dates: '1449–1492', role: 'Signore di Firenze, mecenate delle arti, centro del potere politico.' },
-      { name: 'Niccolò Machiavelli', dates: '1469–1527', role: 'Filosofo e stratega. Teorico del potere senza compromessi.' },
       { name: 'Michelangelo',         dates: '1475–1564', role: 'Scultore e pittore. Creatore della Cappella Sistina e del David.' },
-      { name: 'Raffaello Sanzio',     dates: '1483–1520', role: 'Pittore e architetto. Maestro del Rinascimento.' },
-      { name: 'Cesare Borgia',        dates: '1475–1507', role: 'Condottiero e cardinale. Ispirò Il Principe di Machiavelli.' },
-      { name: 'Lucrezia Borgia',      dates: '1480–1519', role: 'Nobildonna italiana. Figura controversa e mecenate delle arti.' },
-      { name: 'Caterina Sforza',      dates: '1463–1509', role: 'Leonessa di Romagna. Guerriera e signora di Imola e Forlì.' },
-      { name: 'Girolamo Savonarola',  dates: '1452–1498', role: 'Frate predicatore. Dominatore politico e morale di Firenze.' },
     ],
     [ /* 1600 - Pirateria */
       { name: 'Barbanera',       dates: '1680–1718', role: 'Il pirata più temuto dei Caraibi. Simbolo del terrore dei mari.' },
       { name: 'Anne Bonny',      dates: '1697–1782', role: 'Piratessa leggendaria. Sfidò le convenzioni di un\'epoca intera.' },
       { name: 'Henry Morgan',    dates: '1635–1688', role: 'Corsaro gallese, poi Governatore della Giamaica. Doppio gioco supremo.' },
-      { name: 'Calico Jack',     dates: '1682–1720', role: 'Capitano pirata noto per la sua bandiera e il suo equipaggio.' },
-      { name: 'Bartholomew Roberts', dates: '1682–1722', role: 'Pirata gallese. Il pirata di maggior successo dell\'epoca d\'oro.' },
-      { name: 'Mary Read',       dates: '1685–1721', role: 'Piratessa inglese. Combatté e navigò travestita da uomo.' },
-      { name: 'Charles Vane',    dates: '1680–1721', role: 'Capitano pirata inglese. Ribelle indomabile della repubblica di Nassau.' },
-      { name: 'Stede Bonnet',    dates: '1688–1718', role: 'Il Pirata Gentiluomo. Da proprietario terriero a famigerato corsaro.' },
-      { name: 'William Kidd',    dates: '1654–1701', role: 'Corsaro scozzese. Finito al patibolo tra inganni e pirateria.' },
     ],
     [ /* 1700 - Rivoluzione Americana */
       { name: 'George Washington',  dates: '1732–1799', role: 'Generale e primo Presidente degli Stati Uniti d\'America.' },
       { name: 'Benjamin Franklin',  dates: '1706–1790', role: 'Scienziato, diplomatico e Padre Fondatore.' },
       { name: 'Thomas Jefferson',   dates: '1743–1826', role: 'Autore della Dichiarazione di Indipendenza americana.' },
-      { name: 'Alexander Hamilton', dates: '1755–1804', role: 'Stratega finanziario, architetto del governo federale.' },
-      { name: 'Paul Revere',        dates: '1734–1818', role: 'Patriota e incisore. Famoso per la sua cavalcata notturna di allarme.' },
-      { name: 'Thomas Paine',       dates: '1737–1809', role: 'Filosofo politico. Autore del saggio Senso Comune che ispirò la rivolta.' },
-      { name: 'John Adams',         dates: '1735–1826', role: 'Padre Fondatore e secondo Presidente degli Stati Uniti.' },
-      { name: 'Samuel Adams',       dates: '1722–1803', role: 'Politico e filosofo. Leader carismatico dei Figli della Libertà.' },
-      { name: 'Marchese de Lafayette', dates: '1757–1834', role: 'Ufficiale francese. Eroe dei due mondi per il suo ruolo nella rivoluzione.' },
     ],
     [ /* 1800 - Rivoluzione Francese */
       { name: 'Napoleone Bonaparte', dates: '1769–1821', role: 'Generale e Imperatore. Rivoluzionò l\'Europa con armi e leggi.' },
       { name: 'Marie Antoinette',    dates: '1755–1793', role: 'Regina di Francia. Simbolo del potere assoluto e della sua caduta.' },
       { name: 'Maximilien Robespierre', dates: '1758–1794', role: 'Architetto del Terrore rivoluzionario. Il volto oscuro degli ideali.' },
-      { name: 'Jean-Paul Marat',     dates: '1743–1793', role: 'Giornalista radicale e voce spietata del popolo insorto.' },
-      { name: 'Georges Danton',      dates: '1759–1794', role: 'Politico e oratore. Figura chiave e carismatica della Rivoluzione.' },
-      { name: 'Camille Desmoulins',  dates: '1760–1794', role: 'Giornalista e politico. La voce della rivolta che incitò la folla.' },
-      { name: 'Olympe de Gouges',    dates: '1748–1793', role: 'Drammaturga e attivista. Pioniera dei diritti delle donne.' },
-      { name: 'Charlotte Corday',    dates: '1768–1793', role: 'Assassina di Marat. L\'angelo della morte della Rivoluzione.' },
-      { name: 'Marchese de Sade',    dates: '1740–1814', role: 'Nobile e scrittore libertino. Testimone oscuro e controverso dell\'epoca.' },
     ],
     [ /* 1900 - Rivoluzione Industriale */
       { name: 'Nikola Tesla',   dates: '1856–1943', role: 'Inventore visionario. Padre dell\'elettricità alternata.' },
-      { name: 'Karl Marx',      dates: '1818–1883', role: 'Filosofo e teorico. Le sue idee cambiarono il corso della storia.' },
       { name: 'Charles Darwin', dates: '1809–1882', role: 'Naturalista. La teoria dell\'evoluzione scosse le basi del sapere.' },
-      { name: 'Queen Victoria', dates: '1819–1901', role: 'Regina dell\'Impero Britannico nel suo massimo splendore.' },
       { name: 'Thomas Edison',  dates: '1847–1931', role: 'Inventore e imprenditore. Pioniere dell\'era elettrica.' },
-      { name: 'Alexander Graham Bell', dates: '1847–1922', role: 'Scienziato e inventore. Il padre del telefono.' },
-      { name: 'Florence Nightingale', dates: '1820–1910', role: 'Infermiera britannica. Fondatrice dell\'assistenza infermieristica moderna.' },
-      { name: 'Isambard Kingdom Brunel', dates: '1806–1859', role: 'Ingegnere britannico. Rivoluzionò i trasporti e l\'ingegneria civile.' },
-      { name: 'Ada Lovelace',   dates: '1815–1852', role: 'Matematica britannica. La prima programmatrice di computer.' },
     ],
   ];
 
@@ -1187,7 +1157,8 @@
 
   /* Pannello DESTRA — descrizione personaggio + bottoni */
   const charDetailEl = document.createElement('div');
-  charDetailEl.innerHTML = `<div class="sc-panel" style="width:360px;">
+  charDetailEl.innerHTML = `<div class="sc-panel" style="width:360px; position:relative;">
+    <button id="charCloseBtn" class="payment-close" style="position: absolute; right: 10px; top: 10px; z-index: 1000; cursor: pointer; pointer-events: auto; background: transparent; border: none; font-size: 28px; color: #0ff; line-height: 1; padding: 5px;">&times;</button>
     <div class="sc-panel-tag">PROFILO STORICO</div>
     <div class="sc-epoch" id="charName" style="margin-bottom:4px;">Seleziona un personaggio</div>
     <div style="font-size:10px;letter-spacing:.18em;color:rgba(0,255,255,.55);margin-bottom:8px;" id="charDates"></div>
@@ -1196,7 +1167,7 @@
     <div class="sc-actions" id="charActions" style="display:none;">
       <button class="sc-btn-confirm" id="charConfirmBtn">INIZIA ESPERIENZA</button>
     </div>
-    <div class="sc-confirm-msg" id="charConfirmMsg" style="display:none">⬡ SINCRONIZZAZIONE AVVIATA</div>
+    <div class="sc-confirm-msg" id="charConfirmMsg" style="display:none">⬡ ESPERIENZA AGGIUNTA AL CARRELLO</div>
   </div>`;
   charDetailEl.style.cssText = 'opacity:0;transition:opacity .4s ease;pointer-events:none;';
   document.getElementById('hud-container').appendChild(charDetailEl);
@@ -1224,12 +1195,12 @@
       });
       if (window.updateCartUI) window.updateCartUI();
     }
-    
-    if (charConfirmTimeout) clearTimeout(charConfirmTimeout);
-    charConfirmTimeout = setTimeout(() => {
-      hideCharacterView();
-      charConfirmTimeout = null;
-    }, 3000);
+  });
+
+  document.getElementById('charCloseBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideCharacterView(true);
   });
 
   function buildCharList(epochIdx) {
@@ -1321,7 +1292,7 @@
     dnaBackArrow.style.display = 'block';
   }
 
-  function hideCharacterView() {
+  function hideCharacterView(returnToTimeline = true) {
     if (charConfirmTimeout) {
       clearTimeout(charConfirmTimeout);
       charConfirmTimeout = null;
@@ -1331,7 +1302,7 @@
     charListCss.position.set(0, 1000, 0);
     charDetailCss.position.set(0, 1000, 0);
     charViewEpoch = -1;
-    showTimelineView();
+    if (returnToTimeline) showTimelineView();
   }
 
   // Click + hover sui nodi
@@ -2181,7 +2152,8 @@
 
   // ── Pannello sinistro: data/orario ──
   const scLeftEl = document.createElement('div');
-  scLeftEl.innerHTML = `<div class="sc-panel">
+  scLeftEl.innerHTML = `<div class="sc-panel" style="position:relative;">
+    <button id="scCloseBtn" class="payment-close" style="position: absolute; right: 10px; top: 10px; z-index: 1000; cursor: pointer; pointer-events: auto; background: transparent; border: none; font-size: 28px; color: #0ff; line-height: 1; padding: 5px;">&times;</button>
     <div class="sc-panel-tag">ACCESSO GENETICO</div>
     <div class="sc-epoch" id="scEpoch">—</div>
     <div id="scTagline" style="color:rgba(0,220,255,0.75);font-size:18px;font-family:'Rajdhani',sans-serif;letter-spacing:0.06em;margin:4px 0 8px;">—</div>
@@ -2311,11 +2283,12 @@
       window.updateCartUI();
     }
 
-    if (typeof scConfirmTimeout !== 'undefined' && scConfirmTimeout) clearTimeout(scConfirmTimeout);
-    scConfirmTimeout = setTimeout(() => {
-      hideGeneInfo();
-      scConfirmTimeout = null;
-    }, 3500);
+  });
+
+  document.getElementById('scCloseBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideGeneInfo();
   });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
@@ -2938,7 +2911,7 @@
     } else if (typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) {
       cartPreviousState = 'character';
       cartPreviousEpoch = charViewEpoch;
-      hideCharacterView();
+      hideCharacterView(false);
     } else if (typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) {
       cartPreviousState = 'timeline';
       hideTimelineView();
@@ -2980,7 +2953,6 @@
       showDNAView();
       showGeneInfo(cartPreviousGene);
     } else if (cartPreviousState === 'character') {
-      showTimelineView();
       showCharacterView(cartPreviousEpoch);
     } else if (cartPreviousState === 'timeline') {
       showTimelineView();
@@ -3217,6 +3189,21 @@
         }
         if (uNameEl) uNameEl.textContent = fullName.toUpperCase();
         
+        const qrImg = document.getElementById('ticketQrCode');
+        if (qrImg) {
+          let baseUrl = '';
+          if (window.location.protocol === 'file:') {
+            baseUrl = 'http://172.20.10.3:8000/';
+          } else {
+            baseUrl = window.location.href.split('?')[0];
+            if (baseUrl.endsWith('index.html')) baseUrl = baseUrl.replace('index.html', '');
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+          }
+          const mobileUrl = baseUrl + `mobile_ticket.html?name=${encodeURIComponent(fullName.toUpperCase())}&exp=${encodeURIComponent(item.title)}`;
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}`;
+          qrImg.style.display = 'block';
+        }
+        
         // Mostra il biglietto e nascondi gli altri pannelli per adattarlo allo schermo curvo
         if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
         
@@ -3426,9 +3413,28 @@
         }
         if (ticketExperienceName) {
           if (cartItems.length > 0) {
-            ticketExperienceName.textContent = cartItems.map(item => item.title).join(' + ').toUpperCase();
+            const expName = cartItems.map(item => item.title).join(' + ').toUpperCase();
+            ticketExperienceName.textContent = expName;
+            
+            const qrImg = document.getElementById('ticketQrCode');
+            if (qrImg) {
+              const uName = ticketUserName ? ticketUserName.textContent : 'SCONOSCIUTO';
+              let baseUrl = '';
+              if (window.location.protocol === 'file:') {
+                baseUrl = 'http://172.20.10.3:8000/';
+              } else {
+                baseUrl = window.location.href.split('?')[0];
+                if (baseUrl.endsWith('index.html')) baseUrl = baseUrl.replace('index.html', '');
+                if (!baseUrl.endsWith('/')) baseUrl += '/';
+              }
+              const mobileUrl = baseUrl + `mobile_ticket.html?name=${encodeURIComponent(uName)}&exp=${encodeURIComponent(expName)}`;
+              qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}`;
+              qrImg.style.display = 'block';
+            }
           } else {
             ticketExperienceName.textContent = 'NESSUNA';
+            const qrImg = document.getElementById('ticketQrCode');
+            if (qrImg) qrImg.style.display = 'none';
           }
         }
         
@@ -3579,7 +3585,7 @@
     if (typeof hideTimelineView === 'function' && typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) hideTimelineView();
     if (typeof hideDNAView === 'function' && typeof dnaGroup !== 'undefined' && dnaGroup && dnaGroup.visible) hideDNAView();
     if (typeof hideGeneInfo === 'function' && selectedDnaGene !== -1) hideGeneInfo();
-    if (typeof hideCharacterView === 'function' && typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) hideCharacterView();
+    if (typeof hideCharacterView === 'function' && typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) hideCharacterView(false);
     
     // Ripristina ESATTAMENTE il Main Menu (solo panelL e panelR)
     const panelL = document.getElementById('panelL');

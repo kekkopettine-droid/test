@@ -107,9 +107,9 @@
       if (state.gridGroup) state.gridGroup.visible  = false;
       if (syncScreenEl)    syncScreenEl.classList.add('hidden-panel');
 
-      /* Sfondo grigio-azzurro nebbioso */
-      state.renderer.setClearColor(0x8797a8, 1);
-      state.scene.fog = new THREE.FogExp2(0x8797a8, 0.006);
+      /* Sfondo scuro profondo per far risaltare il tunnel luminoso (Animus warp) */
+      state.renderer.setClearColor(0x020508, 1);
+      state.scene.fog = new THREE.FogExp2(0x020508, 0.008);
 
       lid('0%', 0.12);
 
@@ -191,6 +191,31 @@
         blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
       })));
 
+      /* ── WARP LINES (Linee luminose di memoria) ── */
+      const WCOUNT = 400;
+      const wPos = new Float32Array(WCOUNT * 6);
+      const wData = new Array(WCOUNT);
+      for (let i = 0; i < WCOUNT; i++) {
+        const x = (Math.random() - 0.5) * 70;
+        const y = (Math.random() - 0.5) * 50;
+        const z = FAR_Z + Math.random() * (NEAR_Z - FAR_Z);
+        const length = 4 + Math.random() * 20;
+        wPos[i*6]   = x; wPos[i*6+1] = y; wPos[i*6+2] = z;
+        wPos[i*6+3] = x; wPos[i*6+4] = y; wPos[i*6+5] = z + length;
+        wData[i] = { spd: 15 + Math.random() * 25, length: length };
+      }
+      const wGeo = new THREE.BufferGeometry();
+      wGeo.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
+      const wMat = new THREE.LineBasicMaterial({
+        color: 0x00ffff,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const warpLines = new THREE.LineSegments(wGeo, wMat);
+      vortexGrp.add(warpLines);
+
       /* ── HUD Overlay ── */
       overlayEl = buildOverlay();
       document.body.appendChild(overlayEl);
@@ -247,6 +272,29 @@
         }
         dGeo.attributes.position.needsUpdate = true;
 
+        /* Aggiorna warp lines */
+        for (let i = 0; i < WCOUNT; i++) {
+          let z = wPos[i*6+2] + dt * wData[i].spd * (spd * 2.5);
+          if (z > NEAR_Z + 15) {
+            z = FAR_Z - Math.random() * 30;
+            const x = (Math.random() - 0.5) * 70;
+            const y = (Math.random() - 0.5) * 50;
+            wPos[i*6]   = x; wPos[i*6+1] = y;
+            wPos[i*6+3] = x; wPos[i*6+4] = y;
+          }
+          wPos[i*6+2] = z;
+          wPos[i*6+5] = z + (wData[i].length * (1 + accel * 0.5)); // Le linee si allungano con l'accelerazione
+        }
+        wGeo.attributes.position.needsUpdate = true;
+
+        /* Camera FOV warp per sensazione di velocità */
+        if (state.camera && state.camera.isPerspectiveCamera) {
+          if (!state.camera.userData.baseFov) state.camera.userData.baseFov = state.camera.fov;
+          const targetFov = state.camera.userData.baseFov + accel * 10;
+          state.camera.fov += (targetFov - state.camera.fov) * 0.1;
+          state.camera.updateProjectionMatrix();
+        }
+
         /* Camera shake + aberrazione cromatica (implosione) */
         if (imploding && threeCanvas) {
           const sh = Math.min(accel * 2.2, 18);
@@ -276,9 +324,14 @@
         if (vortexGrp) {
           state.scene.remove(vortexGrp);
           dGeo.dispose(); ptTex.dispose();
+          wGeo.dispose(); wMat.dispose();
           allTextures.forEach(t => t.dispose());
           elements.forEach(el => { if (el.material) el.material.dispose(); });
           vortexGrp = null;
+        }
+        if (state.camera && state.camera.isPerspectiveCamera && state.camera.userData.baseFov) {
+          state.camera.fov = state.camera.userData.baseFov;
+          state.camera.updateProjectionMatrix();
         }
         if (state.scene.fog) state.scene.fog = null;
         if (overlayEl)   { document.body.removeChild(overlayEl); overlayEl = null; }

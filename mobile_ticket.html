@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Abstergo Ticket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #020508;
+      color: #0ff;
+      font-family: 'Rajdhani', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .animus-ticket {
+      position: relative;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px 25px;
+      background: rgba(0, 20, 30, 0.7);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 4px;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.1), inset 0 0 20px rgba(0, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      text-transform: uppercase;
+      box-sizing: border-box;
+    }
+    .animus-ticket::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, #0ff, transparent);
+      opacity: 0.8;
+    }
+    .ticket-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .ticket-logo {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      margin-bottom: 8px;
+    }
+    .ticket-status {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0ff;
+      letter-spacing: 0.3em;
+    }
+    .ticket-body {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    .ticket-field {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .ticket-field label {
+      font-size: 12px;
+      color: rgba(0, 255, 255, 0.5);
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+    .ticket-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+    .experience-name {
+      color: #0ff;
+      text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+    }
+    .ticket-barcode {
+      text-align: center;
+      font-size: 32px;
+      letter-spacing: 6px;
+      color: rgba(0, 255, 255, 0.4);
+      margin-top: 20px;
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+      padding-top: 20px;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 80px;
+      font-weight: 700;
+      color: rgba(0, 255, 255, 0.03);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="animus-ticket">
+    <div class="watermark">ABSTERGO</div>
+    <div class="ticket-header">
+      <span class="ticket-logo">⬡ ABSTERGO</span>
+      <span class="ticket-status">AUTORIZZAZIONE ACCORDATA</span>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-field">
+        <label>SOGGETTO</label>
+        <div id="val-name" class="ticket-value">SCONOSCIUTO</div>
+      </div>
+      <div class="ticket-field">
+        <label>ESPERIENZA ACQUISTATA</label>
+        <div id="val-exp" class="ticket-value experience-name">NESSUNA</div>
+      </div>
+    </div>
+    <div class="ticket-barcode">
+      || ||| |||| | || | ||| |||| || | |
+    </div>
+  </div>
+
+  <script>
+    // Recupera i parametri dalla URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const name = urlParams.get('name');
+    const exp = urlParams.get('exp');
+
+    if (name) document.getElementById('val-name').textContent = name;
+    if (exp) document.getElementById('val-exp').textContent = exp;
+  </script>
+</body>
+</html>
