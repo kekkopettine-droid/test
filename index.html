@@ -62,7 +62,7 @@
   </div>
 
   <!-- PANNELLO 1: SINISTRA -->
-  <div class="panel" id="panelL">
+  <div class="panel" id="panelL" style="display: none !important;">
     <div class="panel-header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
            stroke="#00ccff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -136,9 +136,9 @@
     </div>
     <div class="panel-text" style="font-size: 18px; line-height: 1.8; margin-bottom: 30px;">
       Abstergo Industries ti dà il benvenuto in una nuova era della scoperta. Ti offriamo l'opportunità esclusiva di provare l'Animus, un macchinario rivoluzionario in grado di decodificare il DNA e farti rivivere i ricordi del passato in prima persona.<br><br>
-      Scegli tra due tipologie di esperienze immersive, prenota il tuo biglietto e sarai invitato presso le nostre strutture per iniziare il tuo viaggio nel tempo.
+      Scegli l'esperienza immersiva, prenota il tuo biglietto e sarai invitato presso le nostre strutture per iniziare il tuo viaggio nel tempo.
     </div>
-    <button id="btnExploreExperiences" class="btn-back" style="align-self: center; font-size: 18px; padding: 14px 40px; margin: 0 auto; display: block;">ESPLORA LE ESPERIENZE</button>
+    <button id="btnExploreExperiences" class="btn-back" style="align-self: center; font-size: 18px; padding: 14px 40px; margin: 0 auto; display: block;">ESPLORA L'ESPERIENZA</button>
   </div>
 
   <!-- FLOATING TIMELINE -->
@@ -315,6 +315,21 @@
       </div>
       <button id="btnReturnAnimus" class="btn-return-animus">RITORNA ALL'ANIMUS</button>
     </div>
+  </div>
+
+  <!-- TIMELINE BACKGROUND VIDEO -->
+  <div id="timelineBgContainer" class="timeline-bg-container hidden" style="pointer-events: none;">
+    <video id="timelineBgVideo" class="cinematic-video" playsinline muted disablePictureInPicture loop preload="none">
+      <source src="assets/video/timeline-bg.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- CINEMATIC OVERLAY -->
+  <div id="cinematicOverlay" class="cinematic-overlay hidden" style="pointer-events: none;">
+    <video id="cinematicVideo" class="cinematic-video" playsinline muted disablePictureInPicture preload="none">
+      <source src="assets/video/transition-historical.mp4" type="video/mp4">
+    </video>
+    <button id="skipCinematicBtn" class="skip-btn hidden">SALTA</button>
   </div>
 
   <!-- FLASH BIANCO PER LA TRANSIZIONE -->

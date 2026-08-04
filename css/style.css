@@ -14,6 +14,7 @@ body {
   position:fixed; top:0; left:0;
   width:100vw; height:100vh;
   z-index:1; display:block;
+  transition: opacity 0.8s ease;
 }
 
 /* ── SCANLINES (Linee orizzontali in sovrimpressione per l'effetto schermo) ── */
@@ -1244,7 +1245,7 @@ body {
 #eyelids {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 9999;
+  z-index: 10001;
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -1384,3 +1385,95 @@ body {
   color: #ffffff;
 }
 
+/* CINEMATIC OVERLAY */
+.cinematic-overlay {
+  position: fixed;
+  top: -5vh;
+  left: -5vw;
+  width: 110vw;
+  height: 110vh;
+  z-index: 9999;
+  background-color: #000;
+  opacity: 1;
+  transition: opacity 0.4s ease, transform 0.1s linear;
+  transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px));
+}
+.cinematic-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* TIMELINE BACKGROUND VIDEO CONTAINER */
+.timeline-bg-container {
+  position: fixed;
+  top: -5vh;
+  left: -5vw;
+  width: 110vw;
+  height: 110vh;
+  z-index: 0;
+  background-color: #000;
+  opacity: 1;
+  transition: opacity 0.4s ease, transform 0.1s linear;
+  transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px));
+}
+.timeline-bg-container.hidden {
+  opacity: 0;
+}
+
+.cinematic-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.skip-btn {
+  position: absolute;
+  bottom: 30px;
+  right: 40px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  color: rgba(200, 255, 255, 0.9);
+  padding: 8px 16px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  z-index: 10000;
+  transition: opacity 0.5s ease, background 0.2s ease, border-color 0.2s ease;
+  pointer-events: auto;
+}
+.skip-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 1);
+  color: #fff;
+}
+.skip-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* TIMELINE STATIC BACKGROUND */
+@keyframes animusBgDrift {
+  0% { transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px)) scale(1); }
+  33% { transform: translate(calc(var(--mouse-x, 0px) - 1vw), calc(var(--mouse-y, 0px) - 1vh)) scale(1.03); }
+  66% { transform: translate(calc(var(--mouse-x, 0px) + 1vw), calc(var(--mouse-y, 0px) + 0.5vh)) scale(1.05); }
+  100% { transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px)) scale(1); }
+}
+
+.timeline-bg-container {
+  position: fixed;
+  top: -5vh;
+  left: -5vw;
+  width: 110vw;
+  height: 110vh;
+  background-image: url('../assets/timeline-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1; /* Sopra WebGL, sotto CSS3D */
+  opacity: 1;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+  animation: animusBgDrift 30s ease-in-out infinite;
+}
+.timeline-bg-container.hidden {
+  opacity: 0;
+}

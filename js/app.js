@@ -590,12 +590,12 @@
   cssObjL.position.set(Math.cos(thetaL) * panelRadiusCSS, -1, Math.sin(thetaL) * panelRadiusCSS);
   cssObjL.scale.set(0.035, 0.035, 0.035);
   cssObjL.lookAt(0, -1, 0);
-  gridGroup.add(cssObjL);
+  // gridGroup.add(cssObjL); // Hide completely
 
   // 3) PANNELLO DESTRO
   const panelR = document.getElementById('panelR');
   const cssObjR = new THREE.CSS3DObject(panelR);
-  const thetaR = thetaCenter + spread;
+  const thetaR = thetaCenter;
   cssObjR.position.set(Math.cos(thetaR) * panelRadiusCSS, -1, Math.sin(thetaR) * panelRadiusCSS);
   cssObjR.scale.set(0.035, 0.035, 0.035);
   cssObjR.lookAt(0, -1, 0);
@@ -621,6 +621,14 @@
 
     setTimeout(() => {
       window.experiencesRevealed = true;
+      
+      // PRELOAD: precarica il video
+      const cinVid = document.getElementById('cinematicVideo');
+      if (cinVid && cinVid.preload !== 'auto') {
+        cinVid.preload = 'auto';
+        cinVid.load(); // Forza il caricamento
+      }
+
       // Fade in panels
       panelL.style.transition = "opacity 0.5s ease";
       panelR.style.transition = "opacity 0.5s ease";
@@ -725,9 +733,9 @@
 
   const hitPlaneL = new THREE.Mesh(panelHitGeo, panelHitMat);
   hitPlaneL.position.set(
-    Math.cos(thetaL) * panelRadiusCSS,
-    -1,
-    Math.sin(thetaL) * panelRadiusCSS + 5
+    0,
+    -10000,
+    0
   );
   hitPlaneL.lookAt(0, -1, 18); /* guarda verso la camera */
   scene.add(hitPlaneL);
@@ -1336,6 +1344,7 @@
     });
     dnaBackArrow.style.display = 'block';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
+    tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     tlGuideEl.forEach((el, i) => {
       el.style.opacity = '0';
@@ -1343,6 +1352,20 @@
       tlGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
     });
     tlDnaGroups.forEach(g => { g.visible = true; });
+    
+    // --- NASCONDI DISPLAY 3D E MOSTRA VIDEO IN LOOP ---
+    const canvas = document.getElementById('threeCanvas');
+    if (canvas) {
+      canvas.style.transition = 'none'; // Nascondi istantaneamente per evitare flash visivi
+      canvas.style.opacity = '0';
+    }
+    
+    const bgContainer = document.getElementById('timelineBgContainer');
+    const bgVideo = document.getElementById('timelineBgVideo');
+    if (bgContainer && bgVideo) {
+      bgContainer.classList.remove('hidden');
+      bgVideo.play().catch(e => console.warn('Bg video play error', e));
+    }
   }
 
   function hideTimelineElements() {
@@ -1367,6 +1390,25 @@
     hideTimelineElements();
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
+    
+    // --- RIPRISTINA DISPLAY 3D E NASCONDI IL VIDEO DI SFONDO ---
+    const overlay = document.getElementById('cinematicOverlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+    
+    const bgContainer = document.getElementById('timelineBgContainer');
+    const bgVideo = document.getElementById('timelineBgVideo');
+    if (bgContainer && bgVideo) {
+      bgContainer.classList.add('hidden');
+      bgVideo.pause();
+    }
+    
+    const canvas = document.getElementById('threeCanvas');
+    if (canvas) {
+      canvas.style.transition = 'opacity 0.8s ease'; // Ripristina il fade morbido
+      canvas.style.opacity = '1';
+    }
   }
 
 
@@ -2377,7 +2419,7 @@
         }
         if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { 
           if (window.audioEngine) window.audioEngine.playClick();
-          showTimelineView(); 
+          playCinematicTransition(); 
           return; 
         }
       }
@@ -2564,6 +2606,20 @@
     if (hasBooted) {
       eMouse.x += (rawMouse.x - eMouse.x) * EASE;
       eMouse.y += (rawMouse.y - eMouse.y) * EASE;
+      
+      // Parallax del video di sfondo della timeline (loop)
+      const tlBg = document.getElementById('timelineBgContainer');
+      if (tlBg && !tlBg.classList.contains('hidden')) {
+        tlBg.style.setProperty('--mouse-x', `${-eMouse.x * 2.5}vw`);
+        tlBg.style.setProperty('--mouse-y', `${eMouse.y * 1.5}vh`);
+      }
+      
+      // Parallax della transizione video (se mai servisse)
+      const cinematicOverlay = document.getElementById('cinematicOverlay');
+      if (cinematicOverlay && cinematicOverlay.style.zIndex === '0') {
+        cinematicOverlay.style.setProperty('--mouse-x', `${-eMouse.x * 2.5}vw`);
+        cinematicOverlay.style.setProperty('--mouse-y', `${eMouse.y * 1.5}vh`);
+      }
     }
 
     camera.position.set(0, 0, 18);
@@ -3764,6 +3820,157 @@
         returnFromWhiteRoom();
       }
     });
+  }
+
+  // --- CINEMATIC TRANSITION LOGIC ---
+  function playCinematicTransition() {
+    const overlay = document.getElementById('cinematicOverlay');
+    const video = document.getElementById('cinematicVideo');
+    const skipBtn = document.getElementById('skipCinematicBtn');
+    const eyelidTop = document.querySelector('.eyelid-top');
+    const eyelidBottom = document.querySelector('.eyelid-bottom');
+    
+    if (!overlay || !video) {
+      doFallbackTransition();
+      return;
+    }
+
+    // Effetto "svenimento": chiudi le palpebre
+    if (eyelidTop && eyelidBottom) {
+      eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+      eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+      eyelidTop.style.height = '50%';
+      eyelidBottom.style.height = '50%';
+    }
+
+    // Rewind del video se era già stato riprodotto
+    video.currentTime = 0;
+
+    // Attendi la chiusura delle palpebre prima di caricare/avviare il video (1.5s)
+    setTimeout(() => {
+      // Mostra overlay in primo piano
+      overlay.style.zIndex = '9999';
+      overlay.style.opacity = '1';
+      overlay.classList.remove('hidden');
+      overlay.style.pointerEvents = 'auto';
+      
+      let fallbackTriggered = false;
+    let fallbackTimeout = setTimeout(() => {
+      if (!fallbackTriggered && video.readyState < 3) {
+        console.warn("Video stall timeout (5s). Triggering fallback.");
+        doFallbackTransition();
+      }
+    }, 5000); // 5 secondi per permettere al file pesante di caricarsi
+    
+    const onVideoError = () => {
+      console.warn("Video error event triggered.");
+      doFallbackTransition();
+    };
+    video.addEventListener('error', onVideoError, true);
+    
+    // Tenta di avviare il video
+    let playPromise = video.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        clearTimeout(fallbackTimeout);
+        // Sblocca audio se possibile
+        video.muted = false;
+        
+        // Il video è partito: riapri lentamente le palpebre per rivelare l'inizio
+        if (eyelidTop && eyelidBottom) {
+          eyelidTop.style.transition = 'height 2s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          eyelidBottom.style.transition = 'height 2s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          eyelidTop.style.height = '0%';
+          eyelidBottom.style.height = '0%';
+        }
+        
+        // Skip dopo 1.5 secondi
+        setTimeout(() => {
+          if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
+        }, 1500);
+
+        let cleanupDone = false;
+        const cleanup = () => {
+          if (cleanupDone) return;
+          cleanupDone = true;
+          
+          // Nascondiamo il video cinematico con un fade-out
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            video.pause();
+            overlay.classList.add('hidden');
+            overlay.style.pointerEvents = 'none';
+            skipBtn.classList.add('hidden');
+            showTimelineView();
+          }, 400); // 400ms fade-out
+          
+          document.removeEventListener('click', skipHandler);
+          document.removeEventListener('keydown', skipHandler);
+          video.removeEventListener('ended', cleanup);
+          video.removeEventListener('error', onVideoError, true);
+        };
+
+        const skipHandler = (e) => {
+          if (e.type === 'keydown' && e.key !== 'Escape') return;
+          cleanup();
+        };
+
+        document.addEventListener('click', skipHandler);
+        document.addEventListener('keydown', skipHandler);
+        video.addEventListener('ended', cleanup);
+        
+      }).catch(err => {
+        console.warn("Video autoplay failed or missing:", err);
+        doFallbackTransition();
+      });
+    } else {
+      doFallbackTransition();
+    }
+    
+    function doFallbackTransition() {
+      if (fallbackTriggered) return;
+      fallbackTriggered = true;
+      clearTimeout(fallbackTimeout);
+      video.removeEventListener('error', onVideoError, true);
+      
+      if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.style.pointerEvents = 'none';
+      }
+      // Fallback: transizione più sicura e veloce
+      const flash = document.getElementById('animus-white-flash');
+      if (flash) {
+        flash.style.transition = 'opacity 0.2s ease-in';
+        flash.style.background = '#000';
+        flash.style.opacity = '1';
+        flash.style.pointerEvents = 'auto';
+        setTimeout(() => {
+          // Nel fallback apri subito gli occhi per evitare che resti nero
+          if (eyelidTop && eyelidBottom) {
+            eyelidTop.style.transition = 'height 0.5s ease-in';
+            eyelidBottom.style.transition = 'height 0.5s ease-in';
+            eyelidTop.style.height = '0%';
+            eyelidBottom.style.height = '0%';
+          }
+          showTimelineView();
+          flash.style.opacity = '0';
+          flash.style.pointerEvents = 'none';
+          setTimeout(() => { 
+            flash.style.background = ''; 
+            flash.style.transition = 'opacity 1.5s ease-in'; 
+          }, 300);
+        }, 250);
+      } else {
+        if (eyelidTop && eyelidBottom) {
+          eyelidTop.style.height = '0%';
+          eyelidBottom.style.height = '0%';
+        }
+        showTimelineView();
+      }
+    }
+    
+    }, 1500); // Fine attesa palpebre chiuse
   }
 
   animate();
