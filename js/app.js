@@ -16,7 +16,7 @@
       return new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: false,
+        alpha: true,
         powerPreference: 'high-performance',
         failIfMajorPerformanceCaveat: false
       });
@@ -28,7 +28,7 @@
   function initRenderer(r) {
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     r.setSize(window.innerWidth, window.innerHeight);
-    r.setClearColor(0x1a1a1a, 1);
+    r.setClearColor(0x000000, 0); // Trasparente per mostrare il video html sotto
   }
 
   renderer = createRenderer();
@@ -1353,13 +1353,16 @@
     });
     tlDnaGroups.forEach(g => { g.visible = true; });
     
-    // --- NASCONDI DISPLAY 3D E MOSTRA VIDEO IN LOOP ---
+    // --- NASCONDI AMBIENTE ANIMUS E MOSTRA OGGETTI STORICI ---
+    // Manteniamo il threeCanvas visibile (essendo ora trasparente)
     const canvas = document.getElementById('threeCanvas');
     if (canvas) {
-      canvas.style.transition = 'none'; // Nascondi istantaneamente per evitare flash visivi
-      canvas.style.opacity = '0';
+      canvas.style.transition = 'none'; 
+      canvas.style.opacity = '1'; // DEVE RESTARE VISIBILE
     }
     
+    if (typeof gridGroup !== 'undefined') gridGroup.visible = false;
+    if (typeof bgGroup !== 'undefined') bgGroup.visible = false;
     const bgContainer = document.getElementById('timelineBgContainer');
     const bgVideo = document.getElementById('timelineBgVideo');
     if (bgContainer && bgVideo) {
@@ -1406,9 +1409,12 @@
     
     const canvas = document.getElementById('threeCanvas');
     if (canvas) {
-      canvas.style.transition = 'opacity 0.8s ease'; // Ripristina il fade morbido
+      canvas.style.transition = 'opacity 0.8s ease'; // Ripristina il fade morbido se serve
       canvas.style.opacity = '1';
     }
+    
+    if (typeof gridGroup !== 'undefined') gridGroup.visible = true;
+    if (typeof bgGroup !== 'undefined') bgGroup.visible = true;
   }
 
 
@@ -3895,18 +3901,38 @@
           if (cleanupDone) return;
           cleanupDone = true;
           
-          // Nascondiamo il video cinematico con un fade-out
-          overlay.style.opacity = '0';
-          setTimeout(() => {
+          // Prima avviamo la timeline e il video di sfondo
+          showTimelineView();
+          
+          // Nascondiamo il video cinematico SOLO quando il nuovo video inizia davvero a suonare
+          // Questo elimina completamente il microscopico frame nero di caricamento del browser!
+          const bgVideo = document.getElementById('timelineBgVideo');
+          
+          const hideOverlay = () => {
+            overlay.style.transition = 'none'; // Disabilita eventuali transizioni CSS
+            overlay.style.opacity = '0';
             video.pause();
             overlay.classList.add('hidden');
             overlay.style.pointerEvents = 'none';
             skipBtn.classList.add('hidden');
-            showTimelineView();
-          }, 400); // 400ms fade-out
+            if(bgVideo) {
+              bgVideo.removeEventListener('playing', hideOverlay);
+            }
+          };
+
+          if (bgVideo && bgVideo.readyState >= 3) {
+            hideOverlay();
+          } else if (bgVideo) {
+            bgVideo.addEventListener('playing', hideOverlay);
+            // Fallback di sicurezza in caso non parta l'evento
+            setTimeout(hideOverlay, 300);
+          } else {
+            hideOverlay();
+          }
           
           document.removeEventListener('click', skipHandler);
           document.removeEventListener('keydown', skipHandler);
+          video.removeEventListener('timeupdate', timeUpdateHandler);
           video.removeEventListener('ended', cleanup);
           video.removeEventListener('error', onVideoError, true);
         };
@@ -3915,11 +3941,20 @@
           if (e.type === 'keydown' && e.key !== 'Escape') return;
           cleanup();
         };
+        
+        const timeUpdateHandler = () => {
+          // Fermati poco prima della fine per "congelare" l'ultimo fotogramma 
+          // ed evitare che il browser pulisca il buffer video diventando nero!
+          if (video.duration && video.currentTime >= video.duration - 0.05) {
+            video.pause();
+            cleanup();
+          }
+        };
 
         document.addEventListener('click', skipHandler);
         document.addEventListener('keydown', skipHandler);
-        video.addEventListener('ended', cleanup);
-        
+        video.addEventListener('timeupdate', timeUpdateHandler);
+        video.addEventListener('ended', cleanup); // Fallback
       }).catch(err => {
         console.warn("Video autoplay failed or missing:", err);
         doFallbackTransition();
@@ -3972,6 +4007,8 @@
     
     }, 1500); // Fine attesa palpebre chiuse
   }
+
+
 
   animate();
 })();

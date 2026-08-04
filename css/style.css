@@ -1468,7 +1468,7 @@ body {
   background-image: url('../assets/timeline-bg.jpg');
   background-size: cover;
   background-position: center;
-  z-index: 1; /* Sopra WebGL, sotto CSS3D */
+  z-index: 0; /* SOTTO WebGL (che è z-index 1) */
   opacity: 1;
   transition: opacity 0.8s ease;
   pointer-events: none;
