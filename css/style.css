@@ -1247,12 +1247,21 @@ body {
   transition: height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 .eyelid-top {
-  /* ombra morbida che precede la palpebra — effetto oscuramento progressivo */
-  box-shadow: 0 50px 130px rgba(0,0,0,0.96), 0 15px 45px rgba(0,0,0,0.9);
+  /* bordo inferiore curvo — forma della palpebra superiore */
+  border-radius: 0 0 50% 50% / 0 0 22px 22px;
+  box-shadow:
+    0 60px 150px rgba(0,0,0,0.98),
+    0 22px 60px  rgba(0,0,0,0.93),
+    0 6px  18px  rgba(0,0,0,0.88);
 }
 .eyelid-bottom {
   margin-top: auto;
-  box-shadow: 0 -50px 130px rgba(0,0,0,0.96), 0 -15px 45px rgba(0,0,0,0.9);
+  /* bordo superiore curvo — forma della palpebra inferiore */
+  border-radius: 50% 50% 0 0 / 22px 22px 0 0;
+  box-shadow:
+    0 -60px 150px rgba(0,0,0,0.98),
+    0 -22px 60px  rgba(0,0,0,0.93),
+    0 -6px  18px  rgba(0,0,0,0.88);
 }
 
 .animus-white-flash {

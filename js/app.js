@@ -3765,20 +3765,26 @@
       const eyelidBottom = document.querySelector('.eyelid-bottom');
       
       if (eyelidTop && eyelidBottom) {
-        // Chiudi gli occhi lentamente
-        // Chiusura: sup. cade veloce, inf. sale lenta (60/40)
-        eyelidTop.style.transition    = 'height 1.0s cubic-bezier(0.5, 0, 1, 0.85)';
-        eyelidBottom.style.transition = 'height 1.35s cubic-bezier(0.3, 0, 0.7, 0.9)';
-        eyelidTop.style.height    = '60%';
-        eyelidBottom.style.height = '40%';
+        // Fase 1: appesantimento (lotta contro il sonno)
+        eyelidTop.style.transition    = 'height 0.9s cubic-bezier(0.15, 0, 0.5, 0.6)';
+        eyelidBottom.style.transition = 'height 1.1s cubic-bezier(0.05, 0, 0.3, 0.5)';
+        eyelidTop.style.height    = '27%';
+        eyelidBottom.style.height = '9%';
+        // Fase 2: resa — caduta rapida
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 0.5s cubic-bezier(0.4, 0, 1, 0.88)';
+          eyelidBottom.style.transition = 'height 0.65s cubic-bezier(0.25, 0, 0.9, 0.88)';
+          eyelidTop.style.height    = '60%';
+          eyelidBottom.style.height = '40%';
+        }, 820);
         
         // Quando lo schermo è nero, ripristina la scena
         setTimeout(() => {
           returnFromWhiteRoom();
           
-          // Riapertura: lenta, quasi groggy
-          eyelidTop.style.transition    = 'height 1.5s cubic-bezier(0, 0, 0.25, 1)';
-          eyelidBottom.style.transition = 'height 1.2s cubic-bezier(0, 0, 0.3, 1)';
+          // Apertura groggy: lenta, poi si sveglia
+          eyelidTop.style.transition    = 'height 1.6s cubic-bezier(0, 0, 0.2, 1)';
+          eyelidBottom.style.transition = 'height 1.3s cubic-bezier(0, 0, 0.25, 1)';
           eyelidTop.style.height    = '0%';
           eyelidBottom.style.height = '0%';
         }, 1600);
@@ -3847,10 +3853,18 @@
       clearInterval(tickerInterval);
 
       if (eyelidTop && eyelidBottom) {
-        eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
-        eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.2, 0, 0.8, 0.9)';
-        eyelidTop.style.height    = '60%';
-        eyelidBottom.style.height = '40%';
+        // Sedazione fase 1: occhi pesanti, lotta contro il sonno
+        eyelidTop.style.transition    = 'height 1.3s cubic-bezier(0.15, 0, 0.45, 0.6)';
+        eyelidBottom.style.transition = 'height 1.6s cubic-bezier(0.05, 0, 0.25, 0.5)';
+        eyelidTop.style.height    = '27%';
+        eyelidBottom.style.height = '9%';
+        // Sedazione fase 2: resa, caduta rapida
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 0.65s cubic-bezier(0.4, 0, 1, 0.9)';
+          eyelidBottom.style.transition = 'height 0.8s cubic-bezier(0.25, 0, 0.9, 0.9)';
+          eyelidTop.style.height    = '60%';
+          eyelidBottom.style.height = '40%';
+        }, 1100);
       }
 
       // ── FASE 3: 1550ms chiusura + 2000ms buio → avvia video ──
@@ -3885,12 +3899,20 @@
             clearTimeout(fallbackTimeout);
             video.muted = false;
 
-            // Video pronto: riapri le palpebre
+            // Video pronto: apertura groggy in 2 fasi
             if (eyelidTop && eyelidBottom) {
-              eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
-              eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
-              eyelidTop.style.height    = '0%';
-              eyelidBottom.style.height = '0%';
+              // Fase 1: si sveglia a fatica (si apre solo parzialmente)
+              eyelidTop.style.transition    = 'height 1.6s cubic-bezier(0, 0, 0.12, 1)';
+              eyelidBottom.style.transition = 'height 1.3s cubic-bezier(0, 0, 0.18, 1)';
+              eyelidTop.style.height    = '20%';
+              eyelidBottom.style.height = '6%';
+              // Fase 2: finalmente apre (dopo 1500ms)
+              setTimeout(() => {
+                eyelidTop.style.transition    = 'height 0.9s cubic-bezier(0, 0, 0.28, 1)';
+                eyelidBottom.style.transition = 'height 0.7s cubic-bezier(0, 0, 0.32, 1)';
+                eyelidTop.style.height    = '0%';
+                eyelidBottom.style.height = '0%';
+              }, 1500);
             }
 
             // Skip visibile 1.5s dopo l'apertura
@@ -3913,9 +3935,9 @@
 
           // ── CHIUDI GLI OCCHI (come la transizione iniziale) ──
           if (eyelidTop && eyelidBottom) {
-            // Sup. cade rapido, inf. segue più lenta (60/40)
-            eyelidTop.style.transition    = 'height 0.4s cubic-bezier(0.5, 0, 1, 0.8)';
-            eyelidBottom.style.transition = 'height 0.54s cubic-bezier(0.25, 0, 0.8, 0.9)';
+            // Battito rapido: sup. si chiude prima, inf. segue
+            eyelidTop.style.transition    = 'height 0.36s cubic-bezier(0.55, 0, 1, 0.8)';
+            eyelidBottom.style.transition = 'height 0.5s  cubic-bezier(0.3,  0, 0.85, 0.8)';
             eyelidTop.style.height    = '60%';
             eyelidBottom.style.height = '40%';
           }
@@ -3946,8 +3968,8 @@
 
               // ── RIAPRI GLI OCCHI mentre il flash svanisce ──
               if (eyelidTop && eyelidBottom) {
-                eyelidTop.style.transition    = 'height 0.85s cubic-bezier(0, 0, 0.25, 1)';
-                eyelidBottom.style.transition = 'height 0.7s cubic-bezier(0, 0, 0.3, 1)';
+                eyelidTop.style.transition    = 'height 0.9s cubic-bezier(0, 0, 0.22, 1)';
+                eyelidBottom.style.transition = 'height 0.72s cubic-bezier(0, 0, 0.28, 1)';
                 eyelidTop.style.height    = '0%';
                 eyelidBottom.style.height = '0%';
               }
