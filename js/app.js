@@ -3801,85 +3801,98 @@
       return;
     }
 
-    // ── FASE 1: Sync bar + chiusura occhi ──
-    const syncBar  = document.getElementById('animus-sync-bar');
-    const syncFill = syncBar ? syncBar.querySelector('.asb-fill') : null;
-    const syncPct  = syncBar ? syncBar.querySelector('.asb-pct')  : null;
+    // Scope condiviso tra fasi e doFallbackTransition
+    let fallbackTriggered = false;
+    let fallbackTimeout   = null;
+    let onVideoError      = null;
 
-    if (syncBar) {
-      syncBar.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        syncBar.classList.add('asb-visible');
-        requestAnimationFrame(() => {
-          if (syncFill) syncFill.style.width = '100%';
-          // Conta percentuale in parallelo con la barra
-          let pct = 0;
-          const pctTick = setInterval(() => {
-            pct = Math.min(100, pct + 2);
-            if (syncPct) syncPct.textContent = pct + '%';
-            if (pct >= 100) clearInterval(pctTick);
-          }, 28);
-        });
-      });
-    }
+    // ── FASE 1: mostra la sync screen sul display (la stessa del flusso acquisto) ──
+    const syncScreenEl2 = document.getElementById('syncScreen');
+    const syncBarFill2  = document.getElementById('syncBarFill');
+    const syncPctText2  = document.getElementById('syncPctText');
+    const syncDnaTicker = document.getElementById('syncDnaTicker');
 
-    if (eyelidTop && eyelidBottom) {
-      // Sedazione: sup. crolla pesante, inf. sale più lenta (60/40)
-      eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
-      eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.2, 0, 0.8, 0.9)';
-      eyelidTop.style.height    = '60%';
-      eyelidBottom.style.height = '40%';
-    }
+    if (syncBarFill2) syncBarFill2.style.width = '0%';
+    if (syncPctText2) syncPctText2.textContent  = '0%';
+    if (syncScreenEl2) syncScreenEl2.classList.remove('hidden-panel');
 
-    // ── FASE 2: 1550ms chiusura + 2000ms buio totale → poi avvia video ──
+    // Ticker DNA
+    const dnaChars = 'ATCGATCGATCGATCGATCG';
+    let tickerStr = '';
+    const tickerInterval = setInterval(() => {
+      tickerStr = Array.from({length: 40}, () => dnaChars[Math.floor(Math.random()*20)]).join('');
+      if (syncDnaTicker) syncDnaTicker.textContent = tickerStr;
+    }, 80);
+
+    // Avvia la barra dopo due frame (necessario per attivare la CSS transition)
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (syncBarFill2) syncBarFill2.style.width = '100%';
+      // Contatore percentuale (2.5s = 50 step × 50ms)
+      let pct = 0;
+      const pctTick = setInterval(() => {
+        pct = Math.min(100, pct + 2);
+        if (syncPctText2) syncPctText2.textContent = pct + '%';
+        if (pct >= 100) clearInterval(pctTick);
+      }, 50);
+    }));
+
+    // ── FASE 2: dopo 2.8s (sync completa) → chiudi gli occhi ──
     setTimeout(() => {
-      if (syncBar) {
-        syncBar.classList.remove('asb-visible');
-        setTimeout(() => syncBar.classList.add('hidden'), 300);
+      clearInterval(tickerInterval);
+
+      if (eyelidTop && eyelidBottom) {
+        eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
+        eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.2, 0, 0.8, 0.9)';
+        eyelidTop.style.height    = '60%';
+        eyelidBottom.style.height = '40%';
       }
 
-      overlay.style.zIndex = '9999';
-      overlay.style.opacity = '1';
-      overlay.classList.remove('hidden');
-      overlay.style.pointerEvents = 'auto';
+      // ── FASE 3: 1550ms chiusura + 2000ms buio → avvia video ──
+      setTimeout(() => {
+        if (syncScreenEl2) syncScreenEl2.classList.add('hidden-panel');
 
-      video.currentTime = 0;
+        overlay.style.zIndex = '9999';
+        overlay.style.opacity = '1';
+        overlay.classList.remove('hidden');
+        overlay.style.pointerEvents = 'auto';
 
-      let fallbackTriggered = false;
-      let fallbackTimeout = setTimeout(() => {
-        if (!fallbackTriggered && video.readyState < 3) {
-          console.warn('Video stall timeout (5s). Triggering fallback.');
-          doFallbackTransition();
-        }
-      }, 5000);
+        video.currentTime = 0;
 
-      const onVideoError = () => {
-        console.warn('Video error event triggered.');
-        doFallbackTransition();
-      };
-      video.addEventListener('error', onVideoError, true);
-
-      let playPromise = video.play();
-
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          clearTimeout(fallbackTimeout);
-          video.muted = false;
-
-          // Video pronto: riapri le palpebre
-          if (eyelidTop && eyelidBottom) {
-            eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
-            eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
-            eyelidTop.style.height    = '0%';
-            eyelidBottom.style.height = '0%';
+        fallbackTriggered = false;
+        fallbackTimeout = setTimeout(() => {
+          if (!fallbackTriggered && video.readyState < 3) {
+            console.warn('Video stall timeout (5s). Triggering fallback.');
+            doFallbackTransition();
           }
+        }, 5000);
 
-          // Skip visibile 1.5s dopo l'apertura degli occhi
-          setTimeout(() => {
-            if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
-          }, 1500);
+        onVideoError = () => {
+          console.warn('Video error event triggered.');
+          doFallbackTransition();
+        };
+        video.addEventListener('error', onVideoError, true);
 
-          let cleanupDone = false;
+        let playPromise = video.play();
+
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            clearTimeout(fallbackTimeout);
+            video.muted = false;
+
+            // Video pronto: riapri le palpebre
+            if (eyelidTop && eyelidBottom) {
+              eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
+              eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
+              eyelidTop.style.height    = '0%';
+              eyelidBottom.style.height = '0%';
+            }
+
+            // Skip visibile 1.5s dopo l'apertura
+            setTimeout(() => {
+              if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
+            }, 1500);
+
+            let cleanupDone = false;
         let rafid = null;
         
         const cleanup = () => {
@@ -4041,7 +4054,8 @@
       }
     }
     
-    }, 3550); // fine fase 2: 1550ms chiusura occhi + 2000ms buio
+        }, 3550); // 1550ms chiusura + 2000ms buio
+      }, 2800); // attesa sync screen completa
   }
 
 
