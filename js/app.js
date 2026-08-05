@@ -3801,17 +3801,28 @@
       return;
     }
 
-    // Rewind del video
-    video.currentTime = 0;
+    // ── FASE 1: Sync bar + chiusura occhi ──
+    const syncBar  = document.getElementById('animus-sync-bar');
+    const syncFill = syncBar ? syncBar.querySelector('.asb-fill') : null;
+    const syncPct  = syncBar ? syncBar.querySelector('.asb-pct')  : null;
 
-    // Mostra l'overlay SUBITO — è dietro le palpebre (z-index 10001), invisibile
-    overlay.style.zIndex = '9999';
-    overlay.style.opacity = '1';
-    overlay.classList.remove('hidden');
-    overlay.style.pointerEvents = 'auto';
+    if (syncBar) {
+      syncBar.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        syncBar.classList.add('asb-visible');
+        requestAnimationFrame(() => {
+          if (syncFill) syncFill.style.width = '100%';
+          // Conta percentuale in parallelo con la barra
+          let pct = 0;
+          const pctTick = setInterval(() => {
+            pct = Math.min(100, pct + 2);
+            if (syncPct) syncPct.textContent = pct + '%';
+            if (pct >= 100) clearInterval(pctTick);
+          }, 28);
+        });
+      });
+    }
 
-    // Chiudi gli occhi E bufferizza il video IN PARALLELO per eliminare il nero
-    const eyeCloseStart = Date.now();
     if (eyelidTop && eyelidBottom) {
       // Sedazione: sup. crolla pesante, inf. sale più lenta (60/40)
       eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
@@ -3820,36 +3831,43 @@
       eyelidBottom.style.height = '40%';
     }
 
-    let fallbackTriggered = false;
-    let fallbackTimeout = setTimeout(() => {
-      if (!fallbackTriggered && video.readyState < 3) {
-        console.warn("Video stall timeout (5s). Triggering fallback.");
-        doFallbackTransition();
+    // ── FASE 2: 1550ms chiusura + 2000ms buio totale → poi avvia video ──
+    setTimeout(() => {
+      if (syncBar) {
+        syncBar.classList.remove('asb-visible');
+        setTimeout(() => syncBar.classList.add('hidden'), 300);
       }
-    }, 5000); // 5 secondi per permettere al file pesante di caricarsi
-    
-    const onVideoError = () => {
-      console.warn("Video error event triggered.");
-      doFallbackTransition();
-    };
-    video.addEventListener('error', onVideoError, true);
-    
-    // Tenta di avviare il video
-    let playPromise = video.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        clearTimeout(fallbackTimeout);
-        video.muted = false;
 
-        // Aspetta che le palpebre siano chiuse prima di riaprirle
-        // (se il video è pronto in anticipo aspettiamo comunque la fine della chiusura)
-        const elapsed = Date.now() - eyeCloseStart;
-        const waitMore = Math.max(0, 1550 - elapsed);
+      overlay.style.zIndex = '9999';
+      overlay.style.opacity = '1';
+      overlay.classList.remove('hidden');
+      overlay.style.pointerEvents = 'auto';
 
-        setTimeout(() => {
+      video.currentTime = 0;
+
+      let fallbackTriggered = false;
+      let fallbackTimeout = setTimeout(() => {
+        if (!fallbackTriggered && video.readyState < 3) {
+          console.warn('Video stall timeout (5s). Triggering fallback.');
+          doFallbackTransition();
+        }
+      }, 5000);
+
+      const onVideoError = () => {
+        console.warn('Video error event triggered.');
+        doFallbackTransition();
+      };
+      video.addEventListener('error', onVideoError, true);
+
+      let playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          clearTimeout(fallbackTimeout);
+          video.muted = false;
+
+          // Video pronto: riapri le palpebre
           if (eyelidTop && eyelidBottom) {
-            // Riapertura groggy: sup. fatica, inf. più rapida
             eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
             eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
             eyelidTop.style.height    = '0%';
@@ -3860,9 +3878,8 @@
           setTimeout(() => {
             if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
           }, 1500);
-        }, waitMore);
 
-        let cleanupDone = false;
+          let cleanupDone = false;
         let rafid = null;
         
         const cleanup = () => {
@@ -4024,7 +4041,7 @@
       }
     }
     
-    // (fine playCinematicTransition)
+    }, 3550); // fine fase 2: 1550ms chiusura occhi + 2000ms buio
   }
 
 
