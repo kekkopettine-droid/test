@@ -3766,19 +3766,20 @@
       
       if (eyelidTop && eyelidBottom) {
         // Chiudi gli occhi lentamente
-        eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        eyelidTop.style.height = '50%';
-        eyelidBottom.style.height = '50%';
+        // Chiusura: sup. cade veloce, inf. sale lenta (60/40)
+        eyelidTop.style.transition    = 'height 1.0s cubic-bezier(0.5, 0, 1, 0.85)';
+        eyelidBottom.style.transition = 'height 1.35s cubic-bezier(0.3, 0, 0.7, 0.9)';
+        eyelidTop.style.height    = '60%';
+        eyelidBottom.style.height = '40%';
         
         // Quando lo schermo è nero, ripristina la scena
         setTimeout(() => {
           returnFromWhiteRoom();
           
-          // Riapri gli occhi
-          eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-          eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-          eyelidTop.style.height = '0%';
+          // Riapertura: lenta, quasi groggy
+          eyelidTop.style.transition    = 'height 1.5s cubic-bezier(0, 0, 0.25, 1)';
+          eyelidBottom.style.transition = 'height 1.2s cubic-bezier(0, 0, 0.3, 1)';
+          eyelidTop.style.height    = '0%';
           eyelidBottom.style.height = '0%';
         }, 1600);
       } else {
@@ -3802,10 +3803,11 @@
 
     // Effetto "svenimento": chiudi le palpebre
     if (eyelidTop && eyelidBottom) {
-      eyelidTop.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-      eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
-      eyelidTop.style.height = '50%';
-      eyelidBottom.style.height = '50%';
+      // Sedazione: sup. crolla pesante, inf. sale più lenta (60/40)
+      eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
+      eyelidBottom.style.transition = 'height 1.5s cubic-bezier(0.2, 0, 0.8, 0.9)';
+      eyelidTop.style.height    = '60%';
+      eyelidBottom.style.height = '40%';
     }
 
     // Rewind del video se era già stato riprodotto
@@ -3844,9 +3846,10 @@
         
         // Il video è partito: riapri lentamente le palpebre per rivelare l'inizio
         if (eyelidTop && eyelidBottom) {
-          eyelidTop.style.transition = 'height 2s cubic-bezier(0.4, 0.0, 0.2, 1)';
-          eyelidBottom.style.transition = 'height 2s cubic-bezier(0.4, 0.0, 0.2, 1)';
-          eyelidTop.style.height = '0%';
+          // Riapertura groggy: sup. fatica, inf. più rapida
+          eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
+          eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
+          eyelidTop.style.height    = '0%';
           eyelidBottom.style.height = '0%';
         }
         
@@ -3870,10 +3873,11 @@
 
           // ── CHIUDI GLI OCCHI (come la transizione iniziale) ──
           if (eyelidTop && eyelidBottom) {
-            eyelidTop.style.transition    = 'height 0.55s cubic-bezier(0.4,0,0.6,1)';
-            eyelidBottom.style.transition = 'height 0.55s cubic-bezier(0.4,0,0.6,1)';
-            eyelidTop.style.height    = '50%';
-            eyelidBottom.style.height = '50%';
+            // Sup. cade rapido, inf. segue più lenta (60/40)
+            eyelidTop.style.transition    = 'height 0.4s cubic-bezier(0.5, 0, 1, 0.8)';
+            eyelidBottom.style.transition = 'height 0.54s cubic-bezier(0.25, 0, 0.8, 0.9)';
+            eyelidTop.style.height    = '60%';
+            eyelidBottom.style.height = '40%';
           }
 
           // ── DOPO 620ms (occhi chiusi): cambia scena ──
@@ -3902,8 +3906,8 @@
 
               // ── RIAPRI GLI OCCHI mentre il flash svanisce ──
               if (eyelidTop && eyelidBottom) {
-                eyelidTop.style.transition    = 'height 0.9s cubic-bezier(0.2,0,0.4,1)';
-                eyelidBottom.style.transition = 'height 0.9s cubic-bezier(0.2,0,0.4,1)';
+                eyelidTop.style.transition    = 'height 0.85s cubic-bezier(0, 0, 0.25, 1)';
+                eyelidBottom.style.transition = 'height 0.7s cubic-bezier(0, 0, 0.3, 1)';
                 eyelidTop.style.height    = '0%';
                 eyelidBottom.style.height = '0%';
               }
@@ -3994,9 +3998,9 @@
         setTimeout(() => {
           // Nel fallback apri subito gli occhi per evitare che resti nero
           if (eyelidTop && eyelidBottom) {
-            eyelidTop.style.transition = 'height 0.5s ease-in';
-            eyelidBottom.style.transition = 'height 0.5s ease-in';
-            eyelidTop.style.height = '0%';
+            eyelidTop.style.transition    = 'height 0.5s cubic-bezier(0, 0, 0.3, 1)';
+            eyelidBottom.style.transition = 'height 0.4s cubic-bezier(0, 0, 0.4, 1)';
+            eyelidTop.style.height    = '0%';
             eyelidBottom.style.height = '0%';
           }
           showTimelineView();
