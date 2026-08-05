@@ -3861,68 +3861,79 @@
         const cleanup = () => {
           if (cleanupDone) return;
           cleanupDone = true;
-          
           if (rafid) cancelAnimationFrame(rafid);
-          
-          // Effetto bagliore (flash bianco) per coprire lo stacco
-          const flash = document.getElementById('animus-white-flash');
-          if (flash) {
-            flash.style.transition = 'opacity 0.4s ease-in';
-            flash.style.opacity = '1';
-          }
-          
-          // Pre-carica e avvia il video di sfondo
-          showTimelineView();
-          
-          const bgVideo = document.getElementById('timelineBgVideo');
-          let hideOverlayCalled = false;
-          
-          const hideOverlay = () => {
-            if (hideOverlayCalled) return;
-            hideOverlayCalled = true;
-            
-            // Nascondiamo il video cinematico che ora è coperto dal bagliore
-            overlay.style.transition = 'none';
-            overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
-            skipBtn.classList.add('hidden');
-            video.pause();
-            overlay.classList.add('hidden');
-            
-            // Il video nuovo è pronto: facciamo svanire il bagliore per rivelarlo!
-            if (flash) {
-              setTimeout(() => {
-                flash.style.transition = 'opacity 1.0s ease-out';
-                flash.style.opacity = '0';
-              }, 50);
-            }
-          };
 
-          if (bgVideo) {
-            const onReadyToHide = () => {
-              bgVideo.removeEventListener('playing', onReadyToHide);
-              if ('requestVideoFrameCallback' in bgVideo) {
-                bgVideo.requestVideoFrameCallback(() => requestAnimationFrame(hideOverlay));
-              } else {
-                requestAnimationFrame(() => requestAnimationFrame(hideOverlay));
-              }
-            };
-            
-            bgVideo.addEventListener('playing', onReadyToHide);
-            
-            if (bgVideo.readyState >= 3 && !bgVideo.paused) {
-              onReadyToHide();
-            }
-            
-            // Fallback
-            setTimeout(hideOverlay, 400);
-          } else {
-            hideOverlay();
-          }
-          
+          // Rimuovi i listener subito
           document.removeEventListener('click', skipHandler);
           document.removeEventListener('keydown', skipHandler);
           video.removeEventListener('error', onVideoError, true);
+
+          // ── CHIUDI GLI OCCHI (come la transizione iniziale) ──
+          if (eyelidTop && eyelidBottom) {
+            eyelidTop.style.transition    = 'height 0.55s cubic-bezier(0.4,0,0.6,1)';
+            eyelidBottom.style.transition = 'height 0.55s cubic-bezier(0.4,0,0.6,1)';
+            eyelidTop.style.height    = '50%';
+            eyelidBottom.style.height = '50%';
+          }
+
+          // ── DOPO 620ms (occhi chiusi): cambia scena ──
+          setTimeout(() => {
+            const flash = document.getElementById('animus-white-flash');
+            if (flash) {
+              flash.style.transition = 'opacity 0.15s ease-in';
+              flash.style.opacity = '1';
+            }
+
+            showTimelineView();
+
+            const bgVideo = document.getElementById('timelineBgVideo');
+            let hideOverlayCalled = false;
+
+            const hideOverlay = () => {
+              if (hideOverlayCalled) return;
+              hideOverlayCalled = true;
+
+              overlay.style.transition = 'none';
+              overlay.style.opacity = '0';
+              overlay.style.pointerEvents = 'none';
+              skipBtn.classList.add('hidden');
+              video.pause();
+              overlay.classList.add('hidden');
+
+              // ── RIAPRI GLI OCCHI mentre il flash svanisce ──
+              if (eyelidTop && eyelidBottom) {
+                eyelidTop.style.transition    = 'height 0.9s cubic-bezier(0.2,0,0.4,1)';
+                eyelidBottom.style.transition = 'height 0.9s cubic-bezier(0.2,0,0.4,1)';
+                eyelidTop.style.height    = '0%';
+                eyelidBottom.style.height = '0%';
+              }
+
+              if (flash) {
+                setTimeout(() => {
+                  flash.style.transition = 'opacity 0.9s ease-out';
+                  flash.style.opacity = '0';
+                }, 100);
+              }
+            };
+
+            if (bgVideo) {
+              const onReadyToHide = () => {
+                bgVideo.removeEventListener('playing', onReadyToHide);
+                if ('requestVideoFrameCallback' in bgVideo) {
+                  bgVideo.requestVideoFrameCallback(() => requestAnimationFrame(hideOverlay));
+                } else {
+                  requestAnimationFrame(() => requestAnimationFrame(hideOverlay));
+                }
+              };
+              bgVideo.addEventListener('playing', onReadyToHide);
+              if (bgVideo.readyState >= 3 && !bgVideo.paused) {
+                onReadyToHide();
+              }
+              setTimeout(hideOverlay, 400);
+            } else {
+              hideOverlay();
+            }
+          }, 620);
         };
 
         const skipHandler = (e) => {
