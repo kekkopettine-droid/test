@@ -3801,7 +3801,17 @@
       return;
     }
 
-    // Effetto "svenimento": chiudi le palpebre
+    // Rewind del video
+    video.currentTime = 0;
+
+    // Mostra l'overlay SUBITO — è dietro le palpebre (z-index 10001), invisibile
+    overlay.style.zIndex = '9999';
+    overlay.style.opacity = '1';
+    overlay.classList.remove('hidden');
+    overlay.style.pointerEvents = 'auto';
+
+    // Chiudi gli occhi E bufferizza il video IN PARALLELO per eliminare il nero
+    const eyeCloseStart = Date.now();
     if (eyelidTop && eyelidBottom) {
       // Sedazione: sup. crolla pesante, inf. sale più lenta (60/40)
       eyelidTop.style.transition    = 'height 1.05s cubic-bezier(0.4, 0, 1, 0.8)';
@@ -3810,18 +3820,7 @@
       eyelidBottom.style.height = '40%';
     }
 
-    // Rewind del video se era già stato riprodotto
-    video.currentTime = 0;
-
-    // Attendi la chiusura delle palpebre prima di caricare/avviare il video (1.5s)
-    setTimeout(() => {
-      // Mostra overlay in primo piano
-      overlay.style.zIndex = '9999';
-      overlay.style.opacity = '1';
-      overlay.classList.remove('hidden');
-      overlay.style.pointerEvents = 'auto';
-      
-      let fallbackTriggered = false;
+    let fallbackTriggered = false;
     let fallbackTimeout = setTimeout(() => {
       if (!fallbackTriggered && video.readyState < 3) {
         console.warn("Video stall timeout (5s). Triggering fallback.");
@@ -3841,22 +3840,27 @@
     if (playPromise !== undefined) {
       playPromise.then(() => {
         clearTimeout(fallbackTimeout);
-        // Sblocca audio se possibile
         video.muted = false;
-        
-        // Il video è partito: riapri lentamente le palpebre per rivelare l'inizio
-        if (eyelidTop && eyelidBottom) {
-          // Riapertura groggy: sup. fatica, inf. più rapida
-          eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
-          eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
-          eyelidTop.style.height    = '0%';
-          eyelidBottom.style.height = '0%';
-        }
-        
-        // Skip dopo 1.5 secondi
+
+        // Aspetta che le palpebre siano chiuse prima di riaprirle
+        // (se il video è pronto in anticipo aspettiamo comunque la fine della chiusura)
+        const elapsed = Date.now() - eyeCloseStart;
+        const waitMore = Math.max(0, 1550 - elapsed);
+
         setTimeout(() => {
-          if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
-        }, 1500);
+          if (eyelidTop && eyelidBottom) {
+            // Riapertura groggy: sup. fatica, inf. più rapida
+            eyelidTop.style.transition    = 'height 2.2s cubic-bezier(0, 0, 0.2, 1)';
+            eyelidBottom.style.transition = 'height 1.8s cubic-bezier(0, 0, 0.3, 1)';
+            eyelidTop.style.height    = '0%';
+            eyelidBottom.style.height = '0%';
+          }
+
+          // Skip visibile 1.5s dopo l'apertura degli occhi
+          setTimeout(() => {
+            if (!overlay.classList.contains('hidden') && !fallbackTriggered) skipBtn.classList.remove('hidden');
+          }, 1500);
+        }, waitMore);
 
         let cleanupDone = false;
         let rafid = null;
@@ -4020,7 +4024,7 @@
       }
     }
     
-    }, 1500); // Fine attesa palpebre chiuse
+    // (fine playCinematicTransition)
   }
 
 
