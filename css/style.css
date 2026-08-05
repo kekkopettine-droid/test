@@ -19,13 +19,7 @@ body {
 
 /* ── SCANLINES (Linee orizzontali in sovrimpressione per l'effetto schermo) ── */
 #scanlines {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  z-index:9; pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg, transparent, transparent 3px,
-    rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px
-  );
-  mix-blend-mode: multiply;
+  display: none;
 }
 
 /* ── VIGNETTE ── */
@@ -44,10 +38,6 @@ body {
   background-color: rgba(0, 15, 25, 0.55);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  background-image:
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
   
   border: 1px solid rgba(0, 255, 255, 0.3);
   padding: 38px;
@@ -1465,14 +1455,11 @@ body {
   left: -5vw;
   width: 110vw;
   height: 110vh;
-  background-image: url('../assets/timeline-bg.jpg');
-  background-size: cover;
-  background-position: center;
+  background-color: #000;
   z-index: 0; /* SOTTO WebGL (che è z-index 1) */
   opacity: 1;
   transition: opacity 0.8s ease;
   pointer-events: none;
-  animation: animusBgDrift 30s ease-in-out infinite;
 }
 .timeline-bg-container.hidden {
   opacity: 0;

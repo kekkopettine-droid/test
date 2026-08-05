@@ -358,29 +358,7 @@
   const thetaCenter = Math.PI * 1.5;
   const panelArcStart = thetaCenter - (arcLength / 2);
 
-  // Linee orizzontali
-  for (let y = -10.5; y <= 10.5; y += 1.5) {
-    const points = [];
-    const segments = 64;
-    for(let i=0; i<=segments; i++){
-      const a = panelArcStart + (i/segments)*arcLength;
-      points.push(new THREE.Vector3(Math.cos(a)*gridRadius, y, Math.sin(a)*gridRadius));
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
-    const line = new THREE.Line(geo, gridMatHoriz);
-    gridGroup.add(line);
-  }
-
-  // Linee verticali
-  const numVertLines = 40;
-  for (let i = 0; i <= numVertLines; i++) {
-    const a = panelArcStart + (i / numVertLines) * arcLength;
-    const points = [
-      new THREE.Vector3(Math.cos(a) * gridRadius, -11, Math.sin(a) * gridRadius),
-      new THREE.Vector3(Math.cos(a) * gridRadius,  11, Math.sin(a) * gridRadius)
-    ];
-    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMatVert));
-  }
+  // Griglia rimossa (niente righe orizzontali né verticali sul display)
 
   /* ── DETTAGLI STRUTTURALI: LED INDICATORI AI BORDI DELL'ARCO ── */
   const postLedMats = [];
@@ -2608,34 +2586,15 @@
       }
     }
 
-    // Aggiornamento eMouse solo dopo il boot, così non accumula durante l'animazione
+    // Aggiornamento eMouse (usato per i calcoli interni ma disabilitato per il movimento visivo)
     if (hasBooted) {
       eMouse.x += (rawMouse.x - eMouse.x) * EASE;
       eMouse.y += (rawMouse.y - eMouse.y) * EASE;
-      
-      // Parallax del video di sfondo della timeline (loop)
-      const tlBg = document.getElementById('timelineBgContainer');
-      if (tlBg && !tlBg.classList.contains('hidden')) {
-        tlBg.style.setProperty('--mouse-x', `${-eMouse.x * 2.5}vw`);
-        tlBg.style.setProperty('--mouse-y', `${eMouse.y * 1.5}vh`);
-      }
-      
-      // Parallax della transizione video (se mai servisse)
-      const cinematicOverlay = document.getElementById('cinematicOverlay');
-      if (cinematicOverlay && cinematicOverlay.style.zIndex === '0') {
-        cinematicOverlay.style.setProperty('--mouse-x', `${-eMouse.x * 2.5}vw`);
-        cinematicOverlay.style.setProperty('--mouse-y', `${eMouse.y * 1.5}vh`);
-      }
     }
 
     camera.position.set(0, 0, 18);
-    if (hasBooted) {
-      // Movimento della camera attivo solo dopo il completamento dell'animazione
-      camera.lookAt(eMouse.x * 10, eMouse.y * 5, 0);
-    } else {
-      // Durante il boot la visuale rimane fissa al centro
-      camera.lookAt(0, 0, 0);
-    }
+    // Visuale sempre fissa al centro, ignorando il cursore
+    camera.lookAt(0, 0, 0);
 
     /* Raycasting pannelli — usa rawMouse (posizione reale, non smorzata) */
     if (hasBooted && window.experiencesRevealed && !panelL.classList.contains('hidden-panel')) {
@@ -3897,43 +3856,72 @@
         }, 1500);
 
         let cleanupDone = false;
+        let rafid = null;
+        
         const cleanup = () => {
           if (cleanupDone) return;
           cleanupDone = true;
           
-          // Prima avviamo la timeline e il video di sfondo
+          if (rafid) cancelAnimationFrame(rafid);
+          
+          // Effetto bagliore (flash bianco) per coprire lo stacco
+          const flash = document.getElementById('animus-white-flash');
+          if (flash) {
+            flash.style.transition = 'opacity 0.4s ease-in';
+            flash.style.opacity = '1';
+          }
+          
+          // Pre-carica e avvia il video di sfondo
           showTimelineView();
           
-          // Nascondiamo il video cinematico SOLO quando il nuovo video inizia davvero a suonare
-          // Questo elimina completamente il microscopico frame nero di caricamento del browser!
           const bgVideo = document.getElementById('timelineBgVideo');
+          let hideOverlayCalled = false;
           
           const hideOverlay = () => {
-            overlay.style.transition = 'none'; // Disabilita eventuali transizioni CSS
+            if (hideOverlayCalled) return;
+            hideOverlayCalled = true;
+            
+            // Nascondiamo il video cinematico che ora è coperto dal bagliore
+            overlay.style.transition = 'none';
             overlay.style.opacity = '0';
-            video.pause();
-            overlay.classList.add('hidden');
             overlay.style.pointerEvents = 'none';
             skipBtn.classList.add('hidden');
-            if(bgVideo) {
-              bgVideo.removeEventListener('playing', hideOverlay);
+            video.pause();
+            overlay.classList.add('hidden');
+            
+            // Il video nuovo è pronto: facciamo svanire il bagliore per rivelarlo!
+            if (flash) {
+              setTimeout(() => {
+                flash.style.transition = 'opacity 1.0s ease-out';
+                flash.style.opacity = '0';
+              }, 50);
             }
           };
 
-          if (bgVideo && bgVideo.readyState >= 3) {
-            hideOverlay();
-          } else if (bgVideo) {
-            bgVideo.addEventListener('playing', hideOverlay);
-            // Fallback di sicurezza in caso non parta l'evento
-            setTimeout(hideOverlay, 300);
+          if (bgVideo) {
+            const onReadyToHide = () => {
+              bgVideo.removeEventListener('playing', onReadyToHide);
+              if ('requestVideoFrameCallback' in bgVideo) {
+                bgVideo.requestVideoFrameCallback(() => requestAnimationFrame(hideOverlay));
+              } else {
+                requestAnimationFrame(() => requestAnimationFrame(hideOverlay));
+              }
+            };
+            
+            bgVideo.addEventListener('playing', onReadyToHide);
+            
+            if (bgVideo.readyState >= 3 && !bgVideo.paused) {
+              onReadyToHide();
+            }
+            
+            // Fallback
+            setTimeout(hideOverlay, 400);
           } else {
             hideOverlay();
           }
           
           document.removeEventListener('click', skipHandler);
           document.removeEventListener('keydown', skipHandler);
-          video.removeEventListener('timeupdate', timeUpdateHandler);
-          video.removeEventListener('ended', cleanup);
           video.removeEventListener('error', onVideoError, true);
         };
 
@@ -3942,19 +3930,31 @@
           cleanup();
         };
         
-        const timeUpdateHandler = () => {
-          // Fermati poco prima della fine per "congelare" l'ultimo fotogramma 
-          // ed evitare che il browser pulisca il buffer video diventando nero!
-          if (video.duration && video.currentTime >= video.duration - 0.05) {
-            video.pause();
-            cleanup();
+        const rafTimeUpdate = () => {
+          if (!cleanupDone) {
+            // Avviamo la transizione 1 secondo prima della fine, così
+            // c'è tutto il tempo di fare un bellissimo crossfade incrociato 
+            // mentre entrambi i video sono in playback fluido
+            if (video.duration && video.currentTime >= video.duration - 1.0) {
+              cleanup();
+            } else {
+              rafid = requestAnimationFrame(rafTimeUpdate);
+            }
           }
         };
 
         document.addEventListener('click', skipHandler);
         document.addEventListener('keydown', skipHandler);
-        video.addEventListener('timeupdate', timeUpdateHandler);
-        video.addEventListener('ended', cleanup); // Fallback
+        rafid = requestAnimationFrame(rafTimeUpdate);
+        
+        // Se il video finisce del tutto (es. lag), assicuriamoci di pulire
+        video.addEventListener('ended', () => {
+          cleanup();
+          // Se per qualche motivo arriva alla fine, lo forziamo via in modo brusco (fallback)
+          overlay.style.transition = 'none';
+          overlay.style.opacity = '0';
+          overlay.classList.add('hidden');
+        });
       }).catch(err => {
         console.warn("Video autoplay failed or missing:", err);
         doFallbackTransition();
