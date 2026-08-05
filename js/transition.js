@@ -66,21 +66,22 @@
     })(performance.now());
 
     /* ── FASE 1: SEDAZIONE (0 → 3800 ms) ── */
-    const lid = (h, dur) => {
-      const t = `height ${dur}s cubic-bezier(.4,0,.2,1)`;
+    const lid = (h, dur, ease = 'ease-in-out') => {
+      const t = `height ${dur}s ${ease}`;
       eyelidTop.style.transition    = t;
       eyelidBottom.style.transition = t;
       eyelidTop.style.height    = h;
       eyelidBottom.style.height = h;
     };
-    lid('28%', 0.28);
-    setTimeout(() => lid('6%',  0.22), 350);
-    setTimeout(() => lid('52%', 0.32), 820);
-    setTimeout(() => lid('16%', 0.38), 1280);
-    setTimeout(() => lid('44%', 0.30), 1800);
-    setTimeout(() => lid('22%', 0.42), 2280);
-    setTimeout(() => lid('48%', 0.50), 2850);
-    setTimeout(() => lid('50%', 1.15), 3380);
+    
+    // Le due palpebre iniziano a chiudersi molto lentamente (primi 1.6 secondi)
+    lid('40%', 1.6);
+    
+    // Un lentissimo e debole tentativo di riaprirle (0.6 secondi)
+    setTimeout(() => lid('20%', 0.6), 1600);
+
+    // Chiusura definitiva, lenta e inesorabile fino ad addormentarsi (1.6 secondi)
+    setTimeout(() => lid('50%', 1.6), 2200);
 
     const blurT0 = performance.now();
     (function animBlur(now) {
