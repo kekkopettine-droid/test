@@ -3806,6 +3806,12 @@
     let fallbackTimeout   = null;
     let onVideoError      = null;
 
+    // Nascondi le schede esperienza prima di mostrare la sync screen
+    const _pL = document.getElementById('panelL');
+    const _pR = document.getElementById('panelR');
+    if (_pL) { _pL.style.transition = 'opacity 0.35s ease'; _pL.style.opacity = '0'; _pL.style.pointerEvents = 'none'; }
+    if (_pR) { _pR.style.transition = 'opacity 0.35s ease'; _pR.style.opacity = '0'; _pR.style.pointerEvents = 'none'; }
+
     // ── FASE 1: mostra la sync screen sul display (la stessa del flusso acquisto) ──
     const syncScreenEl2 = document.getElementById('syncScreen');
     const syncBarFill2  = document.getElementById('syncBarFill');
