@@ -196,12 +196,12 @@ body {
   transition: opacity 0.3s;
 }
 .tl-node-dot {
-  width: 18px;
-  height: 18px;
-  background: rgba(10, 10, 10, 0.9);
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  width: 24px;
+  height: 24px;
+  background: rgba(30, 30, 30, 0.9);
+  border: 3px solid rgba(255, 255, 255, 1);
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(255,255,255,0.6), inset 0 0 4px rgba(255,255,255,0.2);
+  box-shadow: 0 0 15px rgba(255,255,255,0.9), inset 0 0 8px rgba(255,255,255,0.4);
   transition: all 0.3s ease;
   pointer-events: none;
 }
@@ -212,11 +212,11 @@ body {
   transform: scale(1.6);
 }
 .tl-node-year {
-  color: rgba(230, 240, 255, 0.9);
-  font-size: 20px;
+  color: #ffffff;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-shadow: 0 0 8px rgba(255,255,255,0.6);
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 12px rgba(255,255,255,0.9);
   transition: color 0.3s;
   pointer-events: none;
 }

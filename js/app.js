@@ -3,6 +3,29 @@
 
   var memoryBlocks = [];
 
+  // Dummy variables per prevenire ReferenceErrors e TypeErrors dopo la rimozione del carrello
+  const dummyEl = {
+    style: {},
+    classList: { add: ()=>{}, remove: ()=>{}, contains: ()=>false },
+    addEventListener: ()=>{},
+    textContent: '',
+    value: '',
+    disabled: false
+  };
+  const paymentPanelEl = dummyEl;
+  const paymentSuccessPanelEl = dummyEl;
+  const userInfoPanelEl = dummyEl;
+  const cartBtnEl = dummyEl;
+  const cartPanelEl = dummyEl;
+  const ticketsPanelEl = dummyEl;
+  const cssCartBtn = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssCartPanel = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssTicketsPanel = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssPaymentPanel = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssUserInfoPanel = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssPaymentSuccessPanel = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+  const cssAnimusTicket = { position: { set: ()=>{} }, scale: { set: ()=>{} }, lookAt: ()=>{} };
+
   /* ══════════════════════════════════════════════
      RENDERER & SCENE
   ══════════════════════════════════════════════ */
@@ -654,54 +677,8 @@
     });
   }
 
-  // 4) CARRELLO CSS3D (Button and Panel)
-  const cartBtnEl = document.getElementById('cartButton');
-  cartBtnEl.style.opacity = '0';
-  cartBtnEl.style.pointerEvents = 'none';
-  const cssCartBtn = new THREE.CSS3DObject(cartBtnEl);
-  const thetaCartBtn = thetaCenter + 1.0;
-  cssCartBtn.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 8.0, Math.sin(thetaCartBtn) * panelRadiusCSS);
-  cssCartBtn.scale.set(0.035, 0.035, 0.035);
-  cssCartBtn.lookAt(0, 8.0, 0);
-  gridGroup.add(cssCartBtn);
-
-  const ticketBtnEl = document.getElementById('ticketButton');
-  if (ticketBtnEl) {
-    ticketBtnEl.style.opacity = '0';
-    ticketBtnEl.style.pointerEvents = 'none';
-    window.cssTicketBtn = new THREE.CSS3DObject(ticketBtnEl);
-    const thetaTicketBtn = thetaCenter + 1.15;
-    window.cssTicketBtn.position.set(Math.cos(thetaTicketBtn) * panelRadiusCSS, 8.0, Math.sin(thetaTicketBtn) * panelRadiusCSS);
-    window.cssTicketBtn.scale.set(0.035, 0.035, 0.035);
-    window.cssTicketBtn.lookAt(0, 8.0, 0);
-    gridGroup.add(window.cssTicketBtn);
-
-    ticketBtnEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      if (typeof showTicketsView === 'function') {
-        showTicketsView();
-      }
-    });
-  }
-
-  const cartPanelEl = document.getElementById('cartPanel');
-  const cssCartPanel = new THREE.CSS3DObject(cartPanelEl);
-  cssCartPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-  cssCartPanel.scale.set(0.035, 0.035, 0.035);
-  cssCartPanel.lookAt(0, 1.5, 0);
-  gridGroup.add(cssCartPanel);
-
-  const ticketsPanelEl = document.getElementById('ticketsPanel');
-  let cssTicketsPanel = null;
-  if (ticketsPanelEl) {
-    cssTicketsPanel = new THREE.CSS3DObject(ticketsPanelEl);
-    cssTicketsPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-    cssTicketsPanel.scale.set(0.035, 0.035, 0.035);
-    cssTicketsPanel.lookAt(0, 1.5, 0);
-    gridGroup.add(cssTicketsPanel);
-  }
-
+  // Carrello UI rimosso su richiesta
+  
   /* ── Piani WebGL invisibili per hit-testing affidabile ──
      Nella scene principale (NON gridGroup) con posizioni world dopo boot.
      gridGroup.position = (0,0,5), rotation.y = 0 dopo boot.
@@ -727,26 +704,6 @@
   hitPlaneR.lookAt(0, -1, 18);
   scene.add(hitPlaneR);
 
-  const cartHitGeo = new THREE.PlaneGeometry(160 * 0.035, 160 * 0.035);
-  const hitPlaneCart = new THREE.Mesh(cartHitGeo, panelHitMat);
-  hitPlaneCart.position.set(
-    Math.cos(thetaCartBtn) * panelRadiusCSS,
-    8.0,
-    Math.sin(thetaCartBtn) * panelRadiusCSS + 5
-  );
-  // Orientato verso la camera (z=18), come hitPlaneL/hitPlaneR — fix click mancati
-  hitPlaneCart.lookAt(0, 8.0, 18);
-  scene.add(hitPlaneCart);
-
-  const hitPlaneTicket = new THREE.Mesh(cartHitGeo, panelHitMat);
-  const thetaTicketBtn = thetaCenter + 1.15;
-  hitPlaneTicket.position.set(
-    Math.cos(thetaTicketBtn) * panelRadiusCSS,
-    8.0,
-    Math.sin(thetaTicketBtn) * panelRadiusCSS + 5
-  );
-  hitPlaneTicket.lookAt(0, 8.0, 18);
-  scene.add(hitPlaneTicket);
 
   /* Raycaster dedicato ai pannelli — creato una volta sola */
   const panelRaycaster = new THREE.Raycaster();
@@ -879,7 +836,7 @@
      CURVED HOLOGRAPHIC TIMELINE (scheda destra)
   ══════════════════════════════════════════════ */
   const TL_R = 16;
-  const TL_Y = 0;
+  const TL_Y = -2.5;
   // L'arco totale del display va da 135° a 405°(=45°).
   // La camera (FOV 50°) vede solo da ~205° a ~335°: i nodi vengono posizionati
   // in questo intervallo così risultano tutti visibili.
@@ -906,10 +863,9 @@
     const tlT   = new Float32Array(TL_LINE_PTS);
     for (let i = 0; i < TL_LINE_PTS; i++) {
       const t   = i / (TL_LINE_PTS - 1);
-      const phi = panelArcStart + t * arcLength;
-      tlPos[i*3]   = Math.cos(phi) * TL_R;
+      tlPos[i*3]   = -14.0 + t * 28.0; // Piatta lungo l'asse X
       tlPos[i*3+1] = TL_Y;
-      tlPos[i*3+2] = Math.sin(phi) * TL_R;
+      tlPos[i*3+2] = -12.0;            // Piatta lungo l'asse Z
       tlOff[i] = Math.random() * Math.PI * 2;
       tlT[i]   = t;
     }
@@ -972,8 +928,9 @@
   // Tick verticali ai 5 nodi (WebGL) — si estendono dalla linea verso il nodo
   tlTickObjs = [];
   for (let s = 0; s < 5; s++) {
-    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
-    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const t     = s / 4;
+    const cx    = -14.0 + t * 28.0;
+    const cz    = -12.0;
     const yNode = TL_Y + tlNodeOffsets[s];
     const tk    = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
@@ -991,8 +948,9 @@
   tlNodeEls  = [];
   tlNodeCsss = [];
   for (let s = 0; s < 5; s++) {
-    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
-    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const t     = s / 4;
+    const cx    = -14.0 + t * 28.0;
+    const cz    = -12.0;
     const yNode = TL_Y + tlNodeOffsets[s];
     const el    = document.createElement('div');
     el.className = 'tl-node-item';
@@ -1006,7 +964,8 @@
     const cssN = new THREE.CSS3DObject(el);
     cssN.position.set(cx, yNode, cz);
     cssN.scale.set(0.018, 0.018, 0.018);
-    cssN.lookAt(0, yNode, 0);
+    // Visto che è piatto, guarda dritto in asse Z
+    cssN.rotation.set(0, 0, 0);
     // FIX SAFARI BUG: microscopica rotazione per evitare che il piano sia perfettamente ortogonale
     cssN.rotation.y += 0.001;
     cssN.rotation.x += 0.001;
@@ -1015,7 +974,7 @@
   }
 
   // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
-  const guideText  = "Seleziona un'epoca per sincronizzarti con un personaggio storico.";
+  const guideText  = "";
   const GUIDE_R    = 22, GUIDE_Y = 7.5;
   const CHAR_SCALE = 0.018, CHAR_STEP = 0.015;
   // Centro spostato a destra (+0.15) per non sovrapporsi al logo Abstergo a sinistra
@@ -1042,16 +1001,17 @@
   tlDnaGroups = [];
   tlDnaHovers = new Array(5).fill(false);
   for (let s = 0; s < 5; s++) {
-    const phi   = TL_ARC_START + (s / 4) * TL_ARC_LEN;
-    const cx    = Math.cos(phi) * TL_R, cz = Math.sin(phi) * TL_R;
+    const t     = s / 4;
+    const cx    = -14.0 + t * 28.0;
+    const cz    = -12.0;
     const yNode = TL_Y + tlNodeOffsets[s];
     const yDna  = yNode + (tlNodeOffsets[s] > 0 ? 1.2 : -1.2);
 
     const mg = new THREE.Group();
     mg.position.set(cx, yDna, cz);
     mg.scale.setScalar(1.4);
-    // Ruota il DNA in modo che il suo asse segua la tangente del cilindro a quest'angolo
-    mg.rotation.y = Math.atan2(-Math.cos(phi), -Math.sin(phi));
+    // Ruota il DNA in modo che stia frontale per la timeline piatta
+    mg.rotation.y = 0;
     mg.visible = false;
 
     // Doppia elica stile particelle — stesso look del DNA principale
@@ -1166,21 +1126,9 @@
   document.getElementById('charConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('charConfirmBtn').disabled = true;
-    document.getElementById('charConfirmMsg').style.display = 'block';
     
-    // Add item to cart
-    if (charViewEpoch !== -1 && selectedCharIdx !== -1) {
-      const ch = historicalChars[charViewEpoch][selectedCharIdx];
-      const charName = ch.name;
-      const charRole = ch.role;
-      cartItems.push({
-        title: charName,
-        date: 'Personaggio Storico',
-        time: charRole.split(' - ')[0] || 'N/D',
-        price: '€ 120'
-      });
-      if (window.updateCartUI) window.updateCartUI();
-    }
+    // Avvia direttamente la sincronizzazione
+    playCinematicTransition();
   });
 
   document.getElementById('charCloseBtn').addEventListener('click', (e) => {
@@ -2082,10 +2030,10 @@
   let blockCanvasClick = false;
   updateDNA(0);
 
-  const dnaBackArrow = document.getElementById('dnaBackArrow');
+  const dnaBackArrow = document.getElementById('dnaBackArrow') || document.createElement('button');
 
   // Testo guida curvo per la vista DNA — un CSS3DObject per carattere
-  const dnaGuideText = "Seleziona un frammento del tuo DNA per sincronizzarti con l'antenato che ha vissuto in quell'epoca.";
+  const dnaGuideText = "";
   const DNA_GUIDE_R  = 22, DNA_GUIDE_Y = 7.5;
   const DNA_CHAR_SCALE = 0.018, DNA_CHAR_STEP = 0.015;
   const dnaGuideStartPhi = thetaCenter + 0.2 - (dnaGuideText.length * DNA_CHAR_STEP) / 2;
@@ -2294,19 +2242,11 @@
   document.getElementById('scConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     document.getElementById('scConfirmBtn').disabled = true;
-    document.getElementById('scConfirmMsg').style.display = 'block';
 
     const gene = geneData[selectedDnaGene];
     if (gene) {
-      const dateVal = document.getElementById('scDate').value;
-      const timeVal = document.getElementById('scTime').value;
-      cartItems.push({
-        title: gene.epoch.toUpperCase() + ' - ' + gene.year,
-        date: dateVal,
-        time: timeVal,
-        price: gene.price
-      });
-      window.updateCartUI();
+      // Avvia direttamente la sincronizzazione
+      playCinematicTransition();
     }
 
   });
@@ -3258,28 +3198,7 @@
     });
   };
 
-  /* ── PAYMENT LOGIC ── */
-  const paymentPanelEl = document.getElementById('paymentPanel');
-  const userInfoPanelEl = document.getElementById('userInfoPanel');
-  const paymentSuccessPanelEl = document.getElementById('paymentSuccessPanel');
-  
-  const cssPaymentPanel = new THREE.CSS3DObject(paymentPanelEl);
-  cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-  cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
-  cssPaymentPanel.lookAt(0, 1.5, 0);
-  gridGroup.add(cssPaymentPanel);
-
-  const cssUserInfoPanel = new THREE.CSS3DObject(userInfoPanelEl);
-  cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-  cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
-  cssUserInfoPanel.lookAt(0, 1.5, 0);
-  gridGroup.add(cssUserInfoPanel);
-
-  const cssPaymentSuccessPanel = new THREE.CSS3DObject(paymentSuccessPanelEl);
-  cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-  cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
-  cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
-  gridGroup.add(cssPaymentSuccessPanel);
+  /* ── PAYMENT LOGIC RIMOSSA SU RICHIESTA ── */
 
   const syncScreenEl = document.getElementById('syncScreen');
   const cssSyncScreen = new THREE.CSS3DObject(syncScreenEl);
@@ -3288,29 +3207,9 @@
   cssSyncScreen.lookAt(0, 0, 0);
   gridGroup.add(cssSyncScreen);
 
-  const animusTicketEl = document.getElementById('animusTicket');
-  const cssAnimusTicket = new THREE.CSS3DObject(animusTicketEl);
-  // Fissiamo il biglietto allo schermo curvo come gli altri pannelli, allineato alle linee (Y=1.5)
-  cssAnimusTicket.position.set(Math.cos(thetaCenter) * panelRadiusCSS, 1.5, Math.sin(thetaCenter) * panelRadiusCSS);
-  cssAnimusTicket.scale.set(0.038, 0.038, 0.038); 
-  cssAnimusTicket.lookAt(0, 1.5, 0); 
-  gridGroup.add(cssAnimusTicket);
-  window.cssAnimusTicket = cssAnimusTicket; 
   scene.add(camera);
 
-  const closePaymentBtn = document.getElementById('closePaymentBtn');
-  const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
-  const closeSuccessBtn = document.getElementById('closeSuccessBtn');
-  const paymentTotalAmount = document.getElementById('paymentTotalAmount');
-
-  function calculateTotal() {
-    let total = 0;
-    cartItems.forEach(item => {
-      const val = parseInt(item.price.replace(/[^\d]/g, ''), 10);
-      if (!isNaN(val)) total += val;
-    });
-    return total;
-  }
+  // Logica checkout rimossa
 
   function showPaymentView() {
     cartPanelEl.classList.add('hidden');
@@ -3347,166 +3246,7 @@
     cssUserInfoPanel.lookAt(0, 1.5, 0);
   }
 
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      showPaymentView();
-    });
-  }
-
-  if (closePaymentBtn) {
-    closePaymentBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      hidePaymentView();
-    });
-  }
-
-  if (confirmPaymentBtn) {
-    confirmPaymentBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      
-      confirmPaymentBtn.textContent = "ELABORAZIONE...";
-      confirmPaymentBtn.disabled = true;
-      
-      setTimeout(() => {
-        paymentPanelEl.classList.add('hidden');
-        userInfoPanelEl.classList.add('hidden');
-        
-        // Reset payment panel positions since they are hidden now
-        cssPaymentPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-        cssPaymentPanel.scale.set(0.035, 0.035, 0.035);
-        cssPaymentPanel.lookAt(0, 1.5, 0);
-
-        cssUserInfoPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-        cssUserInfoPanel.scale.set(0.035, 0.035, 0.035);
-        cssUserInfoPanel.lookAt(0, 1.5, 0);
-
-        // Hide everything from the curved display
-        const panelL = document.getElementById('panelL');
-        const panelR = document.getElementById('panelR');
-        const logo = document.getElementById('abstergoLogo');
-        const cartBtn = document.getElementById('cartButton');
-        const dnaView = document.getElementById('floatingTimeline');
-        const globalTimeline = document.querySelector('.global-timeline');
-        
-        if (panelL) panelL.classList.add('hidden-panel');
-        if (panelR) panelR.classList.add('hidden-panel');
-        if (logo) logo.classList.add('hidden-panel');
-        if (cartBtn) cartBtn.style.opacity = '0';
-        if (dnaView) dnaView.classList.add('hidden-panel');
-        if (globalTimeline) globalTimeline.classList.add('hidden-panel');
-        
-        if (typeof tlNodeEls !== 'undefined') {
-          tlNodeEls.forEach(el => el.style.opacity = '0');
-        }
-        if (typeof tlTickObjs !== 'undefined') {
-          tlTickObjs.forEach(obj => obj.visible = false);
-        }
-        if (typeof tlArcLine !== 'undefined') {
-          tlArcLine.visible = false;
-          if (tlArcLine.userData && tlArcLine.userData.glow) {
-            tlArcLine.userData.glow.visible = false;
-          }
-        }
-
-        // Show sync screen
-        if (syncScreenEl) syncScreenEl.classList.remove('hidden-panel');
-        
-        const btnRet = document.getElementById('btnReturnAnimus');
-        if (btnRet) btnRet.style.display = 'block';
-        
-        const btnCloseTicket = document.getElementById('closeTicketBtn');
-        if (btnCloseTicket) btnCloseTicket.style.display = 'none';
-        
-        confirmPaymentBtn.textContent = "CONFERMA E SINCRONIZZA";
-        confirmPaymentBtn.disabled = false;
-        
-        // Save ticket info before emptying cart
-        const userNameInput = document.getElementById('userNameInput');
-        const ticketUserName = document.getElementById('ticketUserName');
-        const ticketExperienceName = document.getElementById('ticketExperienceName');
-        
-        if (ticketUserName) {
-          ticketUserName.textContent = userNameInput && userNameInput.value.trim() ? userNameInput.value.toUpperCase() : 'SCONOSCIUTO';
-        }
-        if (ticketExperienceName) {
-          if (cartItems.length > 0) {
-            const expName = cartItems.map(item => item.title).join(' + ').toUpperCase();
-            ticketExperienceName.textContent = expName;
-            
-            const qrImg = document.getElementById('ticketQrCode');
-            if (qrImg) {
-              const uName = ticketUserName ? ticketUserName.textContent : 'SCONOSCIUTO';
-              let baseUrl = '';
-              if (window.location.protocol === 'file:') {
-                baseUrl = 'http://172.20.10.3:8000/';
-              } else {
-                baseUrl = window.location.href.split('?')[0];
-                if (baseUrl.endsWith('index.html')) baseUrl = baseUrl.replace('index.html', '');
-                if (!baseUrl.endsWith('/')) baseUrl += '/';
-              }
-              const mobileUrl = baseUrl + `mobile_ticket.html?name=${encodeURIComponent(uName)}&exp=${encodeURIComponent(expName)}`;
-              qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}`;
-              qrImg.style.display = 'block';
-            }
-          } else {
-            ticketExperienceName.textContent = 'NESSUNA';
-            const qrImg = document.getElementById('ticketQrCode');
-            if (qrImg) qrImg.style.display = 'none';
-          }
-        }
-        
-        // Add to purchased tickets
-        purchasedTickets.push(...cartItems);
-        window.updateTicketsUI();
-        
-        // Empty cart
-        cartItems.length = 0;
-        window.updateCartUI();
-
-        const ticketBtnEl = document.getElementById('ticketButton');
-        if (ticketBtnEl) {
-          ticketBtnEl.classList.add('has-ticket');
-          ticketBtnEl.style.display = 'flex';
-        }
-
-        // --- ANIMAZIONE CHIUSURA OCCHI E WHITE ROOM ---
-        // Avvia la transizione cinematica in 3 fasi
-        setTimeout(() => {
-          if (window.playSyncTransition) {
-            window.playSyncTransition();
-          } else {
-            console.error("Transizione non trovata, fallback alla white room");
-            transitionToWhiteRoom();
-            if (syncScreenEl) syncScreenEl.classList.add('hidden-panel');
-            setTimeout(() => {
-              const animusTicketEl = document.getElementById('animusTicket');
-              if (animusTicketEl) animusTicketEl.classList.remove('hidden-panel');
-            }, 1000);
-          }
-        }, 2500); // 2.5 seconds of "SINCRONIZZAZIONE..."
-      }, 1500);
-    });
-  }
-
-  if (closeSuccessBtn) {
-    closeSuccessBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      
-      paymentSuccessPanelEl.classList.add('hidden');
-      
-      // Reset position
-      cssPaymentSuccessPanel.position.set(Math.cos(thetaCartBtn) * panelRadiusCSS, 1.5, Math.sin(thetaCartBtn) * panelRadiusCSS);
-      cssPaymentSuccessPanel.scale.set(0.035, 0.035, 0.035);
-      cssPaymentSuccessPanel.lookAt(0, 1.5, 0);
-      
-      hideCartView();
-    });
-  }
+  // Logica pulsanti pagamento rimossa
 
   /* ── WHITE ROOM TRANSITION ── */
   function transitionToWhiteRoom() {
