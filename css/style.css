@@ -1818,3 +1818,209 @@ body {
   font-size: 12px; font-weight: 700;
   color: rgba(200,220,255,0.82);
 }
+
+/* ══════════════════════════════════════════════
+   Memory Overlay — 3 schede piatte (position:fixed)
+   identico all'immagine AC Nexus
+   ══════════════════════════════════════════════ */
+#memOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* card base condivisa */
+#memOverlay .mn-card {
+  background: rgba(0, 3, 12, 0.80);
+  border: 1px solid rgba(200, 215, 255, 0.14);
+  backdrop-filter: blur(2px);
+}
+
+/* ── SCHEDA 1: MEMORIES (sinistra, centrata verticalmente) ── */
+#memOverlay .mn-left {
+  position: absolute;
+  left: 7vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(240px, 22vw, 340px);
+  pointer-events: auto;
+}
+#memOverlay .mn-memories {
+  padding: 20px 22px 22px;
+}
+#memOverlay .mn-mem-hdr {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(215, 230, 255, 0.92);
+  margin-bottom: 9px;
+}
+#memOverlay .mn-sep {
+  height: 1px;
+  background: rgba(200, 215, 255, 0.16);
+  margin-bottom: 12px;
+}
+#memOverlay .mn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+#memOverlay .mn-entry {
+  padding: 6px 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: background 0.15s;
+  pointer-events: auto;
+}
+#memOverlay .mn-entry:hover { background: rgba(200,215,255,0.03); }
+#memOverlay .mn-edot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(200,215,255,0.22);
+  margin-top: 7px; flex-shrink: 0;
+}
+#memOverlay .mn-etext { display: flex; flex-direction: column; gap: 1px; }
+#memOverlay .mn-eyear {
+  font-size: 11px; letter-spacing: 0.07em;
+  color: rgba(200,215,255,0.35);
+}
+#memOverlay .mn-ename {
+  font-size: 13px; font-weight: 500;
+  color: rgba(200,215,255,0.50); letter-spacing: 0.03em;
+}
+/* Voce attiva: bordo rettangolare come nell'immagine */
+#memOverlay .mn-entry-active {
+  border-color: rgba(200, 215, 255, 0.42);
+  background: rgba(200, 215, 255, 0.04);
+  padding: 9px 12px;
+}
+#memOverlay .mn-entry-active .mn-edot {
+  background: rgba(225, 240, 255, 0.9);
+  box-shadow: 0 0 4px rgba(225,240,255,0.5);
+}
+#memOverlay .mn-entry-active .mn-eyear {
+  color: rgba(200,215,255,0.75); font-size: 13px;
+}
+#memOverlay .mn-entry-active .mn-ename {
+  color: #fff; font-size: 16px; font-weight: 600;
+}
+/* Barcode sotto la voce selezionata */
+#memOverlay .mn-databars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: 7px;
+  height: 14px;
+}
+#memOverlay .mn-databar {
+  width: 3px;
+  background: rgba(200,215,255,0.30);
+  border-radius: 1px;
+}
+
+/* ── SCHEDA 2: top-right (chiudi + reticolo) ── */
+#memOverlay .mn-top-right {
+  position: absolute;
+  right: 1.5vw;
+  top: 17vh;
+  width: clamp(130px, 12vw, 175px);
+  pointer-events: auto;
+}
+#memOverlay .mn-info {
+  position: relative;
+  padding: 12px 14px 14px;
+}
+#memOverlay .mn-close {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: transparent; border: none;
+  color: rgba(200,215,255,0.55);
+  font-size: 20px; cursor: pointer;
+  line-height: 1; padding: 2px 4px;
+  pointer-events: auto;
+  font-family: 'Rajdhani', sans-serif;
+  transition: color 0.2s;
+}
+#memOverlay .mn-close:hover { color: rgba(255,255,255,0.9); }
+#memOverlay .mn-reticle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+#memOverlay .mn-info-bars {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 8px;
+}
+#memOverlay .mn-bar {
+  height: 2px; border-radius: 1px;
+  background: rgba(200,215,255,0.22);
+  animation: mnBarPulse2 2.5s ease-in-out infinite;
+}
+#memOverlay .mn-bar:nth-child(2) { animation-delay: 0.35s; }
+#memOverlay .mn-bar:nth-child(3) { animation-delay: 0.7s; }
+@keyframes mnBarPulse2 {
+  0%, 100% { opacity: 0.22; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── SCHEDA 3: Active Memory (destra, sotto scheda 2) ── */
+#memOverlay .mn-active-wrap {
+  position: absolute;
+  right: 4vw;
+  top: calc(17vh + clamp(130px, 12vw, 175px) + 12px);
+  width: clamp(230px, 22vw, 330px);
+  pointer-events: auto;
+}
+#memOverlay .mn-active {
+  padding: 20px 22px 24px;
+}
+#memOverlay .mn-active-lbl {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.13em;
+  color: rgba(160,200,255,0.72);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+#memOverlay .mn-char {
+  font-size: 46px; font-weight: 700;
+  color: #fff; line-height: 1;
+  letter-spacing: 0.01em; margin-bottom: 3px;
+}
+#memOverlay .mn-sub {
+  font-size: 15px; font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(200,215,255,0.50); margin-bottom: 18px;
+}
+#memOverlay .mn-access {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid rgba(200,215,255,0.28);
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 15px; font-weight: 600; letter-spacing: 0.07em;
+  color: rgba(200,215,255,0.82);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  pointer-events: auto;
+  font-family: 'Rajdhani', sans-serif;
+}
+#memOverlay .mn-access:hover {
+  background: rgba(200,215,255,0.07);
+  border-color: rgba(200,215,255,0.6); color: #fff;
+}
+#memOverlay .mn-a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px;
+  border: 1.5px solid rgba(200,215,255,0.55);
+  border-radius: 50%;
+  font-size: 11px; font-weight: 700;
+  color: rgba(200,215,255,0.82);
+}
