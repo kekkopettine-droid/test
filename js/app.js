@@ -2246,7 +2246,7 @@
     </div>
   </div>
 </div>`;
-  acMpEl.style.cssText = 'opacity:0;transition:opacity 0.5s ease;pointer-events:none;';
+  acMpEl.style.cssText = 'opacity:0;transition:opacity 0.5s ease;pointer-events:none;visibility:hidden;';
   document.getElementById('hud-container').appendChild(acMpEl);
   const acMpCss = new THREE.CSS3DObject(acMpEl);
   acMpCss.scale.setScalar(0.025);
@@ -2284,6 +2284,7 @@
     acMpCss.position.set(Math.cos(phi) * r, 0, Math.sin(phi) * r + 5);
     acMpCss.lookAt(0, 0, 18);
     populateMemoriesPanel(s);
+    acMpEl.style.visibility = 'visible';
     acMpEl.style.opacity = '1';
     acMpEl.style.pointerEvents = 'auto';
   }
@@ -2291,6 +2292,7 @@
   function hideMemoriesPanel() {
     acMpEl.style.opacity = '0';
     acMpEl.style.pointerEvents = 'none';
+    setTimeout(() => { acMpEl.style.visibility = 'hidden'; }, 520);
   }
 
   document.getElementById('acMpClose').addEventListener('click', (e) => {
@@ -3569,11 +3571,12 @@
     cssCartPanel.scale.set(0.035, 0.035, 0.035);
     cssCartPanel.lookAt(0, 1.5, 0);
 
-    // Nascondi pannelli gene (booking)
+    // Nascondi pannelli gene (booking) e pannello memorie
     selectedDnaGene = -1;
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
 
     // Nascondi pannelli personaggio
     charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
