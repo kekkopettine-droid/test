@@ -2216,34 +2216,66 @@
   // ── Pannello Memorie stile AC Nexus ──
   const acMpEl = document.createElement('div');
   acMpEl.innerHTML = `
-<div class="ac-mp-wrap">
-  <button class="ac-mp-close-btn" id="acMpClose">&#xD7;</button>
-  <div class="ac-mp-left">
-    <div class="ac-mp-logo-row">
-      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
-        <polygon points="20,2 38,36 2,36" fill="none" stroke="rgba(0,220,255,0.9)" stroke-width="2.5"/>
-        <circle cx="20" cy="22" r="5.5" fill="rgba(0,220,255,0.12)" stroke="rgba(0,220,255,0.9)" stroke-width="2"/>
+<div class="acmp-wrap">
+
+  <!-- SCHEDA 1: lista MEMORIES -->
+  <div class="acmp-card acmp-memories">
+    <div class="acmp-mem-header">
+      <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+        <polygon points="20,3 37,35 3,35" fill="none" stroke="rgba(200,220,255,0.85)" stroke-width="2.5"/>
+        <circle cx="20" cy="22" r="5.5" fill="rgba(200,220,255,0.08)" stroke="rgba(200,220,255,0.85)" stroke-width="2"/>
       </svg>
-      <span class="ac-mp-logo-text">MEMORIES</span>
+      <span>MEMORIES</span>
     </div>
-    <div class="ac-mp-underline"></div>
-    <div class="ac-mp-list" id="acMpList"></div>
+    <div class="acmp-sep"></div>
+    <div class="acmp-list" id="acMpList"></div>
   </div>
-  <div class="ac-mp-vdiv"></div>
-  <div class="ac-mp-right">
-    <div class="ac-mp-active-label">
-      <svg width="15" height="15" viewBox="0 0 40 40" fill="none">
-        <polygon points="20,2 38,36 2,36" fill="none" stroke="rgba(0,200,190,0.8)" stroke-width="2.5"/>
-        <circle cx="20" cy="22" r="5.5" fill="rgba(0,200,190,0.1)" stroke="rgba(0,200,190,0.8)" stroke-width="2"/>
-      </svg>
-      Active Memory
+
+  <!-- COLONNA DESTRA -->
+  <div class="acmp-right">
+
+    <!-- SCHEDA 2: info + chiudi -->
+    <div class="acmp-card acmp-info">
+      <button class="acmp-close" id="acMpClose">&#xD7;</button>
+      <div class="acmp-info-inner">
+        <!-- Reticolo rotante -->
+        <svg class="acmp-reticle-svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <g class="acmp-reticle-outer">
+            <circle cx="32" cy="32" r="26" stroke="rgba(200,220,255,0.25)" stroke-width="1"/>
+            <line x1="32" y1="2"  x2="32" y2="12" stroke="rgba(200,220,255,0.45)" stroke-width="1.5"/>
+            <line x1="32" y1="52" x2="32" y2="62" stroke="rgba(200,220,255,0.45)" stroke-width="1.5"/>
+            <line x1="2"  y1="32" x2="12" y2="32" stroke="rgba(200,220,255,0.45)" stroke-width="1.5"/>
+            <line x1="52" y1="32" x2="62" y2="32" stroke="rgba(200,220,255,0.45)" stroke-width="1.5"/>
+          </g>
+          <circle cx="32" cy="32" r="4" fill="rgba(200,220,255,0.7)"/>
+          <circle cx="32" cy="32" r="10" fill="none" stroke="rgba(200,220,255,0.35)" stroke-width="1"/>
+        </svg>
+        <!-- Barre dati animate -->
+        <div class="acmp-info-bars">
+          <div class="acmp-info-bar" style="width:100%"></div>
+          <div class="acmp-info-bar" style="width:72%"></div>
+          <div class="acmp-info-bar" style="width:45%"></div>
+        </div>
+      </div>
     </div>
-    <div class="ac-mp-char-name" id="acMpChar">&#x2014;</div>
-    <div class="ac-mp-char-sub" id="acMpSub">&#x2014;</div>
-    <div class="ac-mp-access-btn" id="acMpAccess">
-      <span class="ac-mp-a-badge">A</span>
-      Access
+
+    <!-- SCHEDA 3: Active Memory -->
+    <div class="acmp-card acmp-active">
+      <div class="acmp-active-label">
+        <svg class="acmp-active-icon" width="14" height="14" viewBox="0 0 40 40" fill="none">
+          <polygon points="20,3 37,35 3,35" fill="none" stroke="rgba(180,220,255,0.75)" stroke-width="2.5"/>
+          <circle cx="20" cy="22" r="5" fill="rgba(180,220,255,0.08)" stroke="rgba(180,220,255,0.75)" stroke-width="2"/>
+        </svg>
+        Active Memory
+      </div>
+      <div class="acmp-char-name" id="acMpChar">&#x2014;</div>
+      <div class="acmp-char-sub" id="acMpSub">&#x2014;</div>
+      <div class="acmp-access" id="acMpAccess">
+        <span class="acmp-a-badge">A</span>
+        Access
+      </div>
     </div>
+
   </div>
 </div>`;
   acMpEl.style.cssText = 'opacity:0;transition:opacity 0.5s ease;pointer-events:none;visibility:hidden;';
@@ -2262,17 +2294,39 @@
     list.innerHTML = '';
     mem.entries.forEach((entry, i) => {
       const row = document.createElement('div');
-      row.className = 'ac-mp-entry' + (i === 0 ? ' ac-mp-entry-active' : '');
+      row.className = 'acmp-entry' + (i === 0 ? ' acmp-entry-active' : '');
+      // Barre dati solo sotto la voce attiva
+      const barsHtml = i === 0 ? `
+        <div class="acmp-entry-bars">
+          <div class="acmp-entry-bar" style="width:52px"></div>
+          <div class="acmp-entry-bar" style="width:38px"></div>
+          <div class="acmp-entry-bar" style="width:64px"></div>
+          <div class="acmp-entry-bar" style="width:28px"></div>
+          <div class="acmp-entry-bar" style="width:46px"></div>
+        </div>` : '';
       row.innerHTML = `
-        <span class="ac-mp-dot"></span>
-        <div class="ac-mp-entry-inner">
-          <span class="ac-mp-year">${entry.year} &mdash;</span>
-          <span class="ac-mp-name">${entry.name}</span>
+        <span class="acmp-entry-dot"></span>
+        <div class="acmp-entry-text">
+          <span class="acmp-entry-year">${entry.year} &mdash;</span>
+          <span class="acmp-entry-name">${entry.name}</span>
+          ${barsHtml}
         </div>`;
       row.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        list.querySelectorAll('.ac-mp-entry').forEach(r => r.classList.remove('ac-mp-entry-active'));
-        row.classList.add('ac-mp-entry-active');
+        // Rimuovi barre dalle voci precedenti
+        list.querySelectorAll('.acmp-entry-bars').forEach(b => b.remove());
+        list.querySelectorAll('.acmp-entry').forEach(r => r.classList.remove('acmp-entry-active'));
+        row.classList.add('acmp-entry-active');
+        // Aggiungi barre alla voce selezionata
+        const bars = document.createElement('div');
+        bars.className = 'acmp-entry-bars';
+        bars.innerHTML = `
+          <div class="acmp-entry-bar" style="width:52px"></div>
+          <div class="acmp-entry-bar" style="width:38px"></div>
+          <div class="acmp-entry-bar" style="width:64px"></div>
+          <div class="acmp-entry-bar" style="width:28px"></div>
+          <div class="acmp-entry-bar" style="width:46px"></div>`;
+        row.querySelector('.acmp-entry-text').appendChild(bars);
       });
       list.appendChild(row);
     });

@@ -1597,3 +1597,224 @@ body {
   border-radius: 50%; font-size: 13px; font-weight: 700;
   color: rgba(0, 220, 255, 0.9);
 }
+
+/* ── AC Memories Panel v2 (3 schede come nell'immagine) ── */
+.acmp-wrap {
+  display: flex;
+  gap: 14px;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Shared card base */
+.acmp-card {
+  background: rgba(0, 4, 14, 0.78);
+  border: 1px solid rgba(200, 220, 255, 0.12);
+}
+
+/* ── CARD 1: MEMORIES list ── */
+.acmp-memories {
+  width: 440px;
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+.acmp-mem-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(220, 235, 255, 0.92);
+}
+.acmp-sep {
+  height: 1px;
+  background: rgba(200, 220, 255, 0.14);
+  margin-bottom: 14px;
+}
+.acmp-list { display: flex; flex-direction: column; gap: 1px; }
+
+.acmp-entry {
+  padding: 8px 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: background 0.15s;
+  pointer-events: auto;
+}
+.acmp-entry:hover { background: rgba(200,220,255,0.03); }
+
+.acmp-entry-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(200,220,255,0.25);
+  margin-top: 6px; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.acmp-entry-text { display: flex; flex-direction: column; gap: 1px; }
+.acmp-entry-year {
+  font-size: 12px; letter-spacing: 0.08em;
+  color: rgba(200,230,255,0.38);
+}
+.acmp-entry-name {
+  font-size: 15px; font-weight: 500;
+  color: rgba(200,230,255,0.52);
+  letter-spacing: 0.04em;
+}
+
+/* ACTIVE entry — bordered box like in the image */
+.acmp-entry-active {
+  border-color: rgba(200, 230, 255, 0.38);
+  background: rgba(200, 230, 255, 0.04);
+  padding: 12px 14px;
+}
+.acmp-entry-active .acmp-entry-dot {
+  background: rgba(220, 240, 255, 0.9);
+  box-shadow: 0 0 5px rgba(220,240,255,0.5);
+}
+.acmp-entry-active .acmp-entry-year {
+  color: rgba(200,230,255,0.72);
+  font-size: 14px;
+}
+.acmp-entry-active .acmp-entry-name {
+  color: #fff;
+  font-size: 18px; font-weight: 600;
+}
+/* Data-bar accent below active entry */
+.acmp-entry-bars {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.acmp-entry-bar {
+  height: 2px;
+  background: rgba(200,220,255,0.22);
+}
+
+/* ── RIGHT COLUMN ── */
+.acmp-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 360px;
+}
+
+/* ── CARD 2: small info/close card ── */
+.acmp-info {
+  position: relative;
+  padding: 14px 16px;
+  height: 185px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.acmp-close {
+  position: absolute; top: 10px; right: 12px;
+  background: transparent; border: none;
+  color: rgba(200,220,255,0.55);
+  font-size: 22px; cursor: pointer; line-height: 1; padding: 2px 4px;
+  pointer-events: auto;
+  transition: color 0.2s;
+  font-family: 'Rajdhani', sans-serif;
+}
+.acmp-close:hover { color: #fff; }
+
+.acmp-info-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.acmp-reticle-svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.acmp-reticle-outer {
+  animation: acmpSpin 12s linear infinite;
+  transform-origin: 32px 32px;
+}
+@keyframes acmpSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.acmp-info-bars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.acmp-info-bar {
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(200,220,255,0.18);
+  animation: acmpBarPulse 2.5s ease-in-out infinite;
+}
+.acmp-info-bar:nth-child(2) { width: 72%; animation-delay: 0.4s; }
+.acmp-info-bar:nth-child(3) { width: 45%; animation-delay: 0.8s; }
+@keyframes acmpBarPulse {
+  0%, 100% { opacity: 0.18; }
+  50%       { opacity: 0.45; }
+}
+
+/* ── CARD 3: Active Memory ── */
+.acmp-active {
+  flex: 1;
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+.acmp-active-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(180,220,255,0.7);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.acmp-active-icon { animation: acmpSpin 8s linear infinite; }
+.acmp-char-name {
+  font-size: 52px; font-weight: 700;
+  color: #fff; line-height: 1;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+}
+.acmp-char-sub {
+  font-size: 17px; font-weight: 400;
+  letter-spacing: 0.05em;
+  color: rgba(200,220,255,0.5);
+  margin-bottom: 20px;
+}
+.acmp-access {
+  display: inline-flex;
+  align-items: center; gap: 10px;
+  border: 1px solid rgba(200,220,255,0.28);
+  padding: 9px 20px;
+  width: fit-content;
+  cursor: pointer;
+  font-size: 16px; font-weight: 600; letter-spacing: 0.08em;
+  color: rgba(200,220,255,0.82);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  pointer-events: auto;
+  font-family: 'Rajdhani', sans-serif;
+}
+.acmp-access:hover {
+  background: rgba(200,220,255,0.08);
+  border-color: rgba(200,220,255,0.6); color: #fff;
+}
+.acmp-a-badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  border: 1.5px solid rgba(200,220,255,0.55);
+  border-radius: 50%;
+  font-size: 12px; font-weight: 700;
+  color: rgba(200,220,255,0.82);
+}
