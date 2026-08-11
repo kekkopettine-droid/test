@@ -2183,6 +2183,132 @@
   scRightCss.scale.setScalar(0.028);
   scene.add(scRightCss);
 
+  // ── Dati memorie per epoca (pannello stile AC Nexus) ──
+  const geneMemories = [
+    { character: 'EZIO AUDITORE', subTitle: 'Rinascimento Italiano', entries: [
+        { year: '1476 CE', name: 'FIRENZE RESYNCED' },
+        { year: '1486 CE', name: 'VENEZIA RESYNCED' },
+        { year: '1499 CE', name: 'ROMA RESYNCED' },
+        { year: '1511 CE', name: 'COSTANTINOPOLI RESYNCED' },
+    ]},
+    { character: 'EDWARD KENWAY', subTitle: "Golden Age of Piracy", entries: [
+        { year: '1715 CE', name: 'BLACK FLAG RESYNCED' },
+        { year: '1735 CE', name: 'NASSAU RESYNCED' },
+        { year: '1754 CE', name: 'CARAIBI RESYNCED' },
+    ]},
+    { character: 'CONNOR KENWAY', subTitle: 'Rivoluzione Americana', entries: [
+        { year: '1754 CE', name: 'BOSTON RESYNCED' },
+        { year: '1768 CE', name: 'FRONTIERA RESYNCED' },
+        { year: '1781 CE', name: 'YORKTOWN RESYNCED' },
+    ]},
+    { character: 'ARNO DORIAN', subTitle: 'Rivoluzione Francese', entries: [
+        { year: '1789 CE', name: 'PARIGI RESYNCED' },
+        { year: '1793 CE', name: 'VERSAILLES RESYNCED' },
+        { year: '1798 CE', name: 'PONT NEUF RESYNCED' },
+    ]},
+    { character: 'JACOB FRYE', subTitle: 'Era Vittoriana', entries: [
+        { year: '1868 CE', name: 'LONDRA RESYNCED' },
+        { year: '1868 CE', name: 'WHITECHAPEL RESYNCED' },
+        { year: '1888 CE', name: 'TOWER BRIDGE RESYNCED' },
+    ]},
+  ];
+
+  // ── Pannello Memorie stile AC Nexus ──
+  const acMpEl = document.createElement('div');
+  acMpEl.innerHTML = `
+<div class="ac-mp-wrap">
+  <button class="ac-mp-close-btn" id="acMpClose">&#xD7;</button>
+  <div class="ac-mp-left">
+    <div class="ac-mp-logo-row">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+        <polygon points="20,2 38,36 2,36" fill="none" stroke="rgba(0,220,255,0.9)" stroke-width="2.5"/>
+        <circle cx="20" cy="22" r="5.5" fill="rgba(0,220,255,0.12)" stroke="rgba(0,220,255,0.9)" stroke-width="2"/>
+      </svg>
+      <span class="ac-mp-logo-text">MEMORIES</span>
+    </div>
+    <div class="ac-mp-underline"></div>
+    <div class="ac-mp-list" id="acMpList"></div>
+  </div>
+  <div class="ac-mp-vdiv"></div>
+  <div class="ac-mp-right">
+    <div class="ac-mp-active-label">
+      <svg width="15" height="15" viewBox="0 0 40 40" fill="none">
+        <polygon points="20,2 38,36 2,36" fill="none" stroke="rgba(0,200,190,0.8)" stroke-width="2.5"/>
+        <circle cx="20" cy="22" r="5.5" fill="rgba(0,200,190,0.1)" stroke="rgba(0,200,190,0.8)" stroke-width="2"/>
+      </svg>
+      Active Memory
+    </div>
+    <div class="ac-mp-char-name" id="acMpChar">&#x2014;</div>
+    <div class="ac-mp-char-sub" id="acMpSub">&#x2014;</div>
+    <div class="ac-mp-access-btn" id="acMpAccess">
+      <span class="ac-mp-a-badge">A</span>
+      Access
+    </div>
+  </div>
+</div>`;
+  acMpEl.style.cssText = 'opacity:0;transition:opacity 0.5s ease;pointer-events:none;';
+  document.getElementById('hud-container').appendChild(acMpEl);
+  const acMpCss = new THREE.CSS3DObject(acMpEl);
+  acMpCss.scale.setScalar(0.025);
+  acMpCss.position.set(0, 0, 0);
+  acMpCss.lookAt(0, 0, 18);
+  scene.add(acMpCss);
+
+  function populateMemoriesPanel(s) {
+    const mem = geneMemories[s];
+    document.getElementById('acMpChar').textContent = mem.character;
+    document.getElementById('acMpSub').textContent  = mem.subTitle;
+    const list = document.getElementById('acMpList');
+    list.innerHTML = '';
+    mem.entries.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'ac-mp-entry' + (i === 0 ? ' ac-mp-entry-active' : '');
+      row.innerHTML = `
+        <span class="ac-mp-dot"></span>
+        <div class="ac-mp-entry-inner">
+          <span class="ac-mp-year">${entry.year} &mdash;</span>
+          <span class="ac-mp-name">${entry.name}</span>
+        </div>`;
+      row.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        list.querySelectorAll('.ac-mp-entry').forEach(r => r.classList.remove('ac-mp-entry-active'));
+        row.classList.add('ac-mp-entry-active');
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function showMemoriesPanel(s) {
+    const r   = gridRadius - 2.5;
+    const phi = thetaCenter;
+    acMpCss.position.set(Math.cos(phi) * r, 0, Math.sin(phi) * r + 5);
+    acMpCss.lookAt(0, 0, 18);
+    populateMemoriesPanel(s);
+    acMpEl.style.opacity = '1';
+    acMpEl.style.pointerEvents = 'auto';
+  }
+
+  function hideMemoriesPanel() {
+    acMpEl.style.opacity = '0';
+    acMpEl.style.pointerEvents = 'none';
+  }
+
+  document.getElementById('acMpClose').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideMemoriesPanel();
+    hideGeneInfo();
+  });
+
+  document.getElementById('acMpAccess').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideMemoriesPanel();
+    scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
+    scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
+  });
+
+
   function showGeneInfo(s) {
     selectedDnaGene = s;
     canvas.style.pointerEvents = 'none';
@@ -2214,8 +2340,10 @@
     scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
     scRightCss.lookAt(0, gY, 18);
 
-    scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
-    scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
+    // Mostra prima il pannello memorie; i pannelli prenotazione appaiono solo dopo Access
+    showMemoriesPanel(s);
+    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
+    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
     dnaGuideTimeouts = [];
     dnaGuideEls.forEach(el => { el.style.opacity = '0'; el.style.display = 'none'; });
@@ -2230,6 +2358,7 @@
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+    hideMemoriesPanel();
 
     /* Restore DNA visibility */
     dnaGroup.visible = true;
@@ -2254,7 +2383,10 @@
   document.getElementById('scCloseBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     if (window.audioEngine) window.audioEngine.playClick();
-    hideGeneInfo();
+    // Torna al pannello memorie invece di chiudere tutto
+    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
+    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+    showMemoriesPanel(selectedDnaGene);
   });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */

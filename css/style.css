@@ -1474,3 +1474,126 @@ body {
 .timeline-bg-container.hidden {
   opacity: 0;
 }
+
+/* ── AC Memories Panel ── */
+.ac-mp-wrap {
+  position: relative;
+  width: 980px;
+  min-height: 540px;
+  background: rgba(0, 6, 18, 0.80);
+  border: 1px solid rgba(0, 200, 190, 0.18);
+  display: flex;
+  align-items: stretch;
+  font-family: 'Rajdhani', sans-serif;
+  color: rgba(200, 240, 255, 0.9);
+  padding: 36px 0 36px;
+}
+.ac-mp-close-btn {
+  position: absolute;
+  top: 12px; right: 18px;
+  background: transparent; border: none;
+  color: rgba(0, 220, 255, 0.7);
+  font-size: 30px; cursor: pointer; line-height: 1; padding: 4px;
+  pointer-events: auto;
+  transition: color 0.2s;
+}
+.ac-mp-close-btn:hover { color: rgba(0, 220, 255, 1); }
+.ac-mp-left {
+  flex: 0 0 460px;
+  padding: 0 36px;
+  display: flex;
+  flex-direction: column;
+}
+.ac-mp-logo-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.ac-mp-logo-text {
+  font-size: 22px; font-weight: 600; letter-spacing: 0.18em;
+  color: rgba(200, 240, 255, 0.92);
+}
+.ac-mp-underline {
+  height: 1px;
+  background: rgba(0, 200, 190, 0.35);
+  margin-bottom: 18px;
+}
+.ac-mp-list { display: flex; flex-direction: column; gap: 3px; }
+.ac-mp-entry {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px 10px 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  border-radius: 2px;
+  pointer-events: auto;
+}
+.ac-mp-entry:hover { background: rgba(0, 200, 190, 0.06); }
+.ac-mp-entry-active {
+  border-color: rgba(0, 200, 190, 0.45);
+  background: rgba(0, 200, 190, 0.07);
+}
+.ac-mp-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(0, 200, 190, 0.55);
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.ac-mp-entry-active .ac-mp-dot {
+  background: rgba(0, 220, 255, 1);
+  box-shadow: 0 0 6px rgba(0, 220, 255, 0.8);
+}
+.ac-mp-entry-inner { display: flex; flex-direction: column; gap: 1px; }
+.ac-mp-year {
+  font-size: 13px; font-weight: 400;
+  color: rgba(0, 200, 190, 0.65); letter-spacing: 0.08em;
+}
+.ac-mp-name {
+  font-size: 16px; font-weight: 500;
+  letter-spacing: 0.05em; color: rgba(200, 240, 255, 0.88);
+}
+.ac-mp-entry-active .ac-mp-year { color: rgba(0, 220, 255, 0.85); }
+.ac-mp-entry-active .ac-mp-name { color: #fff; font-weight: 600; }
+.ac-mp-vdiv {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 200, 190, 0.28) 20%, rgba(0, 200, 190, 0.28) 80%, transparent);
+  flex-shrink: 0; margin: 0 4px;
+}
+.ac-mp-right {
+  flex: 1; padding: 0 44px;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+}
+.ac-mp-active-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; letter-spacing: 0.13em;
+  color: rgba(0, 200, 190, 0.75);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.ac-mp-char-name {
+  font-size: 50px; font-weight: 700; letter-spacing: 0.03em;
+  color: #fff; line-height: 1; margin-bottom: 4px;
+}
+.ac-mp-char-sub {
+  font-size: 18px; font-weight: 400; letter-spacing: 0.06em;
+  color: rgba(200, 240, 255, 0.60); margin-bottom: 26px;
+}
+.ac-mp-access-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 1px solid rgba(0, 200, 190, 0.45);
+  padding: 11px 22px;
+  cursor: pointer;
+  font-size: 17px; font-weight: 600; letter-spacing: 0.1em;
+  color: rgba(200, 240, 255, 0.9);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s;
+  pointer-events: auto;
+  width: fit-content;
+}
+.ac-mp-access-btn:hover {
+  background: rgba(0, 200, 190, 0.12);
+  border-color: rgba(0, 220, 255, 0.85); color: #fff;
+}
+.ac-mp-a-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border: 1.5px solid rgba(0, 200, 190, 0.8);
+  border-radius: 50%; font-size: 13px; font-weight: 700;
+  color: rgba(0, 220, 255, 0.9);
+}
