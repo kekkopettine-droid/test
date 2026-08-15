@@ -1295,6 +1295,8 @@
       bgContainer.classList.remove('hidden');
       bgVideo.play().catch(e => console.warn('Bg video play error', e));
     }
+    // Mostra pannelli HUD sull'video
+    if (typeof showMemoriesPanel === 'function') showMemoriesPanel(0);
   }
 
   function hideTimelineElements() {
@@ -1317,6 +1319,7 @@
   }
   function hideTimelineView() {
     hideTimelineElements();
+    // hideMemoriesPanel gestito da hideTimelineView
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
     
@@ -2325,14 +2328,14 @@
   document.getElementById('mnClose').addEventListener('click', (e) => {
     e.stopPropagation();
     if (window.audioEngine) window.audioEngine.playClick();
-    hideMemoriesPanel();
     hideGeneInfo();
+    hideTimelineView();
   });
 
   document.getElementById('mnAccess').addEventListener('click', (e) => {
     e.stopPropagation();
     if (window.audioEngine) window.audioEngine.playClick();
-    hideMemoriesPanel();
+    // L'overlay rimane visibile; appaiono i pannelli prenotazione sopra
     scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
     scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
   });
@@ -2369,8 +2372,8 @@
     scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
     scRightCss.lookAt(0, gY, 18);
 
-    // Mostra prima il pannello memorie; i pannelli prenotazione appaiono solo dopo Access
-    showMemoriesPanel(s);
+    // Aggiorna il contenuto dell'overlay (già visibile sul video)
+    if (typeof populateMemoriesPanel === 'function') populateMemoriesPanel(s);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
@@ -2387,7 +2390,6 @@
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    hideMemoriesPanel();
 
     /* Restore DNA visibility */
     dnaGroup.visible = true;
@@ -2412,10 +2414,10 @@
   document.getElementById('scCloseBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     if (window.audioEngine) window.audioEngine.playClick();
-    // Torna al pannello memorie invece di chiudere tutto
+    // Nasconde solo i pannelli prenotazione; l'overlay HUD rimane visibile
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    showMemoriesPanel(selectedDnaGene);
+    hideGeneInfo();
   });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
