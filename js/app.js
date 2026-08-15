@@ -2370,8 +2370,6 @@
     scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
     scRightCss.lookAt(0, gY, 18);
 
-    // Mostra overlay HUD dopo click su data timeline
-    if (typeof showMemoriesPanel === 'function') showMemoriesPanel(s);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
@@ -3206,8 +3204,6 @@
     node.addEventListener('click', (e) => {
       e.stopPropagation();
       if (window.audioEngine) window.audioEngine.playClick();
-      // Mostra le info del frammento genetico corrispondente (stesso indice)
-      showGeneInfo(idx);
     });
   });
 
