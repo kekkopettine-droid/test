@@ -1295,8 +1295,6 @@
       bgContainer.classList.remove('hidden');
       bgVideo.play().catch(e => console.warn('Bg video play error', e));
     }
-    // Mostra pannelli HUD sull'video
-    if (typeof showMemoriesPanel === 'function') showMemoriesPanel(0);
   }
 
   function hideTimelineElements() {
@@ -1319,7 +1317,7 @@
   }
   function hideTimelineView() {
     hideTimelineElements();
-    // hideMemoriesPanel gestito da hideTimelineView
+    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
     
@@ -2328,8 +2326,8 @@
   document.getElementById('mnClose').addEventListener('click', (e) => {
     e.stopPropagation();
     if (window.audioEngine) window.audioEngine.playClick();
+    hideMemoriesPanel();
     hideGeneInfo();
-    hideTimelineView();
   });
 
   document.getElementById('mnAccess').addEventListener('click', (e) => {
@@ -2372,8 +2370,8 @@
     scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
     scRightCss.lookAt(0, gY, 18);
 
-    // Aggiorna il contenuto dell'overlay (già visibile sul video)
-    if (typeof populateMemoriesPanel === 'function') populateMemoriesPanel(s);
+    // Mostra overlay HUD dopo click su data timeline
+    if (typeof showMemoriesPanel === 'function') showMemoriesPanel(s);
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
@@ -2390,6 +2388,7 @@
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
+    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
 
     /* Restore DNA visibility */
     dnaGroup.visible = true;
