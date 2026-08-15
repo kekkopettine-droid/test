@@ -117,17 +117,12 @@
     if (e.target.closest('.sc-panel') || e.target.closest('.char-detail-panel') ||
         e.target.closest('.cart-panel') || e.target.closest('.payment-panel') ||
         e.target.closest('.cart-btn') || e.target.closest('.tl-node-item') ||
-        e.target.closest('.char-row') || e.target.closest('.dna-back-arrow') ||
+        e.target.closest('.dna-back-arrow') ||
         e.target.closest('.timeline-node') || e.target.closest('.btn-return-animus')) {
       return;
     }
     
-    /* Chiude i pannelli gene se aperti (tranne PRENOTA) */
-    if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
-      const id = e.target && e.target.id;
-      if (id === 'scConfirmBtn') return;
-      hideGeneInfo();
-    }
+
   });
 
   // Nasconde il renderer CSS3D durante l'intro sequence
@@ -1058,198 +1053,416 @@
     tlDnaGroups.push(mg);
   }
 
-  /* ══ PERSONAGGI STORICI per epoca ══ */
-  const historicalChars = [
-    [ /* 1500 - Rinascimento */
-      { name: 'Leonardo da Vinci',   dates: '1452–1519', role: 'Artista, scienziato e inventore. Mente universale del Rinascimento.' },
-      { name: 'Lorenzo de\' Medici', dates: '1449–1492', role: 'Signore di Firenze, mecenate delle arti, centro del potere politico.' },
-      { name: 'Michelangelo',         dates: '1475–1564', role: 'Scultore e pittore. Creatore della Cappella Sistina e del David.' },
-    ],
-    [ /* 1600 - Pirateria */
-      { name: 'Barbanera',       dates: '1680–1718', role: 'Il pirata più temuto dei Caraibi. Simbolo del terrore dei mari.' },
-      { name: 'Anne Bonny',      dates: '1697–1782', role: 'Piratessa leggendaria. Sfidò le convenzioni di un\'epoca intera.' },
-      { name: 'Henry Morgan',    dates: '1635–1688', role: 'Corsaro gallese, poi Governatore della Giamaica. Doppio gioco supremo.' },
-    ],
-    [ /* 1700 - Rivoluzione Americana */
-      { name: 'George Washington',  dates: '1732–1799', role: 'Generale e primo Presidente degli Stati Uniti d\'America.' },
-      { name: 'Benjamin Franklin',  dates: '1706–1790', role: 'Scienziato, diplomatico e Padre Fondatore.' },
-      { name: 'Thomas Jefferson',   dates: '1743–1826', role: 'Autore della Dichiarazione di Indipendenza americana.' },
-    ],
-    [ /* 1800 - Rivoluzione Francese */
-      { name: 'Napoleone Bonaparte', dates: '1769–1821', role: 'Generale e Imperatore. Rivoluzionò l\'Europa con armi e leggi.' },
-      { name: 'Marie Antoinette',    dates: '1755–1793', role: 'Regina di Francia. Simbolo del potere assoluto e della sua caduta.' },
-      { name: 'Maximilien Robespierre', dates: '1758–1794', role: 'Architetto del Terrore rivoluzionario. Il volto oscuro degli ideali.' },
-    ],
-    [ /* 1900 - Rivoluzione Industriale */
-      { name: 'Nikola Tesla',   dates: '1856–1943', role: 'Inventore visionario. Padre dell\'elettricità alternata.' },
-      { name: 'Charles Darwin', dates: '1809–1882', role: 'Naturalista. La teoria dell\'evoluzione scosse le basi del sapere.' },
-      { name: 'Thomas Edison',  dates: '1847–1931', role: 'Inventore e imprenditore. Pioniere dell\'era elettrica.' },
-    ],
-  ];
-
-  /* ══ VISTA PERSONAGGI — lista a sinistra, descrizione a destra, entrambi sempre visibili ══ */
   let charViewEpoch = -1;
-  let selectedCharIdx = -1;
-  const charEpochLabels = ['Rinascimento','Età d\'Oro Pirateria','Rivoluzione Americana','Rivoluzione Francese','Rivoluzione Industriale'];
 
-  /* Pannello SINISTRA — nomi personaggi */
-  const charListEl = document.createElement('div');
-  charListEl.style.cssText = 'opacity:0;transition:opacity .4s ease;pointer-events:none;';
-  document.getElementById('hud-container').appendChild(charListEl);
-  const charListCss = new THREE.CSS3DObject(charListEl);
-  charListCss.scale.setScalar(0.028);
-  charListCss.position.set(0, 1000, 0); // Sposta fuori schermo per evitare che il wrapper blocchi il centro
-  scene.add(charListCss);
+  // ── EPOCH OVERLAY ──
+  const eoChars = [
+    [ { name: 'Leonardo da Vinci',      dates: '1452–1519',
+        role: 'Pittore, ingegnere, anatomista, musicista. Leonardo non era semplicemente un genio: era un\'anomalia della storia. Nei suoi taccuini segreti dormivano macchine volanti, studi sul moto del sangue, progetti di città ideali — visioni che il mondo non avrebbe capito per secoli. Rivivere al suo fianco significa toccare il confine sottile tra arte e scienza, tra bellezza e potere.' },
+      { name: "Lorenzo de' Medici",     dates: '1449–1492',
+        role: 'Chiamato "il Magnifico" non per adulazione, ma per timore. Lorenzo governava Firenze con una mano che teneva insieme il pennello degli artisti e il veleno dei nemici. Banchetti, poesie, congiure di palazzo: la sua corte era il centro pulsante del mondo occidentale, dove ogni parola poteva aprire porte o chiudere destini.' },
+      { name: 'Michelangelo',           dates: '1475–1564',
+        role: 'Quattro anni disteso su un\'impalcatura, a dipingere la volta della Cappella Sistina con le lacrime di vernice sugli occhi. Michelangelo non scolpiva il marmo: lo liberava. Diceva di vedere già la figura dentro il blocco grezzo — il suo compito era solo togliere il superfluo. Un uomo tormentato, divino e impossibile da dimenticare.' } ],
+    [ { name: 'Barbanera',              dates: '1680–1718',
+        role: 'Nessun pirata della storia ha generato più terrore del suo solo nome. Edward Teach bruciava micce accese tra la barba prima di abbordare le navi, avvolto in fumo come un demone emerso dal mare. Non era solo un criminale: era uno spettacolo di pura forza psicologica. Le sue vittime cedevano prima ancora che estraesse la sciabola.' },
+      { name: 'Anne Bonny',             dates: '1697–1782',
+        role: 'In un\'epoca in cui le donne dovevano tacere, Anne Bonny impugnò la sciabola e combatté a fianco di uomini che la rispettavano più di chiunque. Abbandonò un marito, scelse la libertà assoluta dei Caraibi e divenne leggenda. Quando la nave fu catturata, lei era ancora in piedi a combattere — gli altri erano ubriachi sottocoperta.' },
+      { name: 'Henry Morgan',           dates: '1635–1688',
+        role: 'Da corsaro spietato a Governatore della Giamaica: la parabola di Henry Morgan è la storia di un uomo che piegò le regole di due mondi. Saccheggiò Panama con un esercito di pirati, poi indossò la giacca del potere coloniale britannico. Un genio militare, un maestro della doppia lealtà, un personaggio che ancora oggi sfida ogni definizione.' } ],
+    [ { name: 'George Washington',      dates: '1732–1799',
+        role: 'Poteva diventare re. Scelse di non farlo. In quel gesto — raro nella storia umana — risiede la vera grandezza di Washington. Guidò un esercito scalzo attraverso l\'inverno di Valley Forge, sopravvisse a battaglie che avrebbero spezzato chiunque, e poi consegnò il potere al popolo. Era un uomo di silenzi profondi e decisioni irreversibili.' },
+      { name: 'Benjamin Franklin',      dates: '1706–1790',
+        role: 'Catturò la saetta con un aquilone. Negoziò l\'alleanza con la Francia che cambiò l\'esito della guerra. Inventò gli occhiali bifocali, il parafulmine, un sistema postale efficiente. Franklin era il tipo di persona che rende tutto il resto dell\'umanità un po\' in imbarazzo: curioso, ironico, inarrestabile. Incontrarlo significava essere travolti.' },
+      { name: 'Thomas Jefferson',       dates: '1743–1826',
+        role: '"Tutti gli uomini sono creati uguali." Quelle parole, scritte in una notte di luglio del 1776, avrebbero fatto tremare troni per secoli. Jefferson era un filosofo costretto a fare il politico, un sognatore che costruì un paese. Contraddittorio, brillante, ossessionato dall\'architettura e dai libri: una mente che ancora interroga la nostra coscienza.' } ],
+    [ { name: 'Napoleone Bonaparte',    dates: '1769–1821',
+        role: 'A trent\'anni era padrone d\'Europa. Dormiva quattro ore per notte, dettava lettere a tre segretari contemporaneamente e leggeva ogni rapporto di guerra come se fosse un romanzo. Napoleone non conquistava solo territori: ridisegnava il diritto, l\'amministrazione, la mappa mentale dell\'Occidente. La sua caduta fu grande quanto la sua ascesa.' },
+      { name: 'Marie Antoinette',       dates: '1755–1793',
+        role: 'Arrivò in Francia a quattordici anni, straniera in un palazzo che la studiava come un\'anomalia. Divenne simbolo di tutto ciò che il popolo odiava — il lusso, la distanza, l\'indifferenza — eppure i documenti rivelano una donna più consapevole e fragile di quanto la storia abbia voluto ricordare. La ghigliottina non fermò il suo mito.' },
+      { name: 'Maximilien Robespierre', dates: '1758–1794',
+        role: 'Lo chiamavano "l\'Incorruttibile". Non beveva, non corrompeva, non mentiva — credeva davvero negli ideali della Rivoluzione fino all\'ultima conseguenza. E fu quella fede assoluta a renderlo il più letale tra i rivoluzionari: mandò alla ghigliottina migliaia di persone in nome della virtù. Dieci mesi dopo, ci finì anche lui.' } ],
+    [ { name: 'Nikola Tesla',           dates: '1856–1943',
+        role: 'Vedeva i fulmini nella mente prima ancora di scriverli sulla carta. Tesla immaginò la trasmissione wireless dell\'energia, la radio, il motore a corrente alternata che alimenta ancora oggi il mondo intero — e morì solo, in una stanza d\'albergo, circondato da piccioni. La storia lo ha ignorato per decenni. La storia aveva torto.' },
+      { name: 'Charles Darwin',         dates: '1809–1882',
+        role: 'Per vent\'anni tenne chiuso nel cassetto il manoscritto che avrebbe distrutto certezze millenarie. Darwin sapeva cosa stava per fare: togliere all\'umanità il trono della creazione, metterla tra gli animali, sulla stessa linea evolutiva di ogni altra forma di vita. Quando pubblicò L\'Origine delle Specie, il mondo non fu mai più lo stesso.' },
+      { name: 'Thomas Edison',          dates: '1847–1931',
+        role: 'Fallì diecimila volte prima di accendere una lampadina. Non era il più brillante — Tesla lo era di più. Ma Edison aveva qualcosa di raro: la determinazione assoluta di trasformare ogni idea in un prodotto, ogni sogno in un brevetto. Inventò il fonografo, il cinema, i laboratori di ricerca industriale. Costruì l\'era moderna mattone per mattone.' } ],
+  ];
+  const eoEpochLabels = ['Rinascimento · 1500', "Età d'Oro Pirateria · 1600", 'Rivoluzione Americana · 1700', 'Rivoluzione Francese · 1800', 'Rivoluzione Industriale · 1900'];
 
-  /* Pannello DESTRA — descrizione personaggio + bottoni */
-  const charDetailEl = document.createElement('div');
-  charDetailEl.innerHTML = `<div class="sc-panel" style="width:360px; position:relative;">
-    <button id="charCloseBtn" class="payment-close" style="position: absolute; right: 10px; top: 10px; z-index: 1000; cursor: pointer; pointer-events: auto; background: transparent; border: none; font-size: 28px; color: #0ff; line-height: 1; padding: 5px;">&times;</button>
-    <div class="sc-panel-tag">PROFILO STORICO</div>
-    <div class="sc-epoch" id="charName" style="margin-bottom:4px;">Seleziona un personaggio</div>
-    <div style="font-size:10px;letter-spacing:.18em;color:rgba(0,255,255,.55);margin-bottom:8px;" id="charDates"></div>
-    <div class="sc-divider"></div>
-    <div id="charRole" style="color:rgba(200,240,255,.82);font-size:15px;line-height:1.65;margin:8px 0 12px;font-family:Rajdhani,sans-serif;">—</div>
-    <div class="sc-actions" id="charActions" style="display:none;">
-      <button class="sc-btn-confirm" id="charConfirmBtn">INIZIA ESPERIENZA</button>
+  // Build overlay DOM
+  const eoEl = document.createElement('div');
+  eoEl.id = 'epochOverlay';
+  eoEl.className = 'hidden';
+  const eoToday = new Date().toISOString().split('T')[0];
+  eoEl.innerHTML = `
+    <div class="eo-topbar">
+      <button class="eo-back-btn" id="eoBackBtn">&#8249;</button>
+      <div class="eo-tabs">
+        <button class="eo-tab eo-active" data-tab="character">PERSONAGGIO</button>
+        <button class="eo-tab" data-tab="customize">PERSONALIZZAZIONE</button>
+        <button class="eo-tab" data-tab="date">DATA</button>
+      </div>
+      <div class="eo-topbar-right">
+        <button class="eo-icon-btn">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>
+        </button>
+        <button class="eo-icon-btn" id="eoCartBtn">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="sc-confirm-msg" id="charConfirmMsg" style="display:none">⬡ ESPERIENZA AGGIUNTA AL CARRELLO</div>
-  </div>`;
-  charDetailEl.style.cssText = 'opacity:0;transition:opacity .4s ease;pointer-events:none;';
-  document.getElementById('hud-container').appendChild(charDetailEl);
-  const charDetailCss = new THREE.CSS3DObject(charDetailEl);
-  charDetailCss.scale.setScalar(0.028);
-  charDetailCss.position.set(0, 1000, 0); // Sposta fuori schermo
-  scene.add(charDetailCss);
 
-  let charConfirmTimeout = null;
-  document.getElementById('charConfirmBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    document.getElementById('charConfirmBtn').disabled = true;
-    
-    // Avvia direttamente la sincronizzazione
-    playCinematicTransition();
-  });
+    <!-- PANELS TRACK (overflow hidden, pannelli in assoluto) -->
+    <div class="eo-panels-track" id="eoPanelsTrack">
 
-  document.getElementById('charCloseBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.audioEngine) window.audioEngine.playClick();
-    hideCharacterView(true);
-  });
+    <!-- TAB: PERSONAGGIO -->
+    <div class="eo-content" id="eoTabCharacter">
+      <div class="eo-left" id="eoLeft"></div>
+      <div class="eo-center" id="eoCenter">
+        <div class="eo-center-label">ANIMUS PREVIEW</div>
+        <div class="eo-center-empty" id="eoCenterEmpty">Seleziona un personaggio</div>
+        <div class="eo-center-name" id="eoCenterName" style="display:none;"></div>
+      </div>
+      <div class="eo-right" id="eoRight">
+        <div class="eo-right-tag">PROFILO STORICO</div>
+        <div class="eo-right-epoch" id="eoRightEpoch">—</div>
+        <div class="eo-right-role" id="eoRightRole" style="display:none;"></div>
+        <div class="eo-right-placeholder" id="eoRightPlaceholder">Seleziona un personaggio dalla lista</div>
+        <button class="eo-right-btn" id="eoConfirmBtn">INIZIA ESPERIENZA</button>
+      </div>
+    </div>
 
-  function buildCharList(epochIdx) {
-    const chars  = historicalChars[epochIdx];
-    const label  = charEpochLabels[epochIdx];
-    const year   = tlNodeData[epochIdx].year;
-    const rows   = chars.map((ch, i) =>
-      `<div class="char-row" data-i="${i}" style="
-        padding:10px 8px;border-bottom:1px solid rgba(0,255,255,.10);
-        cursor:pointer;transition:background .15s,color .15s;border-radius:2px;">
-        <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:.04em;">${ch.name}</div>
-        <div style="font-size:9px;letter-spacing:.18em;color:rgba(0,255,255,.5);margin-top:2px;">${ch.dates}</div>
-      </div>`
-    ).join('');
-    charListEl.innerHTML = `<div class="sc-panel" style="width:300px;">
-      <div class="sc-panel-tag">PERSONAGGI — ${year}</div>
-      <div class="sc-epoch" style="margin-bottom:8px;">${label}</div>
-      <div class="sc-divider"></div>
-      ${rows}
-    </div>`;
-    charListEl.querySelectorAll('.char-row').forEach(row => {
-      const i = parseInt(row.dataset.i);
-      row.addEventListener('mouseenter', () => {
-        if (window.audioEngine) window.audioEngine.playHover();
-        if (selectedCharIdx !== i) row.style.background = 'rgba(0,255,255,.06)';
-        updateCharDetail(epochIdx, i, false);
-      });
-      row.addEventListener('mouseleave', () => { 
-        if (selectedCharIdx !== i) {
-          row.style.background = ''; 
-          if (selectedCharIdx !== -1) {
-            updateCharDetail(epochIdx, selectedCharIdx, true);
-          } else {
-            document.getElementById('charName').textContent = 'Seleziona un personaggio';
-            document.getElementById('charDates').textContent = '';
-            document.getElementById('charRole').textContent  = '—';
-            document.getElementById('charActions').style.display = 'none';
-          }
-        }
-      });
-      row.addEventListener('click', () => {
-        if (window.audioEngine) window.audioEngine.playClick();
-        selectedCharIdx = i;
-        charListEl.querySelectorAll('.char-row').forEach(r => {
-          r.style.background = '';
-        });
-        row.style.background = 'rgba(0,255,255,.15)';
-        updateCharDetail(epochIdx, i, true);
+    <!-- TAB: PERSONALIZZAZIONE -->
+    <div class="eo-content eo-customize-content" id="eoTabCustomize" style="display:none;">
+      <div class="eo-customize-panel">
+        <div class="eo-date-tag">⬡ ABSTERGO INDUSTRIES — CONFIGURAZIONE ANIMUS</div>
+        <div class="eo-date-title">PERSONALIZZA L'ESPERIENZA</div>
+        <div class="eo-date-divider"></div>
+
+        <div class="eo-cust-section">
+          <div class="eo-date-label">LIVELLO DI IMMERSIONE</div>
+          <div class="eo-cust-options" id="eoCustImmersion">
+            <button class="eo-cust-opt" data-val="osservatore">
+              <span class="eo-cust-opt-title">OSSERVATORE</span>
+              <span class="eo-cust-opt-desc">Guardi, non interferisci. Sicuro e distaccato.</span>
+            </button>
+            <button class="eo-cust-opt" data-val="partecipante">
+              <span class="eo-cust-opt-title">PARTECIPANTE</span>
+              <span class="eo-cust-opt-desc">Interagisci con l'ambiente e i personaggi.</span>
+            </button>
+            <button class="eo-cust-opt" data-val="totale">
+              <span class="eo-cust-opt-title">TOTALE</span>
+              <span class="eo-cust-opt-desc">Piena sincronizzazione genetica. Solo per esperti.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="eo-date-divider"></div>
+
+        <div class="eo-cust-section">
+          <div class="eo-date-label">DURATA SESSIONE</div>
+          <div class="eo-cust-options" id="eoCustDuration">
+            <button class="eo-cust-opt" data-val="1h"><span class="eo-cust-opt-title">1 ORA</span></button>
+            <button class="eo-cust-opt" data-val="2h"><span class="eo-cust-opt-title">2 ORE</span></button>
+            <button class="eo-cust-opt" data-val="3h"><span class="eo-cust-opt-title">3 ORE</span></button>
+          </div>
+        </div>
+
+        <div class="eo-date-divider"></div>
+
+        <div class="eo-cust-section" style="flex-direction:row;align-items:center;justify-content:space-between;">
+          <div>
+            <div class="eo-date-label">LINGUA NARRAZIONE</div>
+          </div>
+          <select id="eoCustLang" class="eo-date-input" style="width:200px;">
+            <option value="it">Italiano</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB: DATA -->
+    <div class="eo-content eo-date-content" id="eoTabDate" style="display:none;">
+      <div class="eo-date-panel">
+        <div class="eo-date-tag">⬡ ABSTERGO INDUSTRIES — PRENOTAZIONE</div>
+        <div class="eo-date-title" id="eoDateTitle">PIANIFICA LA TUA ESPERIENZA</div>
+        <div class="eo-date-divider"></div>
+
+        <div class="eo-date-fields">
+          <div class="eo-date-field">
+            <label class="eo-date-label">DATA</label>
+            <input type="date" id="eoDate" class="eo-date-input" min="${eoToday}" value="${eoToday}">
+          </div>
+          <div class="eo-date-field">
+            <label class="eo-date-label">ORARIO</label>
+            <select id="eoTime" class="eo-date-input">
+              <option value="">— Seleziona —</option>
+              <option>09:00</option><option>10:00</option><option>11:00</option>
+              <option>12:00</option><option>14:00</option><option>15:00</option>
+              <option>16:00</option><option>17:00</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="eo-date-field" style="margin-top:8px;">
+          <label class="eo-date-label">SEDE ABSTERGO</label>
+          <select id="eoLocation" class="eo-date-input">
+            <option value="">— Seleziona una sede —</option>
+            <option>Milano — Torre Abstergo, Via della Scienza 1</option>
+            <option>Roma — Complesso EUR, Viale dell'Impero 42</option>
+            <option>Firenze — Palazzo Animus, Piazza della Repubblica 8</option>
+            <option>Venezia — Centro Genetico, Fondamenta dei Ricordi 3</option>
+            <option>Napoli — Hub Meridionale, Via del Futuro 17</option>
+          </select>
+        </div>
+
+        <div class="eo-date-divider" style="margin-top:28px;"></div>
+
+        <div class="eo-date-summary" id="eoDateSummary" style="display:none;">
+          <div class="eo-date-summary-row"><span>PERSONAGGIO</span><span id="eoSumChar">—</span></div>
+          <div class="eo-date-summary-row"><span>EPOCA</span><span id="eoSumEpoch">—</span></div>
+          <div class="eo-date-summary-row"><span>DATA</span><span id="eoSumDate">—</span></div>
+          <div class="eo-date-summary-row"><span>ORARIO</span><span id="eoSumTime">—</span></div>
+          <div class="eo-date-summary-row"><span>SEDE</span><span id="eoSumLoc">—</span></div>
+        </div>
+
+        <button class="eo-date-cart-btn" id="eoDateCartBtn" disabled>
+          &#43; AGGIUNGI AL CARRELLO
+        </button>
+        <div class="eo-date-confirm-msg" id="eoDateConfirmMsg" style="display:none;">⬡ AGGIUNTO AL CARRELLO</div>
+      </div>
+    </div>
+
+    </div><!-- /eo-panels-track -->`;
+  document.body.appendChild(eoEl);
+
+  let eoEpochIdx     = -1;
+  let eoSelectedChar = -1;
+  let eoActiveTab    = 'character';
+  let eoIsSliding    = false;
+  const eoTabOrder   = ['character', 'customize', 'date'];
+  const eoTabElId    = { character: 'eoTabCharacter', customize: 'eoTabCustomize', date: 'eoTabDate' };
+  const eoReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function eoSlideTab(toTab) {
+    if (eoIsSliding || toTab === eoActiveTab) return;
+    const fromTab = eoActiveTab;
+    const fromIdx = eoTabOrder.indexOf(fromTab);
+    const toIdx   = eoTabOrder.indexOf(toTab);
+    const dir     = toIdx > fromIdx ? 'forward' : 'back';
+    const fromEl  = document.getElementById(eoTabElId[fromTab]);
+    const toEl    = document.getElementById(eoTabElId[toTab]);
+
+    eoEl.querySelectorAll('.eo-tab').forEach(b => b.classList.toggle('eo-active', b.dataset.tab === toTab));
+
+    if (eoReduceMotion) {
+      fromEl.style.display = 'none';
+      toEl.style.display = '';
+      eoActiveTab = toTab;
+      if (toTab === 'date') eoUpdateDateSummary();
+      return;
+    }
+
+    eoIsSliding = true;
+    const track = document.getElementById('eoPanelsTrack');
+    track.style.pointerEvents = 'none';
+
+    const outX = dir === 'forward' ? '-100%' : '100%';
+    const inX  = dir === 'forward' ? '100%'  : '-100%';
+    const dur  = 580;
+    const ease = 'cubic-bezier(0.65, 0, 0.35, 1)';
+
+    toEl.style.transition  = '';
+    toEl.style.transform   = `translateX(${inX})`;
+    toEl.style.opacity     = '0.5';
+    toEl.style.filter      = 'blur(3px)';
+    toEl.style.display     = '';
+    toEl.style.willChange  = 'transform, opacity, filter';
+    fromEl.style.willChange = 'transform, opacity, filter';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const t = `${dur}ms ${ease}`;
+        fromEl.style.transition = `transform ${t}, opacity ${dur}ms ease, filter ${dur}ms ease`;
+        toEl.style.transition   = `transform ${t}, opacity ${dur}ms ease, filter ${dur}ms ease`;
+        fromEl.style.transform  = `translateX(${outX})`;
+        fromEl.style.opacity    = '0';
+        fromEl.style.filter     = 'blur(4px)';
+        toEl.style.transform    = 'translateX(0)';
+        toEl.style.opacity      = '1';
+        toEl.style.filter       = 'blur(0px)';
+
+        setTimeout(() => {
+          fromEl.style.display = 'none';
+          [fromEl, toEl].forEach(el => {
+            el.style.transition = '';
+            el.style.transform  = '';
+            el.style.opacity    = '';
+            el.style.filter     = '';
+            el.style.willChange = '';
+          });
+          track.style.pointerEvents = '';
+          eoIsSliding = false;
+          eoActiveTab = toTab;
+          if (toTab === 'date') eoUpdateDateSummary();
+        }, dur + 30);
       });
     });
   }
 
-  function updateCharDetail(epochIdx, charIdx, confirm) {
-    const ch = historicalChars[epochIdx][charIdx];
-    document.getElementById('charName').textContent  = ch.name;
-    document.getElementById('charDates').textContent = ch.dates;
-    document.getElementById('charRole').textContent  = ch.role;
-    document.getElementById('charActions').style.display = confirm ? 'flex' : 'none';
-    if (confirm) {
-      document.getElementById('charConfirmBtn').disabled = false;
-      document.getElementById('charConfirmMsg').style.display = 'none';
+  function eoUpdateDateSummary() {
+    const date = document.getElementById('eoDate').value;
+    const time = document.getElementById('eoTime').value;
+    const loc  = document.getElementById('eoLocation').value;
+    const ch   = eoSelectedChar !== -1 ? eoChars[eoEpochIdx][eoSelectedChar] : null;
+    const btn  = document.getElementById('eoDateCartBtn');
+    const ready = date && time && loc;
+    btn.disabled = !ready;
+
+    if (ch && ready) {
+      document.getElementById('eoDateSummary').style.display = '';
+      document.getElementById('eoSumChar').textContent  = ch.name;
+      document.getElementById('eoSumEpoch').textContent = eoEpochLabels[eoEpochIdx];
+      document.getElementById('eoSumDate').textContent  = date;
+      document.getElementById('eoSumTime').textContent  = time;
+      document.getElementById('eoSumLoc').textContent   = loc.split('—')[0].trim();
+    } else {
+      document.getElementById('eoDateSummary').style.display = 'none';
     }
   }
 
-  function showCharacterView(epochIdx) {
+  // Personalizzazione option buttons
+  ['eoCustImmersion','eoCustDuration'].forEach(groupId => {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    group.querySelectorAll('.eo-cust-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.audioEngine) window.audioEngine.playClick();
+        group.querySelectorAll('.eo-cust-opt').forEach(b => b.classList.remove('eo-cust-selected'));
+        btn.classList.add('eo-cust-selected');
+      });
+      btn.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
+    });
+  });
+
+  // Tab click
+  eoEl.querySelectorAll('.eo-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.audioEngine) window.audioEngine.playClick();
+      eoSlideTab(btn.dataset.tab);
+    });
+  });
+
+  // Date field change → update summary + btn state
+  ['eoDate','eoTime','eoLocation'].forEach(id => {
+    document.getElementById(id).addEventListener('change', eoUpdateDateSummary);
+  });
+
+  // Cart button
+  document.getElementById('eoDateCartBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    document.getElementById('eoDateCartBtn').style.display = 'none';
+    document.getElementById('eoDateConfirmMsg').style.display = '';
+    setTimeout(() => {
+      hideEpochOverlay();
+      playCinematicTransition();
+    }, 1400);
+  });
+
+  function showEpochOverlay(epochIdx) {
+    eoEpochIdx = epochIdx;
+    eoSelectedChar = -1;
     charViewEpoch = epochIdx;
-    buildCharList(epochIdx);
+    eoActiveTab = 'character';
 
-    const r   = gridRadius - 2.5;
-    const margin = 0.32;
-    /* phi < thetaCenter → x negativo → sinistra; phi > thetaCenter → x positivo → destra */
-    const phiNames = thetaCenter - margin; /* sinistra */
-    const phiDesc  = thetaCenter + margin; /* destra  */
-    charListCss.position.set(Math.cos(phiNames)*r, 0, Math.sin(phiNames)*r + 5);
-    charListCss.lookAt(0, 0, 18);
-    charDetailCss.position.set(Math.cos(phiDesc)*r, 0, Math.sin(phiDesc)*r + 5);
-    charDetailCss.lookAt(0, 0, 18);
+    // Reset character tab
+    document.getElementById('eoCenterEmpty').style.display = '';
+    document.getElementById('eoCenterName').style.display = 'none';
+    document.getElementById('eoRightRole').style.display = 'none';
+    document.getElementById('eoRightPlaceholder').style.display = '';
+    document.getElementById('eoConfirmBtn').style.display = 'none';
+    document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
-    /* Reset dettaglio */
-    selectedCharIdx = -1;
-    document.getElementById('charName').textContent = 'Seleziona un personaggio';
-    document.getElementById('charDates').textContent = '';
-    document.getElementById('charRole').textContent  = '—';
-    document.getElementById('charActions').style.display = 'none';
-    document.getElementById('charConfirmMsg').style.display = 'none';
+    // Reset date tab
+    document.getElementById('eoTime').value = '';
+    document.getElementById('eoLocation').value = '';
+    document.getElementById('eoDate').value = eoToday;
+    document.getElementById('eoDateCartBtn').style.display = '';
+    document.getElementById('eoDateCartBtn').disabled = true;
+    document.getElementById('eoDateConfirmMsg').style.display = 'none';
+    document.getElementById('eoDateSummary').style.display = 'none';
 
-    charListEl.style.opacity   = '1'; charListEl.style.pointerEvents   = 'auto';
-    charDetailEl.style.opacity = '1'; charDetailEl.style.pointerEvents = 'auto';
-    dnaBackArrow.style.display = 'block';
+    // Switch to character tab
+    eoSlideTab('character');
+
+    // Build character cards
+    const left = document.getElementById('eoLeft');
+    left.innerHTML = '';
+    eoChars[epochIdx].forEach((ch, i) => {
+      const card = document.createElement('div');
+      card.className = 'eo-char-card';
+      card.innerHTML = `<div class="eo-card-num">0${i+1}</div>
+        <div class="eo-card-info">
+          <div class="eo-card-name">${ch.name}</div>
+          <div class="eo-card-dates">${ch.dates}</div>
+        </div>`;
+      card.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
+      card.addEventListener('click', () => {
+        if (window.audioEngine) window.audioEngine.playClick();
+        eoSelectedChar = i;
+        left.querySelectorAll('.eo-char-card').forEach(c => c.classList.remove('eo-selected'));
+        card.classList.add('eo-selected');
+        document.getElementById('eoCenterEmpty').style.display = 'none';
+        document.getElementById('eoCenterName').style.display = '';
+        document.getElementById('eoCenterName').textContent = ch.name;
+        document.getElementById('eoRightRole').style.display = '';
+        document.getElementById('eoRightRole').textContent = ch.role;
+        document.getElementById('eoRightPlaceholder').style.display = 'none';
+        document.getElementById('eoConfirmBtn').style.display = '';
+      });
+      left.appendChild(card);
+    });
+
+    eoEl.classList.remove('hidden');
+    requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
+    dnaBackArrow.style.display = 'none';
   }
 
-  function hideCharacterView(returnToTimeline = true) {
-    if (charConfirmTimeout) {
-      clearTimeout(charConfirmTimeout);
-      charConfirmTimeout = null;
-    }
-    charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
-    charDetailEl.style.opacity = '0'; charDetailEl.style.pointerEvents = 'none';
-    charListCss.position.set(0, 1000, 0);
-    charDetailCss.position.set(0, 1000, 0);
+  function hideEpochOverlay() {
+    eoEl.classList.remove('eo-visible');
     charViewEpoch = -1;
-    if (returnToTimeline) showTimelineView();
+    eoEpochIdx = -1;
+    setTimeout(() => eoEl.classList.add('hidden'), 350);
   }
+
+  document.getElementById('eoBackBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideEpochOverlay();
+    showTimelineView();
+  });
+
+  document.getElementById('eoConfirmBtn').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    hideEpochOverlay();
+    playCinematicTransition();
+  });
 
   // Click + hover sui nodi
   tlNodeEls.forEach((el, s) => {
-    el.addEventListener('mouseenter', () => { 
+    el.addEventListener('mouseenter', () => {
       if (window.audioEngine) window.audioEngine.playHover();
-      tlDnaHovers[s] = true; 
+      tlDnaHovers[s] = true;
     });
     el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
     el.addEventListener('pointerdown', () => {
       if (window.audioEngine) window.audioEngine.playClick();
-      hideTimelineElements(); /* nasconde solo la timeline, NON ripristina i pannelli */
-      showCharacterView(s);
+      hideTimelineElements();
+      showEpochOverlay(s);
     });
   });
 
@@ -2083,30 +2296,6 @@
     panelR.classList.remove('hidden-panel');
   }
 
-  // ── SHOWCASE BOOKING CINEMATICO ──
-  const geneData = [
-    { year: '1500', epoch: 'Rinascimento',
-      price: '€ 480', duration: '2 ORE',
-      tagline: 'Arte, potere e cospirazioni.',
-      desc: 'Un\'epoca di straordinario fervore intellettuale e artistico, in cui le grandi famiglie si contendono il controllo degli stati attraverso alleanze, tradimenti e veleni. Sotto la superficie del rinnovamento culturale, antiche fratellanze segrete muovono le loro pedine per destinare il futuro dell\'umanità.' },
-    { year: '1600', epoch: "Età d'Oro della Pirateria",
-      price: '€ 390', duration: '2 ORE',
-      tagline: 'Libertà, rischio e mare aperto.',
-      desc: 'Le grandi potenze coloniali si contendono le rotte commerciali mentre uomini e donne fuggono dalle leggi del vecchio mondo per costruirsi un destino sui mari. Un\'epoca di esplorazione senza confini, dove la libertà assoluta ha sempre un prezzo altissimo.' },
-    { year: '1700', epoch: 'Rivoluzione Americana',
-      price: '€ 430', duration: '2 ORE',
-      tagline: 'Indipendenza contro il vecchio ordine.',
-      desc: 'Per la prima volta nella storia moderna, un popolo insorge contro un impero e si dà le proprie leggi. Tra ideali illuministi e battaglie sanguinose, si gettano le basi di un nuovo sistema politico mentre forze nell\'ombra cercano di piegare la rivoluzione ai propri scopi.' },
-    { year: '1800', epoch: 'Rivoluzione Francese',
-      price: '€ 450', duration: '2 ORE',
-      tagline: 'Il vecchio mondo crolla sotto i piedi.',
-      desc: 'La monarchia cede al furore popolare, le istituzioni millenarie vengono spazzate via nel giro di mesi. È un\'era di trasformazione violenta e radicale, in cui gli ideali di libertà e uguaglianza si scontrano con la brutalità del potere e con chi vuole usare il caos per imporsi sulle macerie.' },
-    { year: '1900', epoch: 'Rivoluzione Industriale',
-      price: '€ 360', duration: '2 ORE',
-      tagline: 'Il progresso trasforma ogni cosa.',
-      desc: 'Macchine a vapore, fabbriche fumanti e milioni di persone che abbandonano le campagne per le città. Il mondo si trasforma a una velocità mai vista prima. Mentre la tecnologia promette benessere, le disparità sociali si acuiscono e movimenti operai sfidano chi detiene il controllo sui mezzi di produzione.' },
-  ];
-  const today = new Date().toISOString().split('T')[0];
 
   let bookingPhase      = 'idle'; // 'idle'|'extracting'|'showcasing'|'retracting'
   let bookingAnimT      = 0;
@@ -2124,143 +2313,23 @@
 
   // (showcase group rimosso — il gene si evidenzia in place)
 
-  // ── Pannello sinistro: data/orario ──
-  const scLeftEl = document.createElement('div');
-  scLeftEl.innerHTML = `<div class="sc-panel" style="position:relative;">
-    <button id="scCloseBtn" class="payment-close" style="position: absolute; right: 10px; top: 10px; z-index: 1000; cursor: pointer; pointer-events: auto; background: transparent; border: none; font-size: 28px; color: #0ff; line-height: 1; padding: 5px;">&times;</button>
-    <div class="sc-panel-tag">ACCESSO GENETICO</div>
-    <div class="sc-epoch" id="scEpoch">—</div>
-    <div id="scTagline" style="color:rgba(0,220,255,0.75);font-size:18px;font-family:'Rajdhani',sans-serif;letter-spacing:0.06em;margin:4px 0 8px;">—</div>
-    <div class="sc-divider"></div>
-    <div style="display:flex;gap:24px;">
-      <div class="sc-spec-row" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;">
-        <span class="sc-spec-label">Durata</span><span class="sc-spec-value" id="scDuration">—</span>
-      </div>
-      <div class="sc-spec-row" style="flex:1;flex-direction:column;align-items:flex-start;gap:2px;">
-        <span class="sc-spec-label">Costo</span><span class="sc-spec-value sc-price" id="scPrice">—</span>
-      </div>
-    </div>
-    <div class="sc-divider"></div>
-    <div style="display:flex;gap:10px;">
-      <div class="sc-field" style="flex:1;margin-bottom:0;">
-        <label class="sc-label">Data</label>
-        <input type="date" id="scDate" class="sc-input" value="${today}" min="${today}">
-      </div>
-      <div class="sc-field" style="flex:1;margin-bottom:0;">
-        <label class="sc-label">Orario</label>
-        <select id="scTime" class="sc-input">
-          <option>09:00</option><option>10:00</option><option>11:00</option>
-          <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
-        </select>
-      </div>
-    </div>
-    <div class="sc-actions" style="margin-top:10px;">
-      <button class="sc-btn-confirm" id="scConfirmBtn">PRENOTA</button>
-    </div>
-    <div class="sc-confirm-msg" id="scConfirmMsg" style="display:none">⬡ PRENOTAZIONE CONFERMATA</div>
-  </div>`;
-  scLeftEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
-  document.getElementById('hud-container').appendChild(scLeftEl);
-  const scLeftCss = new THREE.CSS3DObject(scLeftEl);
-  scLeftCss.position.set(-12, 0, -8);
-  scLeftCss.lookAt(0, 0, 18);
-  scLeftCss.scale.setScalar(0.028);
-  scene.add(scLeftCss);
-
-  // ── Pannello destro: descrizione ambientazione epoca ──
-  const scRightEl = document.createElement('div');
-  scRightEl.innerHTML = `<div class="sc-panel">
-    <div class="sc-panel-tag">AMBIENTAZIONE</div>
-    <div class="sc-epoch" id="scEpochRight" style="margin-bottom:14px;">—</div>
-    <div class="sc-divider"></div>
-    <div id="scDescRight" style="color:rgba(200,240,255,0.88);font-size:24px;line-height:1.75;font-family:'Rajdhani',sans-serif;font-weight:400;letter-spacing:0.02em;">—</div>
-  </div>`;
-  scRightEl.style.cssText = 'opacity:0;transition:opacity 0.6s ease;pointer-events:none;';
-  document.getElementById('hud-container').appendChild(scRightEl);
-  const scRightCss = new THREE.CSS3DObject(scRightEl);
-  scRightCss.position.set(12, 0, -8);
-  scRightCss.lookAt(0, 0, 18);
-  scRightCss.scale.setScalar(0.028);
-  scene.add(scRightCss);
+  // Pannelli gene rimossi — stub per evitare errori di riferimento
+  const scLeftEl  = { style: { opacity: '0', pointerEvents: 'none' } };
+  const scRightEl = { style: { opacity: '0', pointerEvents: 'none' } };
+  const scLeftCss  = { position: new THREE.Vector3() };
+  const scRightCss = { position: new THREE.Vector3() };
+  // Elementi fittizi per i listener esistenti
+  const _scStub = document.createElement('div');
+  _scStub.innerHTML = '<button id="scCloseBtn"></button><button id="scConfirmBtn"></button><div id="scConfirmMsg"></div><div id="scEpoch"></div><div id="scTagline"></div><div id="scPrice"></div><div id="scDuration"></div><input id="scDate"><select id="scTime"></select><div id="scEpochRight"></div><div id="scDescRight"></div>';
+  _scStub.style.display = 'none';
+  document.body.appendChild(_scStub);
 
 
 
-  function showGeneInfo(s) {
-    selectedDnaGene = s;
-    canvas.style.pointerEvents = 'none';
-    const g = geneData[s];
-    document.getElementById('scEpoch').textContent    = `${g.epoch.toUpperCase()} · ${g.year}`;
-    document.getElementById('scTagline').textContent  = g.tagline;
-    document.getElementById('scPrice').textContent      = g.price;
-    document.getElementById('scDuration').textContent   = g.duration;
-    document.getElementById('scEpochRight').textContent = g.epoch.toUpperCase();
-    document.getElementById('scDescRight').textContent  = g.desc;
-    document.getElementById('scConfirmBtn').disabled    = false;
-    document.getElementById('scConfirmMsg').style.display = 'none';
-    document.getElementById('scDate').value = today;
-
-    /* Hide DNA group so the interface is clean */
-    dnaGroup.visible = false;
-
-    /* Pannelli centrati sulla superficie interna del display curvo. */
-    const r        = gridRadius - 2.5;
-    const gY       = 0; // Centered vertically
-
-    /* Centered panels around thetaCenter */
-    const margin = 0.35; // Spacing from center
-    const phiL = thetaCenter + margin;
-    const phiR = thetaCenter - margin;
-
-    scLeftCss.position.set(Math.cos(phiL) * r, gY, Math.sin(phiL) * r + 5);
-    scLeftCss.lookAt(0, gY, 18);
-    scRightCss.position.set(Math.cos(phiR) * r, gY, Math.sin(phiR) * r + 5);
-    scRightCss.lookAt(0, gY, 18);
-
-    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
-    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    dnaGuideTimeouts.forEach(t => clearTimeout(t));
-    dnaGuideTimeouts = [];
-    dnaGuideEls.forEach(el => { el.style.opacity = '0'; el.style.display = 'none'; });
-    dnaLabelEls.forEach(el => { el.style.opacity = '0'; el.classList.remove('hovered'); });
-  }
-  function hideGeneInfo() {
-    if (typeof scConfirmTimeout !== 'undefined' && scConfirmTimeout) {
-      clearTimeout(scConfirmTimeout);
-      scConfirmTimeout = null;
-    }
-    selectedDnaGene = -1;
-    lastHoveredGene = -1;
-    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
-    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-
-    /* Restore DNA visibility */
-    dnaGroup.visible = true;
-
-    allDnaSpheres.forEach(sp => sp.scale.setScalar(1));
-    dnaGuideEls.forEach(el => { el.style.display = ''; el.style.opacity = '1'; });
-  }
+  function showGeneInfo(s) { /* rimosso */ }
+  function hideGeneInfo() { selectedDnaGene = -1; }
 
   let scConfirmTimeout = null;
-  document.getElementById('scConfirmBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    document.getElementById('scConfirmBtn').disabled = true;
-
-    const gene = geneData[selectedDnaGene];
-    if (gene) {
-      // Avvia direttamente la sincronizzazione
-      playCinematicTransition();
-    }
-
-  });
-
-  document.getElementById('scCloseBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.audioEngine) window.audioEngine.playClick();
-    // Nasconde solo i pannelli prenotazione; l'overlay HUD rimane visibile
-    scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
-    scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    hideGeneInfo();
-  });
 
   /* ── Click globale su WINDOW — funziona ovunque, anche su CSS3D ── */
 
@@ -2366,7 +2435,6 @@
             e.stopPropagation();
             e.preventDefault();
             if (window.audioEngine) window.audioEngine.playClick();
-            showGeneInfo(s);
             return;
           }
         }
@@ -2395,7 +2463,6 @@
         e.stopPropagation();
         e.preventDefault();
         if (window.audioEngine) window.audioEngine.playClick();
-        showGeneInfo(closestGene);
         return;
       }
     }
@@ -2404,11 +2471,7 @@
   // Freccia indietro: gestisce showcase, DNA, timeline e carrello
   dnaBackArrow.addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
-    if (selectedDnaGene !== -1) {
-      hideGeneInfo();
-    } else if (charViewEpoch !== -1) {
-      hideCharacterView();
-    } else if (tlArcLine && tlArcLine.visible) {
+    if (tlArcLine && tlArcLine.visible) {
       hideTimelineView();
     } else if (cartViewActive) {
       hideCartView();
@@ -2870,15 +2933,7 @@
     }
 
     // Chiude qualsiasi interfaccia che potrebbe essere aperta dietro e ne salva lo stato
-    if (typeof selectedDnaGene !== 'undefined' && selectedDnaGene !== -1) {
-      cartPreviousState = 'gene';
-      cartPreviousGene = selectedDnaGene;
-      hideGeneInfo();
-    } else if (typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) {
-      cartPreviousState = 'character';
-      cartPreviousEpoch = charViewEpoch;
-      hideCharacterView(false);
-    } else if (typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) {
+    if (typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) {
       cartPreviousState = 'timeline';
       hideTimelineView();
     } else if (typeof dnaGroup !== 'undefined' && dnaGroup && dnaGroup.visible) {
@@ -2917,9 +2972,6 @@
     // Restore previous state
     if (cartPreviousState === 'gene') {
       showDNAView();
-      showGeneInfo(cartPreviousGene);
-    } else if (cartPreviousState === 'character') {
-      showCharacterView(cartPreviousEpoch);
     } else if (cartPreviousState === 'timeline') {
       showTimelineView();
     } else if (cartPreviousState === 'dna') {
@@ -3348,8 +3400,8 @@
     // Forza la chiusura di eventuali viste WebGL rimaste in sottofondo
     if (typeof hideTimelineView === 'function' && typeof tlArcLine !== 'undefined' && tlArcLine && tlArcLine.visible) hideTimelineView();
     if (typeof hideDNAView === 'function' && typeof dnaGroup !== 'undefined' && dnaGroup && dnaGroup.visible) hideDNAView();
-    if (typeof hideGeneInfo === 'function' && selectedDnaGene !== -1) hideGeneInfo();
-    if (typeof hideCharacterView === 'function' && typeof charViewEpoch !== 'undefined' && charViewEpoch !== -1) hideCharacterView(false);
+
+
     
     // Ripristina ESATTAMENTE il Main Menu (solo panelL e panelR)
     const panelL = document.getElementById('panelL');
@@ -3446,11 +3498,6 @@
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
 
-    // Nascondi pannelli personaggio
-    charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
-    charDetailEl.style.opacity = '0'; charDetailEl.style.pointerEvents = 'none';
-    charListCss.position.set(0, 1000, 0);
-    charDetailCss.position.set(0, 1000, 0);
     charViewEpoch = -1;
 
     // Nascondi DNA

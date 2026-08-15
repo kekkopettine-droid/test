@@ -1474,3 +1474,453 @@ body {
 .timeline-bg-container.hidden {
   opacity: 0;
 }
+
+/* ── EPOCH OVERLAY (flat fixed UI su click data) ── */
+#epochOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#epochOverlay.eo-visible { opacity: 1; }
+#epochOverlay.hidden { display: none !important; }
+
+/* ── top bar ── */
+.eo-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 18px 28px 0 18px;
+  flex-shrink: 0;
+}
+.eo-back-btn {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .2s, background .2s;
+  flex-shrink: 0;
+}
+.eo-back-btn:hover { background: rgba(255,255,255,.08); border-color: #fff; }
+
+.eo-tabs {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.eo-tab {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 6px 0 10px;
+  margin-right: 48px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.25);
+  transition: color .2s;
+  white-space: nowrap;
+}
+.eo-tab.eo-active {
+  color: #fff;
+  font-weight: 700;
+  border-bottom-color: #fff;
+}
+.eo-tab:hover { color: rgba(255,255,255,0.75); }
+
+.eo-topbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto;
+}
+.eo-icon-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.45);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, border-color .2s;
+}
+.eo-icon-btn:hover { background: rgba(255,255,255,.08); border-color: #fff; }
+.eo-icon-btn svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── main content ── */
+.eo-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 28px 40px 40px 28px;
+  min-height: 0;
+}
+
+/* ── left column: 3 cards ── */
+.eo-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex-shrink: 0;
+  margin-left: 60px;
+}
+.eo-char-card {
+  width: 250px;
+  height: 96px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(0,0,0,0.82);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  gap: 14px;
+  transition: border-color .25s, background .25s, transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
+  position: relative;
+  transform-origin: left center;
+}
+.eo-char-card::before {
+  content: ''; position: absolute;
+  top: -1px; left: -1px; width: 10px; height: 10px;
+  border-top: 1.5px solid rgba(255,255,255,0.6);
+  border-left: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-char-card::after {
+  content: ''; position: absolute;
+  bottom: -1px; right: -1px; width: 10px; height: 10px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.6);
+  border-right: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-char-card:hover {
+  border-color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.1);
+  transform: scaleX(1.22) scaleY(1.18);
+  box-shadow: 0 0 36px rgba(255,255,255,0.3), inset 0 0 22px rgba(255,255,255,0.09);
+}
+.eo-char-card.eo-selected {
+  border-color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.1);
+}
+.eo-card-num {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: rgba(255,255,255,0.35);
+  flex-shrink: 0; width: 24px;
+}
+.eo-card-info { flex: 1; min-width: 0; }
+.eo-card-name {
+  font-size: 14px; font-weight: 700; letter-spacing: .04em;
+  color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.eo-card-dates {
+  font-size: 10px; letter-spacing: .12em; color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+
+/* ── center panel ── */
+.eo-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 28px;
+  bottom: 40px;
+  width: 340px;
+  background: rgba(220,230,240,0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  min-height: 340px;
+}
+.eo-center-label {
+  position: absolute;
+  top: 18px; left: 18px;
+  font-size: 9px; font-weight: 700; letter-spacing: .22em;
+  color: rgba(0,0,0,0.35); text-transform: uppercase;
+}
+.eo-center-name {
+  width: 100%; padding: 22px 20px 18px;
+  background: rgba(0,0,0,0.55);
+  font-size: 22px; font-weight: 700; letter-spacing: .06em;
+  color: #fff; text-align: center;
+  text-shadow: 0 0 20px rgba(0,200,255,0.6);
+}
+.eo-center-empty {
+  font-size: 12px; letter-spacing: .2em; color: rgba(0,0,0,0.3);
+  text-transform: uppercase; margin-bottom: 60px;
+}
+
+/* ── right panel ── */
+.eo-right {
+  width: 300px;
+  flex-shrink: 0;
+  align-self: stretch;
+  margin-left: auto;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow-y: auto;
+}
+.eo-right::before {
+  content: ''; position: absolute;
+  top: -1px; left: -1px; width: 14px; height: 14px;
+  border-top: 1.5px solid rgba(255,255,255,0.5);
+  border-left: 1.5px solid rgba(255,255,255,0.5);
+}
+.eo-right::after {
+  content: ''; position: absolute;
+  bottom: -1px; right: -1px; width: 14px; height: 14px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.5);
+  border-right: 1.5px solid rgba(255,255,255,0.5);
+}
+.eo-right-tag {
+  font-size: 8px; font-weight: 700; letter-spacing: .3em;
+  color: rgba(255,255,255,0.35); text-transform: uppercase;
+  flex-shrink: 0;
+}
+.eo-right-epoch {
+  font-size: 18px; font-weight: 700; letter-spacing: .08em;
+  color: #fff; border-bottom: 1px solid rgba(255,255,255,0.14);
+  padding-bottom: 12px; flex-shrink: 0;
+  text-shadow: 0 0 18px rgba(255,255,255,0.3);
+}
+.eo-right-role {
+  font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.78);
+  font-weight: 400; font-family: 'Rajdhani', sans-serif;
+  letter-spacing: .02em; flex: 1; overflow-y: auto;
+}
+.eo-right-placeholder {
+  font-size: 11px; letter-spacing: .18em; color: rgba(255,255,255,0.22);
+  text-transform: uppercase; margin: auto 0; text-align: center;
+}
+.eo-right-btn {
+  margin-top: auto;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .22em;
+  padding: 12px 0; text-align: center;
+  cursor: pointer; text-transform: uppercase;
+  transition: background .2s, border-color .2s;
+  display: none;
+}
+.eo-right-btn:hover { background: rgba(255,255,255,.1); border-color: #fff; }
+
+/* ── DATE TAB ── */
+.eo-date-content {
+  justify-content: center;
+  align-items: center;
+}
+.eo-date-panel {
+  width: 520px;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 36px 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+}
+.eo-date-panel::before {
+  content: ''; position: absolute;
+  top: -1px; left: -1px; width: 16px; height: 16px;
+  border-top: 1.5px solid rgba(255,255,255,0.6);
+  border-left: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-date-panel::after {
+  content: ''; position: absolute;
+  bottom: -1px; right: -1px; width: 16px; height: 16px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.6);
+  border-right: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-date-tag {
+  font-size: 8px; font-weight: 700; letter-spacing: .28em;
+  color: rgba(255,255,255,0.35); text-transform: uppercase;
+}
+.eo-date-title {
+  font-size: 22px; font-weight: 700; letter-spacing: .1em;
+  color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.25);
+}
+.eo-date-divider {
+  height: 1px; background: rgba(255,255,255,0.12);
+}
+.eo-date-fields {
+  display: flex; gap: 20px;
+}
+.eo-date-field {
+  flex: 1; display: flex; flex-direction: column; gap: 7px;
+}
+.eo-date-label {
+  font-size: 8px; font-weight: 700; letter-spacing: .26em;
+  color: rgba(255,255,255,0.4); text-transform: uppercase;
+}
+.eo-date-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: .04em;
+  padding: 10px 12px; outline: none; cursor: pointer; width: 100%;
+  -webkit-appearance: none; appearance: none; color-scheme: dark;
+  transition: border-color .2s, box-shadow .2s;
+}
+.eo-date-input:focus { border-color: rgba(255,255,255,0.6); box-shadow: 0 0 12px rgba(255,255,255,0.1); }
+.eo-date-input option { background: #060c14; color: #fff; }
+
+.eo-date-summary {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px 0 4px;
+}
+.eo-date-summary-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'Rajdhani', sans-serif;
+}
+.eo-date-summary-row span:first-child {
+  font-size: 8px; font-weight: 700; letter-spacing: .22em;
+  color: rgba(255,255,255,0.35); text-transform: uppercase;
+}
+.eo-date-summary-row span:last-child {
+  font-size: 13px; font-weight: 600; letter-spacing: .04em; color: #fff;
+  text-align: right; max-width: 60%;
+}
+
+.eo-date-cart-btn {
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.55);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .24em;
+  padding: 14px 0; text-align: center; cursor: pointer;
+  text-transform: uppercase;
+  transition: background .2s, border-color .2s, box-shadow .2s;
+}
+.eo-date-cart-btn:not(:disabled):hover {
+  background: rgba(255,255,255,.1);
+  border-color: #fff;
+  box-shadow: 0 0 22px rgba(255,255,255,0.15);
+}
+.eo-date-cart-btn:disabled {
+  opacity: 0.3; cursor: not-allowed;
+}
+.eo-date-confirm-msg {
+  text-align: center; font-size: 10px; font-weight: 700;
+  letter-spacing: .24em; color: #fff;
+  text-shadow: 0 0 18px rgba(255,255,255,0.8);
+  animation: scConfirmPulse 1.5s infinite;
+}
+
+/* ── PANELS TRACK (slide container) ── */
+.eo-panels-track {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.eo-panels-track > .eo-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── PERSONALIZZAZIONE TAB ── */
+.eo-customize-content {
+  justify-content: center;
+  align-items: center;
+}
+.eo-customize-panel {
+  width: 560px;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 36px 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+.eo-customize-panel::before {
+  content: ''; position: absolute;
+  top: -1px; left: -1px; width: 16px; height: 16px;
+  border-top: 1.5px solid rgba(255,255,255,0.6);
+  border-left: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-customize-panel::after {
+  content: ''; position: absolute;
+  bottom: -1px; right: -1px; width: 16px; height: 16px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.6);
+  border-right: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-cust-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eo-cust-options {
+  display: flex;
+  gap: 12px;
+}
+.eo-cust-opt {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  padding: 14px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  position: relative;
+}
+.eo-cust-opt:hover {
+  border-color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.08);
+}
+.eo-cust-opt.eo-cust-selected {
+  border-color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 18px rgba(255,255,255,0.12);
+}
+.eo-cust-opt.eo-cust-selected::before {
+  content: '⬡';
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+}
+.eo-cust-opt-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.eo-cust-opt-desc {
+  font-size: 11px; color: rgba(255,255,255,0.5);
+  line-height: 1.4; font-weight: 400; letter-spacing: .02em;
+}
