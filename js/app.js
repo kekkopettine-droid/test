@@ -1317,7 +1317,6 @@
   }
   function hideTimelineView() {
     hideTimelineElements();
-    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
     panelL.classList.remove('hidden-panel');
     panelR.classList.remove('hidden-panel');
     
@@ -2184,159 +2183,6 @@
   scRightCss.scale.setScalar(0.028);
   scene.add(scRightCss);
 
-  // ── Dati memorie per epoca (pannello stile AC Nexus) ──
-  const geneMemories = [
-    { character: 'EZIO AUDITORE', subTitle: 'Rinascimento Italiano', entries: [
-        { year: '1476 CE', name: 'FIRENZE RESYNCED' },
-        { year: '1486 CE', name: 'VENEZIA RESYNCED' },
-        { year: '1499 CE', name: 'ROMA RESYNCED' },
-        { year: '1511 CE', name: 'COSTANTINOPOLI RESYNCED' },
-    ]},
-    { character: 'EDWARD KENWAY', subTitle: "Golden Age of Piracy", entries: [
-        { year: '1715 CE', name: 'BLACK FLAG RESYNCED' },
-        { year: '1735 CE', name: 'NASSAU RESYNCED' },
-        { year: '1754 CE', name: 'CARAIBI RESYNCED' },
-    ]},
-    { character: 'CONNOR KENWAY', subTitle: 'Rivoluzione Americana', entries: [
-        { year: '1754 CE', name: 'BOSTON RESYNCED' },
-        { year: '1768 CE', name: 'FRONTIERA RESYNCED' },
-        { year: '1781 CE', name: 'YORKTOWN RESYNCED' },
-    ]},
-    { character: 'ARNO DORIAN', subTitle: 'Rivoluzione Francese', entries: [
-        { year: '1789 CE', name: 'PARIGI RESYNCED' },
-        { year: '1793 CE', name: 'VERSAILLES RESYNCED' },
-        { year: '1798 CE', name: 'PONT NEUF RESYNCED' },
-    ]},
-    { character: 'JACOB FRYE', subTitle: 'Era Vittoriana', entries: [
-        { year: '1868 CE', name: 'LONDRA RESYNCED' },
-        { year: '1868 CE', name: 'WHITECHAPEL RESYNCED' },
-        { year: '1888 CE', name: 'TOWER BRIDGE RESYNCED' },
-    ]},
-  ];
-
-  // ── Overlay piatto 3 schede (position:fixed, identico all'immagine AC Nexus) ──
-  const memOverlay = document.createElement('div');
-  memOverlay.id = 'memOverlay';
-  memOverlay.innerHTML = `
-    <!-- SCHEDA 1: MEMORIES (sinistra) -->
-    <div class="mn-left">
-      <div class="mn-card mn-memories">
-        <div class="mn-mem-hdr">
-          <svg width="17" height="17" viewBox="0 0 40 40" fill="none">
-            <polygon points="20,3 37,35 3,35" fill="none" stroke="rgba(200,215,255,0.85)" stroke-width="2.5"/>
-            <circle cx="20" cy="22" r="5" fill="none" stroke="rgba(200,215,255,0.85)" stroke-width="2"/>
-          </svg>
-          MEMORIES
-        </div>
-        <div class="mn-sep"></div>
-        <div class="mn-list" id="mnList"></div>
-      </div>
-    </div>
-
-    <!-- SCHEDA 2: top-right (chiudi + reticolo) -->
-    <div class="mn-top-right">
-      <div class="mn-card mn-info">
-        <button class="mn-close" id="mnClose">&#xD7;</button>
-        <div class="mn-reticle-row">
-          <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
-            <circle cx="28" cy="28" r="20" stroke="rgba(200,215,255,0.28)" stroke-width="1"/>
-            <circle cx="28" cy="28" r="8"  stroke="rgba(200,215,255,0.45)" stroke-width="1"/>
-            <circle cx="28" cy="28" r="2"  fill="rgba(200,215,255,0.8)"/>
-            <line x1="28" y1="4"  x2="28" y2="14" stroke="rgba(200,215,255,0.5)" stroke-width="1.5"/>
-            <line x1="28" y1="42" x2="28" y2="52" stroke="rgba(200,215,255,0.5)" stroke-width="1.5"/>
-            <line x1="4"  y1="28" x2="14" y2="28" stroke="rgba(200,215,255,0.5)" stroke-width="1.5"/>
-            <line x1="42" y1="28" x2="52" y2="28" stroke="rgba(200,215,255,0.5)" stroke-width="1.5"/>
-          </svg>
-          <div class="mn-info-bars">
-            <div class="mn-bar" style="width:100%"></div>
-            <div class="mn-bar" style="width:65%"></div>
-            <div class="mn-bar" style="width:40%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SCHEDA 3: Active Memory (destra) -->
-    <div class="mn-active-wrap">
-      <div class="mn-card mn-active">
-        <div class="mn-active-lbl">
-          <svg width="13" height="13" viewBox="0 0 40 40" fill="none">
-            <polygon points="20,3 37,35 3,35" fill="none" stroke="rgba(170,205,255,0.75)" stroke-width="2.5"/>
-            <circle cx="20" cy="22" r="5" fill="none" stroke="rgba(170,205,255,0.75)" stroke-width="2"/>
-          </svg>
-          Active Memory
-        </div>
-        <div class="mn-char" id="mnChar">&#x2014;</div>
-        <div class="mn-sub"  id="mnSub">&#x2014;</div>
-        <div class="mn-access" id="mnAccess">
-          <span class="mn-a">A</span>
-          Access
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(memOverlay);
-
-  // Barre verticali per l'effetto barcode sotto la voce selezionata
-  const BAR_HEIGHTS = [5,9,4,11,6,8,3,10,7,5,12,4,9,6,8,3,11,5,7,4];
-
-  function populateMemoriesPanel(s) {
-    const mem = geneMemories[s];
-    document.getElementById('mnChar').textContent = mem.character;
-    document.getElementById('mnSub').textContent  = mem.subTitle;
-    const list = document.getElementById('mnList');
-    list.innerHTML = '';
-    mem.entries.forEach((entry, i) => {
-      const row = document.createElement('div');
-      row.className = 'mn-entry' + (i === 0 ? ' mn-entry-active' : '');
-      const barsHtml = i === 0
-        ? `<div class="mn-databars">${BAR_HEIGHTS.map(h=>`<div class="mn-databar" style="height:${h}px"></div>`).join('')}</div>`
-        : '';
-      row.innerHTML = `
-        <span class="mn-edot"></span>
-        <div class="mn-etext">
-          <span class="mn-eyear">${entry.year} &mdash;</span>
-          <span class="mn-ename">${entry.name}</span>
-          ${barsHtml}
-        </div>`;
-      row.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        list.querySelectorAll('.mn-databars').forEach(b => b.remove());
-        list.querySelectorAll('.mn-entry').forEach(r => r.classList.remove('mn-entry-active'));
-        row.classList.add('mn-entry-active');
-        const bars = document.createElement('div');
-        bars.className = 'mn-databars';
-        bars.innerHTML = BAR_HEIGHTS.map(h=>`<div class="mn-databar" style="height:${h}px"></div>`).join('');
-        row.querySelector('.mn-etext').appendChild(bars);
-      });
-      list.appendChild(row);
-    });
-  }
-
-  function showMemoriesPanel(s) {
-    populateMemoriesPanel(s);
-    memOverlay.style.visibility = 'visible';
-    requestAnimationFrame(() => { memOverlay.style.opacity = '1'; });
-  }
-
-  function hideMemoriesPanel() {
-    memOverlay.style.opacity = '0';
-    setTimeout(() => { memOverlay.style.visibility = 'hidden'; }, 420);
-  }
-
-  document.getElementById('mnClose').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.audioEngine) window.audioEngine.playClick();
-    hideMemoriesPanel();
-    hideGeneInfo();
-  });
-
-  document.getElementById('mnAccess').addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.audioEngine) window.audioEngine.playClick();
-    // L'overlay rimane visibile; appaiono i pannelli prenotazione sopra
-    scLeftEl.style.opacity  = '1'; scLeftEl.style.pointerEvents  = 'auto';
-    scRightEl.style.opacity = '1'; scRightEl.style.pointerEvents = 'auto';
-  });
 
 
   function showGeneInfo(s) {
@@ -2386,7 +2232,6 @@
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
 
     /* Restore DNA visibility */
     dnaGroup.visible = true;
@@ -3600,7 +3445,6 @@
     lastHoveredGene = -1;
     scLeftEl.style.opacity  = '0'; scLeftEl.style.pointerEvents  = 'none';
     scRightEl.style.opacity = '0'; scRightEl.style.pointerEvents = 'none';
-    if (typeof hideMemoriesPanel === 'function') hideMemoriesPanel();
 
     // Nascondi pannelli personaggio
     charListEl.style.opacity   = '0'; charListEl.style.pointerEvents   = 'none';
