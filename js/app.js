@@ -1057,36 +1057,36 @@
 
   // ── EPOCH OVERLAY ──
   const eoChars = [
-    [ { name: 'Leonardo da Vinci',      dates: '1452–1519',
-        role: 'Pittore, ingegnere, anatomista, musicista. Leonardo non era semplicemente un genio: era un\'anomalia della storia. Nei suoi taccuini segreti dormivano macchine volanti, studi sul moto del sangue, progetti di città ideali — visioni che il mondo non avrebbe capito per secoli. Rivivere al suo fianco significa toccare il confine sottile tra arte e scienza, tra bellezza e potere.' },
-      { name: "Lorenzo de' Medici",     dates: '1449–1492',
-        role: 'Chiamato "il Magnifico" non per adulazione, ma per timore. Lorenzo governava Firenze con una mano che teneva insieme il pennello degli artisti e il veleno dei nemici. Banchetti, poesie, congiure di palazzo: la sua corte era il centro pulsante del mondo occidentale, dove ogni parola poteva aprire porte o chiudere destini.' },
-      { name: 'Michelangelo',           dates: '1475–1564',
-        role: 'Quattro anni disteso su un\'impalcatura, a dipingere la volta della Cappella Sistina con le lacrime di vernice sugli occhi. Michelangelo non scolpiva il marmo: lo liberava. Diceva di vedere già la figura dentro il blocco grezzo — il suo compito era solo togliere il superfluo. Un uomo tormentato, divino e impossibile da dimenticare.' } ],
-    [ { name: 'Barbanera',              dates: '1680–1718',
-        role: 'Nessun pirata della storia ha generato più terrore del suo solo nome. Edward Teach bruciava micce accese tra la barba prima di abbordare le navi, avvolto in fumo come un demone emerso dal mare. Non era solo un criminale: era uno spettacolo di pura forza psicologica. Le sue vittime cedevano prima ancora che estraesse la sciabola.' },
-      { name: 'Anne Bonny',             dates: '1697–1782',
-        role: 'In un\'epoca in cui le donne dovevano tacere, Anne Bonny impugnò la sciabola e combatté a fianco di uomini che la rispettavano più di chiunque. Abbandonò un marito, scelse la libertà assoluta dei Caraibi e divenne leggenda. Quando la nave fu catturata, lei era ancora in piedi a combattere — gli altri erano ubriachi sottocoperta.' },
-      { name: 'Henry Morgan',           dates: '1635–1688',
-        role: 'Da corsaro spietato a Governatore della Giamaica: la parabola di Henry Morgan è la storia di un uomo che piegò le regole di due mondi. Saccheggiò Panama con un esercito di pirati, poi indossò la giacca del potere coloniale britannico. Un genio militare, un maestro della doppia lealtà, un personaggio che ancora oggi sfida ogni definizione.' } ],
-    [ { name: 'George Washington',      dates: '1732–1799',
-        role: 'Poteva diventare re. Scelse di non farlo. In quel gesto — raro nella storia umana — risiede la vera grandezza di Washington. Guidò un esercito scalzo attraverso l\'inverno di Valley Forge, sopravvisse a battaglie che avrebbero spezzato chiunque, e poi consegnò il potere al popolo. Era un uomo di silenzi profondi e decisioni irreversibili.' },
-      { name: 'Benjamin Franklin',      dates: '1706–1790',
-        role: 'Catturò la saetta con un aquilone. Negoziò l\'alleanza con la Francia che cambiò l\'esito della guerra. Inventò gli occhiali bifocali, il parafulmine, un sistema postale efficiente. Franklin era il tipo di persona che rende tutto il resto dell\'umanità un po\' in imbarazzo: curioso, ironico, inarrestabile. Incontrarlo significava essere travolti.' },
-      { name: 'Thomas Jefferson',       dates: '1743–1826',
-        role: '"Tutti gli uomini sono creati uguali." Quelle parole, scritte in una notte di luglio del 1776, avrebbero fatto tremare troni per secoli. Jefferson era un filosofo costretto a fare il politico, un sognatore che costruì un paese. Contraddittorio, brillante, ossessionato dall\'architettura e dai libri: una mente che ancora interroga la nostra coscienza.' } ],
-    [ { name: 'Napoleone Bonaparte',    dates: '1769–1821',
-        role: 'A trent\'anni era padrone d\'Europa. Dormiva quattro ore per notte, dettava lettere a tre segretari contemporaneamente e leggeva ogni rapporto di guerra come se fosse un romanzo. Napoleone non conquistava solo territori: ridisegnava il diritto, l\'amministrazione, la mappa mentale dell\'Occidente. La sua caduta fu grande quanto la sua ascesa.' },
-      { name: 'Marie Antoinette',       dates: '1755–1793',
-        role: 'Arrivò in Francia a quattordici anni, straniera in un palazzo che la studiava come un\'anomalia. Divenne simbolo di tutto ciò che il popolo odiava — il lusso, la distanza, l\'indifferenza — eppure i documenti rivelano una donna più consapevole e fragile di quanto la storia abbia voluto ricordare. La ghigliottina non fermò il suo mito.' },
-      { name: 'Maximilien Robespierre', dates: '1758–1794',
-        role: 'Lo chiamavano "l\'Incorruttibile". Non beveva, non corrompeva, non mentiva — credeva davvero negli ideali della Rivoluzione fino all\'ultima conseguenza. E fu quella fede assoluta a renderlo il più letale tra i rivoluzionari: mandò alla ghigliottina migliaia di persone in nome della virtù. Dieci mesi dopo, ci finì anche lui.' } ],
-    [ { name: 'Nikola Tesla',           dates: '1856–1943',
-        role: 'Vedeva i fulmini nella mente prima ancora di scriverli sulla carta. Tesla immaginò la trasmissione wireless dell\'energia, la radio, il motore a corrente alternata che alimenta ancora oggi il mondo intero — e morì solo, in una stanza d\'albergo, circondato da piccioni. La storia lo ha ignorato per decenni. La storia aveva torto.' },
-      { name: 'Charles Darwin',         dates: '1809–1882',
-        role: 'Per vent\'anni tenne chiuso nel cassetto il manoscritto che avrebbe distrutto certezze millenarie. Darwin sapeva cosa stava per fare: togliere all\'umanità il trono della creazione, metterla tra gli animali, sulla stessa linea evolutiva di ogni altra forma di vita. Quando pubblicò L\'Origine delle Specie, il mondo non fu mai più lo stesso.' },
-      { name: 'Thomas Edison',          dates: '1847–1931',
-        role: 'Fallì diecimila volte prima di accendere una lampadina. Non era il più brillante — Tesla lo era di più. Ma Edison aveva qualcosa di raro: la determinazione assoluta di trasformare ogni idea in un prodotto, ogni sogno in un brevetto. Inventò il fonografo, il cinema, i laboratori di ricerca industriale. Costruì l\'era moderna mattone per mattone.' } ],
+    [ { name: 'Leonardo da Vinci',      dates: '1452–1519', img: 'assets/characters/leonardo-da-vinci.jpg',
+        role: 'La tua esperienza si svolge nella Firenze e nella Milano del tardo Quattrocento, attraverso la memoria genetica di uno degli intelletti più documentati della storia. Leonardo da Vinci fu pittore, ingegnere, anatomista e studioso della natura: nei suoi taccuini coesistevano osservazioni sul volo degli uccelli, disegni di macchine idrauliche e studi sul corpo umano eseguiti con precisione scientifica. Osserverai il suo metodo di lavoro — la capacità di connettere discipline distanti — e il contesto culturale in cui operava: le botteghe, i mecenati, le commissioni artistiche. Un\'esperienza costruita sulla comprensione di come conoscenza e forma abbiano dialogato in un\'epoca di straordinaria fertilità intellettuale.' },
+      { name: "Lorenzo de' Medici",     dates: '1449–1492', img: 'assets/characters/lorenzo-de-medici.jpg',
+        role: 'L\'esperienza ti introduce nella Firenze della seconda metà del Quattrocento, nella rete di relazioni politiche e culturali che ruotavano attorno alla famiglia Medici. Lorenzo fu banchiere, statista e mecenate: finanziò artisti come Botticelli e Michelangelo, sostenne l\'Accademia Neoplatonica e gestì alleanze diplomatiche con le principali corti italiane. Attraverso la sua memoria osserverai il funzionamento del potere rinascimentale — non fondato sulla forza militare ma sulla reputazione, sulle lettere e sul controllo delle risorse culturali. Una lettura diretta di come l\'arte e la politica si intrecciassero in modo indistinguibile.' },
+      { name: 'Michelangelo',           dates: '1475–1564', img: 'assets/characters/michelangelo.webp',
+        role: 'La sincronizzazione ti porta nella Roma pontificia del primo Cinquecento, nel periodo in cui Michelangelo lavorava alla volta della Cappella Sistina su commissione di papa Giulio II. Scultore di formazione, Michelangelo affrontò la pittura ad affresco come una sfida tecnica e concettuale: quattro anni di lavoro, un\'impalcatura progettata da lui stesso, una composizione che organizzava oltre trecento figure. L\'esperienza documenta il suo processo creativo, il rapporto con il committente e le condizioni materiali del lavoro artistico nel Rinascimento. Una prospettiva precisa sull\'incontro tra ambizione intellettuale e vincolo istituzionale.' } ],
+    [ { name: 'Barbanera',              dates: '1680–1718', img: 'assets/characters/barbanera.webp',
+        role: 'L\'esperienza si situa nell\'Atlantico e nei Caraibi del primo Settecento, nel periodo di massima attività della pirateria organizzata. Edward Teach, noto come Barbanera, fu uno dei comandanti più documentati dell\'epoca: operava con una flotta propria, negoziava con le autorità coloniali e costruiva la propria reputazione in modo deliberato. La tua sessione esplora la struttura sociale e gerarchica delle imbarcazioni pirata, le rotte commerciali dell\'Atlantico e il contesto geopolitico in cui operavano i corsari tra tolleranza e criminalizzazione da parte delle potenze europee.' },
+      { name: 'Anne Bonny',             dates: '1697–1782', img: 'assets/characters/anne-bonny.webp',
+        role: 'La memoria genetica che esplorerai appartiene a una delle poche figure femminili documentate nella storia della pirateria caraibica del Settecento. Anne Bonny operò a bordo di imbarcazioni pirata in un contesto in cui la partecipazione delle donne era formalmente esclusa. La sua presenza è attestata da documenti processuali del 1720. L\'esperienza analizza il quadro sociale e giuridico dell\'epoca coloniale britannica, le strutture di genere che la regolavano e le forme in cui queste venivano aggirate o ignorate nelle comunità ai margini del diritto.' },
+      { name: 'Henry Morgan',           dates: '1635–1688', img: 'assets/characters/henry-morgan.jpg',
+        role: 'Morgan rappresenta un caso di studio particolarmente significativo per comprendere il confine, spesso permeabile, tra stato e pirateria nel Seicento coloniale. Fu corsaro al servizio della Corona britannica, condusse operazioni militari contro le colonie spagnole nei Caraibi — tra cui la presa di Panama nel 1671 — e concluse la propria carriera come Governatore della Giamaica. La sessione analizza il sistema del corsarismo come strumento di politica estera, le dinamiche di potere tra le corti europee e i territori d\'oltremare, e la trasformazione di Morgan da operatore militare a figura istituzionale.' } ],
+    [ { name: 'George Washington',      dates: '1732–1799', img: 'assets/characters/george-washington.jpg',
+        role: 'L\'esperienza documenta il periodo compreso tra il 1775 e il 1783, gli anni della Guerra d\'Indipendenza americana e del consolidamento delle istituzioni della nuova repubblica. Washington fu comandante in capo dell\'Esercito Continentale e primo presidente degli Stati Uniti: la sua memoria conserva le campagne militari, le deliberazioni del Congresso e il processo di stesura della Costituzione. La sessione offre una lettura diretta di come si costruisce un sistema di governo in condizioni di conflitto aperto, e di quali scelte definirono la struttura istituzionale americana nei suoi primi anni.' },
+      { name: 'Benjamin Franklin',      dates: '1706–1790', img: 'assets/characters/benjamin-franklin.jpg',
+        role: 'Franklin attraversò il Settecento come scienziato, editore, diplomatico e legislatore. Le sue ricerche sull\'elettricità atmosferica portarono all\'invenzione del parafulmine; il suo ruolo diplomatico a Parigi fu determinante per ottenere l\'alleanza francese che modificò gli equilibri della guerra d\'indipendenza. L\'esperienza esplora la sua prospettiva su scienza e utilità pubblica, il funzionamento della diplomazia settecentesca e la costruzione dell\'identità americana attraverso la stampa e il pensiero illuminista. Una memoria che attraversa laboratori, salotti parigini e assemblee legislative.' },
+      { name: 'Thomas Jefferson',       dates: '1743–1826', img: 'assets/characters/thomas-jefferson.jpg',
+        role: 'Jefferson è il principale estensore della Dichiarazione d\'Indipendenza del 1776, uno dei testi fondativi del pensiero politico moderno. Fu anche governatore della Virginia, segretario di stato, vicepresidente e terzo presidente degli Stati Uniti. La sua memoria offre accesso al dibattito intellettuale che precedette e accompagnò la fondazione della repubblica: i riferimenti all\'illuminismo europeo, le contraddizioni tra i principi enunciati e la realtà della schiavitù, la concezione jeffersoniana del rapporto tra stato, individuo e proprietà. Un\'esperienza a contatto con le fondamenta filosofiche del mondo contemporaneo.' } ],
+    [ { name: 'Napoleone Bonaparte',    dates: '1769–1821', img: 'assets/characters/napoleone.jpg',
+        role: 'La sessione copre il periodo compreso tra il Consolato e il primo Impero, gli anni in cui Napoleone Bonaparte ridefinì le strutture giuridiche e amministrative dell\'Europa continentale. Il Codice Napoleonico del 1804 introdusse principi come l\'uguaglianza davanti alla legge, la laicità dello stato e la tutela della proprietà privata, ancora alla base di numerosi ordinamenti europei. La memoria esplora le dinamiche del potere esecutivo centralizzato, le campagne militari come strumento di espansione geopolitica e il sistema di riforme che trasformò gli stati conquistati. Un\'esperienza costruita sul rapporto tra guerra, diritto e modernizzazione.' },
+      { name: 'Marie Antoinette',       dates: '1755–1793', img: 'assets/characters/marie-antoinette.jpg',
+        role: 'L\'esperienza ti introduce nella Versailles della seconda metà del Settecento, attraverso la prospettiva di una figura che occupò il centro della scena politica e simbolica della monarchia francese. Arciduchessa d\'Austria e regina di Francia, Marie Antoinette fu al centro del sistema di rappresentazione del potere assoluto e, simultaneamente, del processo di delegittimazione che portò alla Rivoluzione. La sessione documenta il funzionamento della corte, il ruolo della regina nell\'etichetta versagliese e la percezione pubblica della monarchia negli anni che precedettero il 1789.' },
+      { name: 'Maximilien Robespierre', dates: '1758–1794', img: 'assets/characters/robespierre.jpg',
+        role: 'Robespierre è la figura più rappresentativa del periodo del Terrore, la fase più radicale della Rivoluzione francese compresa tra il 1793 e il 1794. Avvocato di formazione, membro del Comitato di salute pubblica, fu il principale teorico dell\'utilizzo della violenza istituzionale come strumento di difesa della Repubblica. La sua memoria offre accesso al dibattito politico rivoluzionario — la tensione tra libertà e sicurezza, tra ideale e prassi — e al funzionamento delle assemblee e dei tribunali del periodo. Un\'esperienza di osservazione diretta del momento in cui un sistema di valori si confronta con le proprie contraddizioni.' } ],
+    [ { name: 'Nikola Tesla',           dates: '1856–1943', img: 'assets/characters/nikola-tesla.jpg',
+        role: 'Tesla fu il principale responsabile dello sviluppo del sistema di corrente alternata che rese possibile la distribuzione dell\'elettricità su scala industriale. Lavorò inizialmente con Thomas Edison, poi in modo autonomo, brevettando il motore a induzione e sviluppando il sistema polifase adottato nella centrale di Niagara Falls nel 1895. La sua memoria consente di osservare i laboratori sperimentali di fine Ottocento, le logiche economiche che guidavano la ricerca applicata e il dibattito tecnico e commerciale tra corrente continua e alternata. Un\'esperienza centrata sul rapporto tra innovazione scientifica, industria e riconoscimento istituzionale.' },
+      { name: 'Charles Darwin',         dates: '1809–1882', img: 'assets/characters/charles-darwin.jpg',
+        role: 'Darwin impiegò oltre vent\'anni a raccogliere le evidenze e a strutturare la teoria dell\'evoluzione per selezione naturale, pubblicata in L\'Origine delle Specie nel 1859. Il viaggio a bordo del Beagle tra il 1831 e il 1836 lo portò nelle Galapagos, in Sudamerica e in Oceania, dove raccolse osservazioni sistematiche sulla variabilità delle specie. L\'esperienza documenta il metodo di ricerca darwiniano — osservazione, classificazione, ipotesi — e il contesto scientifico e religioso in cui la teoria fu elaborata e ricevuta. Una sessione dedicata a comprendere come si costruisce e si afferma un paradigma scientifico.' },
+      { name: 'Thomas Edison',          dates: '1847–1931', img: 'assets/characters/thomas-edison.jpg',
+        role: 'Edison è considerato il principale artefice della transizione verso un\'economia basata sull\'energia elettrica nella seconda metà dell\'Ottocento. Nel laboratorio di Menlo Park, da lui fondato nel 1876, sviluppò un metodo sistematico di ricerca applicata che portò alla realizzazione della lampada a incandescenza commerciale, del fonografo e dei primi sistemi di distribuzione elettrica urbana. La tua sessione esplora il funzionamento di un laboratorio industriale di fine Ottocento, la logica dei brevetti come strumento competitivo e il processo attraverso cui l\'innovazione tecnologica si trasforma in infrastruttura di massa.' } ],
   ];
   const eoEpochLabels = ['Rinascimento · 1500', "Età d'Oro Pirateria · 1600", 'Rivoluzione Americana · 1700', 'Rivoluzione Francese · 1800', 'Rivoluzione Industriale · 1900'];
 
@@ -1121,6 +1121,7 @@
       <div class="eo-left" id="eoLeft"></div>
       <div class="eo-center" id="eoCenter">
         <div class="eo-center-label">ANIMUS PREVIEW</div>
+        <img id="eoCenterImg" class="eo-center-img" src="" alt="" style="display:none;">
         <div class="eo-center-empty" id="eoCenterEmpty">Seleziona un personaggio</div>
         <div class="eo-center-name" id="eoCenterName" style="display:none;"></div>
       </div>
@@ -1128,9 +1129,10 @@
         <div class="eo-right-tag">PROFILO STORICO</div>
         <div class="eo-right-epoch" id="eoRightEpoch">—</div>
         <div class="eo-right-role" id="eoRightRole" style="display:none;"></div>
-        <div class="eo-right-placeholder" id="eoRightPlaceholder">Seleziona un personaggio dalla lista</div>
+        <div class="eo-right-placeholder" id="eoRightPlaceholder">Seleziona un personaggio</div>
         <button class="eo-right-btn" id="eoConfirmBtn">INIZIA ESPERIENZA</button>
       </div>
+      <button class="eo-avanti-btn" id="eoAvantiChar" disabled>AVANTI &rsaquo;</button>
     </div>
 
     <!-- TAB: PERSONALIZZAZIONE -->
@@ -1183,6 +1185,7 @@
           </select>
         </div>
 
+        <button class="eo-avanti-btn eo-avanti-inline" id="eoAvantiCust" disabled>AVANTI &rsaquo;</button>
       </div>
     </div>
 
@@ -1345,9 +1348,22 @@
         if (window.audioEngine) window.audioEngine.playClick();
         group.querySelectorAll('.eo-cust-opt').forEach(b => b.classList.remove('eo-cust-selected'));
         btn.classList.add('eo-cust-selected');
+        const immOk = document.querySelector('#eoCustImmersion .eo-cust-selected');
+        const durOk = document.querySelector('#eoCustDuration .eo-cust-selected');
+        document.getElementById('eoAvantiCust').disabled = !(immOk && durOk);
       });
       btn.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
     });
+  });
+
+  // Avanti buttons
+  document.getElementById('eoAvantiChar').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    eoSlideTab('customize');
+  });
+  document.getElementById('eoAvantiCust').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    eoSlideTab('date');
   });
 
   // Tab click
@@ -1382,10 +1398,15 @@
 
     // Reset character tab
     document.getElementById('eoCenterEmpty').style.display = '';
+    document.getElementById('eoCenterImg').style.display = 'none';
+    document.getElementById('eoCenterImg').src = '';
     document.getElementById('eoCenterName').style.display = 'none';
     document.getElementById('eoRightRole').style.display = 'none';
     document.getElementById('eoRightPlaceholder').style.display = '';
     document.getElementById('eoConfirmBtn').style.display = 'none';
+    document.getElementById('eoAvantiChar').disabled = true;
+    document.getElementById('eoAvantiCust').disabled = true;
+    document.getElementById('eoCenter').classList.remove('eo-center-lit');
     document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
     // Reset date tab
@@ -1418,12 +1439,23 @@
         left.querySelectorAll('.eo-char-card').forEach(c => c.classList.remove('eo-selected'));
         card.classList.add('eo-selected');
         document.getElementById('eoCenterEmpty').style.display = 'none';
+        const imgEl = document.getElementById('eoCenterImg');
+        imgEl.classList.remove('eo-img-loaded');
+        imgEl.style.display = ch.img ? '' : 'none';
+        if (ch.img) {
+          imgEl.src = ch.img;
+          imgEl.onload = () => imgEl.classList.add('eo-img-loaded');
+          imgEl.onerror = () => { imgEl.style.display = 'none'; };
+        }
         document.getElementById('eoCenterName').style.display = '';
         document.getElementById('eoCenterName').textContent = ch.name;
+        document.getElementById('eoRightEpoch').textContent = `Chi è ${ch.name}?`;
         document.getElementById('eoRightRole').style.display = '';
         document.getElementById('eoRightRole').textContent = ch.role;
         document.getElementById('eoRightPlaceholder').style.display = 'none';
         document.getElementById('eoConfirmBtn').style.display = '';
+        document.getElementById('eoAvantiChar').disabled = false;
+        document.getElementById('eoCenter').classList.add('eo-center-lit');
       });
       left.appendChild(card);
     });
