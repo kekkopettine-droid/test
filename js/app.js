@@ -1097,15 +1097,15 @@
   const eoToday = new Date().toISOString().split('T')[0];
   eoEl.innerHTML = `
     <div class="eo-topbar">
-      <button class="eo-back-btn" id="eoBackBtn">&#8249;</button>
+      <button class="eo-back-btn" id="eoBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="eo-tabs">
         <button class="eo-tab eo-active" data-tab="character">PERSONAGGIO</button>
         <button class="eo-tab" data-tab="customize">PERSONALIZZAZIONE</button>
         <button class="eo-tab" data-tab="date">DATA</button>
       </div>
       <div class="eo-topbar-right">
-        <button class="eo-icon-btn">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>
+        <button class="eo-icon-btn" id="eoTicketsBtn">
+          <svg viewBox="0 0 24 24"><path d="M2 9a1 1 0 011-1h18a1 1 0 011 1v2a2 2 0 000 4v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a2 2 0 000-4V9z"/><line x1="9" y1="8" x2="9" y2="16" stroke-dasharray="2 2"/></svg>
         </button>
         <button class="eo-icon-btn" id="eoCartBtn">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -1118,9 +1118,10 @@
 
     <!-- TAB: PERSONAGGIO -->
     <div class="eo-content" id="eoTabCharacter">
-      <div class="eo-left" id="eoLeft"></div>
+      <div class="eo-left" id="eoLeft">
+        <button class="eo-avanti-btn" id="eoAvantiChar" disabled>AVANTI &rsaquo;</button>
+      </div>
       <div class="eo-center" id="eoCenter">
-        <div class="eo-center-label">ANIMUS PREVIEW</div>
         <img id="eoCenterImg" class="eo-center-img" src="" alt="" style="display:none;">
         <div class="eo-center-empty" id="eoCenterEmpty">Seleziona un personaggio</div>
         <div class="eo-center-name" id="eoCenterName" style="display:none;"></div>
@@ -1132,18 +1133,17 @@
         <div class="eo-right-placeholder" id="eoRightPlaceholder">Seleziona un personaggio</div>
         <button class="eo-right-btn" id="eoConfirmBtn">INIZIA ESPERIENZA</button>
       </div>
-      <button class="eo-avanti-btn" id="eoAvantiChar" disabled>AVANTI &rsaquo;</button>
     </div>
 
     <!-- TAB: PERSONALIZZAZIONE -->
     <div class="eo-content eo-customize-content" id="eoTabCustomize" style="display:none;">
-      <div class="eo-customize-panel">
-        <div class="eo-date-tag">⬡ ABSTERGO INDUSTRIES — CONFIGURAZIONE ANIMUS</div>
-        <div class="eo-date-title">PERSONALIZZA L'ESPERIENZA</div>
-        <div class="eo-date-divider"></div>
+      <div class="eo-cust-bands">
 
-        <div class="eo-cust-section">
-          <div class="eo-date-label">LIVELLO DI IMMERSIONE</div>
+        <div class="eo-cust-band">
+          <div class="eo-cust-band-label">
+            <div class="eo-cust-band-num">01</div>
+            <div class="eo-cust-band-title">LIVELLO DI IMMERSIONE</div>
+          </div>
           <div class="eo-cust-options" id="eoCustImmersion">
             <button class="eo-cust-opt" data-val="osservatore">
               <span class="eo-cust-opt-title">OSSERVATORE</span>
@@ -1159,11 +1159,16 @@
             </button>
           </div>
         </div>
+        <div class="eo-imm-detail" id="eoImmDetail" style="display:none;">
+          <span class="eo-imm-detail-label" id="eoImmDetailLabel"></span>
+          <p class="eo-imm-detail-text" id="eoImmDetailText"></p>
+        </div>
 
-        <div class="eo-date-divider"></div>
-
-        <div class="eo-cust-section">
-          <div class="eo-date-label">DURATA SESSIONE</div>
+        <div class="eo-cust-band">
+          <div class="eo-cust-band-label">
+            <div class="eo-cust-band-num">02</div>
+            <div class="eo-cust-band-title">DURATA SESSIONE</div>
+          </div>
           <div class="eo-cust-options" id="eoCustDuration">
             <button class="eo-cust-opt" data-val="1h"><span class="eo-cust-opt-title">1 ORA</span></button>
             <button class="eo-cust-opt" data-val="2h"><span class="eo-cust-opt-title">2 ORE</span></button>
@@ -1171,13 +1176,12 @@
           </div>
         </div>
 
-        <div class="eo-date-divider"></div>
-
-        <div class="eo-cust-section" style="flex-direction:row;align-items:center;justify-content:space-between;">
-          <div>
-            <div class="eo-date-label">LINGUA NARRAZIONE</div>
+        <div class="eo-cust-band">
+          <div class="eo-cust-band-label">
+            <div class="eo-cust-band-num">03</div>
+            <div class="eo-cust-band-title">LINGUA NARRAZIONE</div>
           </div>
-          <select id="eoCustLang" class="eo-date-input" style="width:200px;">
+          <select id="eoCustLang" class="eo-date-input eo-cust-lang-select">
             <option value="it">Italiano</option>
             <option value="en">English</option>
             <option value="fr">Français</option>
@@ -1229,9 +1233,12 @@
         <div class="eo-date-summary" id="eoDateSummary" style="display:none;">
           <div class="eo-date-summary-row"><span>PERSONAGGIO</span><span id="eoSumChar">—</span></div>
           <div class="eo-date-summary-row"><span>EPOCA</span><span id="eoSumEpoch">—</span></div>
+          <div class="eo-date-summary-row"><span>IMMERSIONE</span><span id="eoSumImm">—</span></div>
+          <div class="eo-date-summary-row"><span>DURATA</span><span id="eoSumDur">—</span></div>
           <div class="eo-date-summary-row"><span>DATA</span><span id="eoSumDate">—</span></div>
           <div class="eo-date-summary-row"><span>ORARIO</span><span id="eoSumTime">—</span></div>
           <div class="eo-date-summary-row"><span>SEDE</span><span id="eoSumLoc">—</span></div>
+          <div class="eo-date-summary-row eo-sum-price-row" style="display:none;"><span>TOTALE</span><span id="eoSumPrice">—</span></div>
         </div>
 
         <button class="eo-date-cart-btn" id="eoDateCartBtn" disabled>
@@ -1318,28 +1325,103 @@
     });
   }
 
+  const eoCart    = [];
+  const eoTickets = [];
+
+  const eoPriceImm    = { osservatore: 500, partecipante: 800, totale: 1000 };
+  const eoPriceDur    = { '1h': 100, '2h': 150, '3h': 300 };
+  const eoImmLabel    = { osservatore: 'Osservatore', partecipante: 'Partecipante', totale: 'Totale' };
+  const eoDurLabel    = { '1h': '1 ora', '2h': '2 ore', '3h': '3 ore' };
+  const eoLangLabel   = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español' };
+
+  function eoComputePrice() {
+    const imm = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val || 'osservatore';
+    const dur = document.querySelector('#eoCustDuration .eo-cust-selected')?.dataset.val || '1h';
+    return (eoPriceImm[imm] || 0) + (eoPriceDur[dur] || 0);
+  }
+
+  function _syncIconBtn(btn, count, hasClass, badgeClass) {
+    if (!btn) return;
+    let badge = btn.querySelector('.' + badgeClass);
+    if (count > 0) {
+      btn.classList.add(hasClass);
+      if (!badge) { badge = document.createElement('span'); badge.className = badgeClass; btn.appendChild(badge); }
+      badge.textContent = count;
+    } else {
+      btn.classList.remove(hasClass);
+      if (badge) badge.remove();
+    }
+  }
+
+  function eoUpdateCartIcon() {
+    _syncIconBtn(document.getElementById('eoCartBtn'),   eoCart.length,    'eo-cart-has-items',    'eo-cart-badge');
+    _syncIconBtn(document.getElementById('tlCartBtn'),   eoCart.length,    'eo-cart-has-items',    'eo-cart-badge');
+  }
+
+  function eoUpdateTicketsIcon() {
+    _syncIconBtn(document.getElementById('eoTicketsBtn'), eoTickets.length, 'eo-tickets-has-items', 'eo-tickets-badge');
+    _syncIconBtn(document.getElementById('tlTicketsBtn'), eoTickets.length, 'eo-tickets-has-items', 'eo-tickets-badge');
+  }
+
+  // Timeline HUD icons (cart + tickets, visibili durante la timeline)
+  const tlIconsHud = document.createElement('div');
+  tlIconsHud.id = 'tlIconsHud';
+  tlIconsHud.className = 'tl-icons-hud';
+  tlIconsHud.style.display = 'none';
+  tlIconsHud.innerHTML = `
+    <button class="eo-icon-btn" id="tlTicketsBtn">
+      <svg viewBox="0 0 24 24"><path d="M2 9a1 1 0 011-1h18a1 1 0 011 1v2a2 2 0 000 4v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a2 2 0 000-4V9z"/><line x1="9" y1="8" x2="9" y2="16" stroke-dasharray="2 2"/></svg>
+    </button>
+    <button class="eo-icon-btn" id="tlCartBtn">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </button>`;
+  document.body.appendChild(tlIconsHud);
+  document.getElementById('tlTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowTickets(); });
+  document.getElementById('tlCartBtn').addEventListener('click',   () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowCart(); });
+
   function eoUpdateDateSummary() {
     const date = document.getElementById('eoDate').value;
     const time = document.getElementById('eoTime').value;
     const loc  = document.getElementById('eoLocation').value;
     const ch   = eoSelectedChar !== -1 ? eoChars[eoEpochIdx][eoSelectedChar] : null;
     const btn  = document.getElementById('eoDateCartBtn');
-    const ready = date && time && loc;
+    const imm  = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val;
+    const dur  = document.querySelector('#eoCustDuration .eo-cust-selected')?.dataset.val;
+    const lang = document.getElementById('eoCustLang')?.value || 'it';
+    const ready = date && time && loc && imm && dur;
     btn.disabled = !ready;
 
     if (ch && ready) {
       document.getElementById('eoDateSummary').style.display = '';
       document.getElementById('eoSumChar').textContent  = ch.name;
       document.getElementById('eoSumEpoch').textContent = eoEpochLabels[eoEpochIdx];
+      document.getElementById('eoSumImm').textContent   = imm ? eoImmLabel[imm] : '—';
+      document.getElementById('eoSumDur').textContent   = dur ? eoDurLabel[dur] : '—';
       document.getElementById('eoSumDate').textContent  = date;
       document.getElementById('eoSumTime').textContent  = time;
       document.getElementById('eoSumLoc').textContent   = loc.split('—')[0].trim();
+      document.getElementById('eoSumPrice').textContent = '€ ' + eoComputePrice();
     } else {
       document.getElementById('eoDateSummary').style.display = 'none';
     }
   }
 
   // Personalizzazione option buttons
+  const eoImmDescriptions = {
+    osservatore: {
+      label: 'MODALITÀ OSSERVATORE',
+      text: 'Rimani un testimone silenzioso del passato. L\'Animus ti posiziona in terza persona rispetto agli eventi: vedi, ascolti, percepisci — ma non interferisci. Ideale per chi si avvicina per la prima volta alla sincronizzazione genetica. Il sistema mantiene una barriera di sicurezza tra la tua coscienza e la memoria ancestrale.'
+    },
+    partecipante: {
+      label: 'MODALITÀ PARTECIPANTE',
+      text: 'Entri attivamente nella memoria genetica. Puoi interagire con l\'ambiente, dialogare con i personaggi storici e influenzare il corso degli eventi minori. L\'Animus consente una sincronizzazione parziale: sei presente nella scena, percepita come parte di essa. Richiede una calibrazione preliminare di 10 minuti.'
+    },
+    totale: {
+      label: 'MODALITÀ IMMERSIONE TOTALE',
+      text: 'Piena fusione tra la tua coscienza e la memoria ancestrale. Non esiste distinzione tra te e il soggetto genetico: ne senti i pensieri, le emozioni, il peso fisico dell\'epoca. L\'esperienza è completa e indistinguibile dalla realtà. Riservata a soggetti con esperienza pregressa di sincronizzazione. Abstergo declina ogni responsabilità per effetti residui post-sessione.'
+    }
+  };
+
   ['eoCustImmersion','eoCustDuration'].forEach(groupId => {
     const group = document.getElementById(groupId);
     if (!group) return;
@@ -1351,6 +1433,16 @@
         const immOk = document.querySelector('#eoCustImmersion .eo-cust-selected');
         const durOk = document.querySelector('#eoCustDuration .eo-cust-selected');
         document.getElementById('eoAvantiCust').disabled = !(immOk && durOk);
+        eoUpdateTabLocks();
+        if (groupId === 'eoCustImmersion') {
+          const val = btn.dataset.val;
+          const desc = eoImmDescriptions[val];
+          const detailEl = document.getElementById('eoImmDetail');
+          document.getElementById('eoImmDetailLabel').textContent = desc.label;
+          document.getElementById('eoImmDetailText').textContent = desc.text;
+          detailEl.style.display = '';
+          requestAnimationFrame(() => detailEl.classList.add('eo-imm-detail-visible'));
+        }
       });
       btn.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
     });
@@ -1366,9 +1458,22 @@
     eoSlideTab('date');
   });
 
+  function eoUpdateTabLocks() {
+    const charOk = eoSelectedChar !== -1;
+    const immOk  = !!document.querySelector('#eoCustImmersion .eo-cust-selected');
+    const durOk  = !!document.querySelector('#eoCustDuration .eo-cust-selected');
+    const custOk = immOk && durOk;
+    eoEl.querySelectorAll('.eo-tab').forEach(btn => {
+      const tab = btn.dataset.tab;
+      const locked = (tab === 'customize' && !charOk) || (tab === 'date' && !custOk);
+      btn.classList.toggle('eo-tab-locked', locked);
+    });
+  }
+
   // Tab click
   eoEl.querySelectorAll('.eo-tab').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.classList.contains('eo-tab-locked')) return;
       if (window.audioEngine) window.audioEngine.playClick();
       eoSlideTab(btn.dataset.tab);
     });
@@ -1379,16 +1484,251 @@
     document.getElementById(id).addEventListener('change', eoUpdateDateSummary);
   });
 
-  // Cart button
+  // Cart button — save item and update icon
   document.getElementById('eoDateCartBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
+    const ch   = eoChars[eoEpochIdx][eoSelectedChar];
+    const imm  = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val || 'osservatore';
+    const dur  = document.querySelector('#eoCustDuration .eo-cust-selected')?.dataset.val || '1h';
+    const lang = document.getElementById('eoCustLang')?.value || 'it';
+    const date = document.getElementById('eoDate').value;
+    const time = document.getElementById('eoTime').value;
+    const loc  = document.getElementById('eoLocation').value;
+    eoCart.push({
+      character: ch.name,
+      epoch:     eoEpochLabels[eoEpochIdx],
+      immersion: eoImmLabel[imm],
+      duration:  eoDurLabel[dur],
+      language:  eoLangLabel[lang],
+      date, time,
+      location:  loc.split('—')[0].trim(),
+      price:     eoComputePrice()
+    });
+    eoUpdateCartIcon();
     document.getElementById('eoDateCartBtn').style.display = 'none';
     document.getElementById('eoDateConfirmMsg').style.display = '';
-    setTimeout(() => {
-      hideEpochOverlay();
-      playCinematicTransition();
-    }, 1400);
+    setTimeout(() => { hideEpochOverlay(); showTimelineView(); }, 1400);
   });
+
+  // Overlay carrello
+  const eoCartOverlay = document.createElement('div');
+  eoCartOverlay.id = 'eoCartOverlay';
+  eoCartOverlay.className = 'eo-cart-overlay hidden';
+  eoCartOverlay.innerHTML = `
+    <div class="eo-cart-panel">
+      <div class="eo-cart-header">
+        <span class="eo-cart-title">⬡ CARRELLO ANIMUS</span>
+        <button class="eo-cart-close" id="eoCartClose">✕</button>
+      </div>
+      <div class="eo-cart-items" id="eoCartItems"></div>
+      <div class="eo-cart-footer">
+        <div class="eo-cart-total-row">
+          <span>TOTALE</span>
+          <span id="eoCartTotal">€ 0</span>
+        </div>
+        <button class="eo-cart-checkout-btn" id="eoCartCheckout">PROCEDI ALL'ACQUISTO</button>
+      </div>
+    </div>`;
+  document.body.appendChild(eoCartOverlay);
+
+  function eoShowCart() {
+    const items = document.getElementById('eoCartItems');
+    items.innerHTML = eoCart.length === 0
+      ? '<div class="eo-cart-empty">Il carrello è vuoto.</div>'
+      : eoCart.map((item, i) => `
+          <div class="eo-cart-item">
+            <div class="eo-cart-item-header">
+              <span class="eo-cart-item-name">${item.character}</span>
+              <span class="eo-cart-item-price">€ ${item.price}</span>
+            </div>
+            <div class="eo-cart-item-details">
+              <span>${item.epoch}</span>
+              <span>${item.immersion} · ${item.duration} · ${item.language}</span>
+              <span>${item.date} ${item.time} — ${item.location}</span>
+            </div>
+            <button class="eo-cart-remove" data-idx="${i}">Rimuovi</button>
+          </div>`).join('');
+    const total = eoCart.reduce((s, x) => s + x.price, 0);
+    document.getElementById('eoCartTotal').textContent = '€ ' + total;
+    eoCartOverlay.classList.remove('hidden');
+    requestAnimationFrame(() => eoCartOverlay.classList.add('eo-cart-visible'));
+    items.querySelectorAll('.eo-cart-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        eoCart.splice(+btn.dataset.idx, 1);
+        eoUpdateCartIcon();
+        eoShowCart();
+      });
+    });
+  }
+
+  function eoHideCart() {
+    eoCartOverlay.classList.remove('eo-cart-visible');
+    setTimeout(() => eoCartOverlay.classList.add('hidden'), 300);
+  }
+
+  // ── CHECKOUT OVERLAY ──
+  const eoCheckoutOverlay = document.createElement('div');
+  eoCheckoutOverlay.id = 'eoCheckoutOverlay';
+  eoCheckoutOverlay.className = 'eo-checkout-overlay hidden';
+  eoCheckoutOverlay.innerHTML = `
+    <div class="eo-checkout-panel">
+      <div class="eo-cart-header">
+        <span class="eo-cart-title">⬡ ACQUISTO BIGLIETTO</span>
+        <button class="eo-cart-close" id="eoCheckoutClose">✕</button>
+      </div>
+      <div class="eo-checkout-body">
+        <div class="eo-checkout-section-label">DATI PERSONALI</div>
+        <div class="eo-checkout-field">
+          <label class="eo-checkout-label">NOME E COGNOME</label>
+          <input type="text" id="eoCkName" class="eo-checkout-input" placeholder="Es. Marco Rossi" autocomplete="name">
+        </div>
+        <div class="eo-checkout-field">
+          <label class="eo-checkout-label">EMAIL</label>
+          <input type="email" id="eoCkEmail" class="eo-checkout-input" placeholder="es. marco@email.it" autocomplete="email">
+        </div>
+        <div class="eo-checkout-field">
+          <label class="eo-checkout-label">TELEFONO</label>
+          <input type="tel" id="eoCkPhone" class="eo-checkout-input" placeholder="+39 000 000 0000" autocomplete="tel">
+        </div>
+        <div class="eo-checkout-section-label" style="margin-top:24px;">DATI DI PAGAMENTO</div>
+        <div class="eo-checkout-field">
+          <label class="eo-checkout-label">NUMERO CARTA</label>
+          <input type="text" id="eoCkCard" class="eo-checkout-input" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number">
+        </div>
+        <div class="eo-checkout-row">
+          <div class="eo-checkout-field">
+            <label class="eo-checkout-label">SCADENZA</label>
+            <input type="text" id="eoCkExp" class="eo-checkout-input" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp">
+          </div>
+          <div class="eo-checkout-field">
+            <label class="eo-checkout-label">CVV</label>
+            <input type="text" id="eoCkCvv" class="eo-checkout-input" placeholder="000" maxlength="3" autocomplete="cc-csc">
+          </div>
+        </div>
+        <div class="eo-checkout-total-row" id="eoCkTotalRow"></div>
+        <div class="eo-checkout-error" id="eoCkError" style="display:none;"></div>
+        <button class="eo-cart-checkout-btn" id="eoCkSubmit" style="margin-top:8px;">CONFERMA ACQUISTO</button>
+      </div>
+    </div>`;
+  document.body.appendChild(eoCheckoutOverlay);
+
+  function eoShowCheckout() {
+    const total = eoCart.reduce((s, x) => s + x.price, 0);
+    document.getElementById('eoCkTotalRow').textContent = `TOTALE: € ${total}`;
+    document.getElementById('eoCkError').style.display = 'none';
+    eoCheckoutOverlay.classList.remove('hidden');
+    requestAnimationFrame(() => eoCheckoutOverlay.classList.add('eo-cart-visible'));
+  }
+
+  function eoHideCheckout() {
+    eoCheckoutOverlay.classList.remove('eo-cart-visible');
+    setTimeout(() => eoCheckoutOverlay.classList.add('hidden'), 300);
+  }
+
+  document.getElementById('eoCheckoutClose').addEventListener('click', eoHideCheckout);
+
+  // Card number formatting
+  document.getElementById('eoCkCard').addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+  });
+  document.getElementById('eoCkExp').addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2);
+    e.target.value = v;
+  });
+  document.getElementById('eoCkCvv').addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+  });
+
+  document.getElementById('eoCkSubmit').addEventListener('click', () => {
+    if (window.audioEngine) window.audioEngine.playClick();
+    const name  = document.getElementById('eoCkName').value.trim();
+    const email = document.getElementById('eoCkEmail').value.trim();
+    const phone = document.getElementById('eoCkPhone').value.trim();
+    const card  = document.getElementById('eoCkCard').value.replace(/\s/g,'');
+    const exp   = document.getElementById('eoCkExp').value.trim();
+    const cvv   = document.getElementById('eoCkCvv').value.trim();
+    const errEl = document.getElementById('eoCkError');
+    if (!name || !email || !phone || card.length < 16 || exp.length < 5 || cvv.length < 3) {
+      errEl.textContent = '⚠ Compila tutti i campi correttamente.';
+      errEl.style.display = '';
+      return;
+    }
+    // Purchase: move cart → tickets
+    const purchasedAt = new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
+    eoCart.forEach(item => eoTickets.push({ ...item, buyer: name, email, purchasedAt, ticketId: 'ANM-' + Math.random().toString(36).substring(2,8).toUpperCase() }));
+    eoCart.length = 0;
+    eoUpdateCartIcon();
+    eoUpdateTicketsIcon();
+    eoHideCheckout();
+    eoHideCart();
+    eoShowTickets();
+  });
+
+  // Wire checkout from cart
+  eoCartOverlay.addEventListener('click', e => {
+    if (e.target.id === 'eoCartCheckout') {
+      if (eoCart.length === 0) return;
+      if (window.audioEngine) window.audioEngine.playClick();
+      eoHideCart();
+      setTimeout(eoShowCheckout, 320);
+    }
+  });
+
+  // ── TICKETS OVERLAY ──
+  const eoTicketsOverlay = document.createElement('div');
+  eoTicketsOverlay.id = 'eoTicketsOverlay';
+  eoTicketsOverlay.className = 'eo-tickets-overlay hidden';
+  eoTicketsOverlay.innerHTML = `
+    <div class="eo-tickets-panel">
+      <div class="eo-cart-header">
+        <span class="eo-cart-title">⬡ I MIEI BIGLIETTI</span>
+        <button class="eo-cart-close" id="eoTicketsClose">✕</button>
+      </div>
+      <div class="eo-tickets-list" id="eoTicketsList"></div>
+    </div>`;
+  document.body.appendChild(eoTicketsOverlay);
+
+  function eoShowTickets() {
+    const list = document.getElementById('eoTicketsList');
+    list.innerHTML = eoTickets.length === 0
+      ? '<div class="eo-cart-empty">Nessun biglietto acquistato.</div>'
+      : eoTickets.map(t => `
+          <div class="eo-ticket-card">
+            <div class="eo-ticket-top">
+              <div>
+                <div class="eo-ticket-id">${t.ticketId}</div>
+                <div class="eo-ticket-char">${t.character}</div>
+                <div class="eo-ticket-epoch">${t.epoch}</div>
+              </div>
+              <div class="eo-ticket-price">€ ${t.price}</div>
+            </div>
+            <div class="eo-ticket-divider"><span></span></div>
+            <div class="eo-ticket-details">
+              <div><span class="eo-ticket-label">IMMERSIONE</span><span>${t.immersion}</span></div>
+              <div><span class="eo-ticket-label">DURATA</span><span>${t.duration}</span></div>
+              <div><span class="eo-ticket-label">LINGUA</span><span>${t.language}</span></div>
+              <div><span class="eo-ticket-label">DATA</span><span>${t.date} · ${t.time}</span></div>
+              <div><span class="eo-ticket-label">SEDE</span><span>${t.location}</span></div>
+              <div><span class="eo-ticket-label">ACQUISTATO</span><span>${t.purchasedAt}</span></div>
+              <div><span class="eo-ticket-label">INTESTATARIO</span><span>${t.buyer}</span></div>
+            </div>
+          </div>`).join('');
+    eoTicketsOverlay.classList.remove('hidden');
+    requestAnimationFrame(() => eoTicketsOverlay.classList.add('eo-cart-visible'));
+  }
+
+  function eoHideTickets() {
+    eoTicketsOverlay.classList.remove('eo-cart-visible');
+    setTimeout(() => eoTicketsOverlay.classList.add('hidden'), 300);
+  }
+
+  document.getElementById('eoTicketsClose').addEventListener('click', eoHideTickets);
+
+  document.getElementById('eoCartBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowCart(); });
+  document.getElementById('eoCartClose').addEventListener('click', eoHideCart);
+  document.getElementById('eoTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowTickets(); });
 
   function showEpochOverlay(epochIdx) {
     eoEpochIdx = epochIdx;
@@ -1407,6 +1747,8 @@
     document.getElementById('eoAvantiChar').disabled = true;
     document.getElementById('eoAvantiCust').disabled = true;
     document.getElementById('eoCenter').classList.remove('eo-center-lit');
+    const _immDetail = document.getElementById('eoImmDetail');
+    if (_immDetail) { _immDetail.classList.remove('eo-imm-detail-visible'); _immDetail.style.display = 'none'; }
     document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
     // Reset date tab
@@ -1418,11 +1760,24 @@
     document.getElementById('eoDateConfirmMsg').style.display = 'none';
     document.getElementById('eoDateSummary').style.display = 'none';
 
-    // Switch to character tab
-    eoSlideTab('character');
+    // Reset all tab panels directly (eoSlideTab would no-op since eoActiveTab is already 'character')
+    eoIsSliding = false;
+    eoTabOrder.forEach(tab => {
+      const el = document.getElementById(eoTabElId[tab]);
+      if (!el) return;
+      el.style.transition = '';
+      el.style.transform  = '';
+      el.style.opacity    = '';
+      el.style.filter     = '';
+      el.style.willChange = '';
+      el.style.display    = tab === 'character' ? '' : 'none';
+    });
+    eoEl.querySelectorAll('.eo-tab').forEach(b => b.classList.toggle('eo-active', b.dataset.tab === 'character'));
+    eoUpdateTabLocks();
 
     // Build character cards
     const left = document.getElementById('eoLeft');
+    const avantiCharBtn = document.getElementById('eoAvantiChar');
     left.innerHTML = '';
     eoChars[epochIdx].forEach((ch, i) => {
       const card = document.createElement('div');
@@ -1456,9 +1811,11 @@
         document.getElementById('eoConfirmBtn').style.display = '';
         document.getElementById('eoAvantiChar').disabled = false;
         document.getElementById('eoCenter').classList.add('eo-center-lit');
+        eoUpdateTabLocks();
       });
       left.appendChild(card);
     });
+    left.appendChild(avantiCharBtn);
 
     eoEl.classList.remove('hidden');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
@@ -1514,6 +1871,7 @@
       }
     });
     dnaBackArrow.style.display = 'block';
+    document.getElementById('tlIconsHud').style.display = 'flex';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
@@ -1555,6 +1913,7 @@
       }
     });
     dnaBackArrow.style.display = 'none';
+    document.getElementById('tlIconsHud').style.display = 'none';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     tlGuideEl.forEach(el => { el.style.opacity = '0'; });
@@ -3909,6 +4268,21 @@
   }
 
 
+
+  // ── SKIP CURVED DISPLAY: start directly from timeline video ──
+  // Remove this block and restore boot sequence if curved display is needed again.
+  hasBooted = true;
+  window.experiencesRevealed = true;
+  gridGroup.visible = false;
+  bgGroup.visible = false;
+  const _welcomeEl = document.getElementById('welcomeScreen');
+  if (_welcomeEl) _welcomeEl.style.display = 'none';
+  const _introEl = document.getElementById('introTextPanel');
+  if (_introEl) { _introEl.style.opacity = '0'; _introEl.style.pointerEvents = 'none'; }
+  panelL.classList.add('hidden-panel');
+  panelR.classList.add('hidden-panel');
+  setTimeout(() => { showTimelineView(); }, 80);
+  // ── END SKIP ──
 
   animate();
 })();

@@ -1047,7 +1047,7 @@ body {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 .payment-total {
   font-size: 18px;
@@ -1496,7 +1496,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 18px 28px 0 18px;
+  padding: 32px 28px 0 36px;
   flex-shrink: 0;
 }
 .eo-back-btn {
@@ -1505,12 +1505,15 @@ body {
   background: transparent;
   border: 1.5px solid rgba(255,255,255,0.5);
   color: #fff;
-  font-size: 26px;
-  line-height: 1;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: border-color .2s, background .2s;
   flex-shrink: 0;
+  padding: 0;
+}
+.eo-back-btn svg {
+  width: 22px; height: 22px;
+  display: block;
 }
 .eo-back-btn:hover { background: rgba(255,255,255,.08); border-color: #fff; }
 
@@ -1527,7 +1530,7 @@ body {
   border: none;
   color: rgba(255,255,255,0.4);
   font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
+  font-size: 19px;
   font-weight: 600;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -1543,13 +1546,19 @@ body {
   font-weight: 700;
   border-bottom-color: #fff;
 }
-.eo-tab:hover { color: rgba(255,255,255,0.75); }
+.eo-tab:hover:not(.eo-tab-locked) { color: rgba(255,255,255,0.75); }
+.eo-tab.eo-tab-locked {
+  color: rgba(255,255,255,0.18);
+  border-bottom-color: rgba(255,255,255,0.08);
+  cursor: not-allowed;
+}
 
 .eo-topbar-right {
   display: flex;
   gap: 12px;
   align-items: center;
   margin-left: auto;
+  margin-right: 16px;
 }
 .eo-icon-btn {
   width: 52px; height: 52px;
@@ -1564,6 +1573,119 @@ body {
 }
 .eo-icon-btn:hover { background: rgba(255,255,255,.08); border-color: #fff; }
 .eo-icon-btn svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Cart icon badge & glow */
+#eoCartBtn { position: relative; transition: border-color .3s, box-shadow .3s; }
+#eoCartBtn.eo-cart-has-items {
+  border-color: rgba(0,220,200,0.9);
+  box-shadow: 0 0 18px rgba(0,210,190,0.55);
+}
+.eo-cart-badge {
+  position: absolute; top: -6px; right: -6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(0,210,190,1); color: #000;
+  font-size: 11px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+
+/* Cart overlay */
+.eo-cart-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.55);
+  display: flex; justify-content: flex-end;
+  opacity: 0; transition: opacity .3s ease;
+  pointer-events: none;
+}
+.eo-cart-overlay.eo-cart-visible { opacity: 1; pointer-events: auto; }
+.eo-cart-overlay.hidden { display: none; }
+.eo-cart-panel {
+  width: 460px; height: 100%;
+  background: rgba(8,12,16,0.97);
+  border-left: 1px solid rgba(0,210,190,0.25);
+  display: flex; flex-direction: column;
+  transform: translateX(40px);
+  transition: transform .3s ease;
+}
+.eo-cart-overlay.eo-cart-visible .eo-cart-panel { transform: translateX(0); }
+.eo-cart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 32px 28px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.eo-cart-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+  letter-spacing: .22em; color: rgba(0,220,200,0.9); text-transform: uppercase;
+}
+.eo-cart-close {
+  background: transparent; border: none; color: rgba(255,255,255,0.5);
+  font-size: 18px; cursor: pointer; line-height: 1;
+  transition: color .2s;
+}
+.eo-cart-close:hover { color: #fff; }
+.eo-cart-items { flex: 1; overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 16px; }
+.eo-cart-empty {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; letter-spacing: .14em;
+  color: rgba(255,255,255,0.35); text-transform: uppercase; margin: auto; text-align: center;
+}
+.eo-cart-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;
+}
+.eo-cart-item-header { display: flex; justify-content: space-between; align-items: baseline; }
+.eo-cart-item-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700;
+  color: rgba(0,220,200,1); letter-spacing: .06em;
+}
+.eo-cart-item-price {
+  font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700;
+  color: #fff; letter-spacing: .04em;
+}
+.eo-cart-item-details {
+  display: flex; flex-direction: column; gap: 3px;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; letter-spacing: .1em;
+  color: rgba(255,255,255,0.45); text-transform: uppercase;
+}
+.eo-cart-remove {
+  background: transparent; border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.35); font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 5px 12px; cursor: pointer; align-self: flex-start;
+  transition: border-color .2s, color .2s;
+}
+.eo-cart-remove:hover { border-color: rgba(255,80,80,0.6); color: rgba(255,80,80,0.8); }
+.eo-cart-footer {
+  padding: 20px 28px 32px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.eo-cart-total-row {
+  display: flex; justify-content: space-between;
+  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+  letter-spacing: .14em; color: rgba(255,255,255,0.7); text-transform: uppercase;
+}
+#eoCartTotal { color: #fff; font-size: 22px; }
+.eo-cart-checkout-btn {
+  background: rgba(0,200,180,0.55); border: 1.5px solid rgba(0,210,190,0.85);
+  color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; padding: 15px;
+  cursor: pointer; transition: background .2s, box-shadow .2s;
+}
+.eo-cart-checkout-btn:hover {
+  background: rgba(0,210,190,0.75);
+  box-shadow: 0 0 22px rgba(0,210,190,0.4);
+}
+
+/* Price row highlight */
+.eo-sum-price-row {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 10px; margin-top: 4px;
+  font-weight: 700;
+}
+.eo-sum-price-row span:last-child {
+  color: rgba(0,220,200,1); font-size: 17px;
+}
 
 /* ── main content ── */
 .eo-content {
@@ -1613,14 +1735,18 @@ body {
 }
 .eo-char-card:hover {
   border-color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.82);
   transform: scaleX(1.22) scaleY(1.18);
-  box-shadow: 0 0 36px rgba(255,255,255,0.3), inset 0 0 22px rgba(255,255,255,0.09);
+  box-shadow: 0 0 36px rgba(255,255,255,0.3), inset 0 0 22px rgba(255,255,255,0.06);
 }
 .eo-char-card.eo-selected {
   border-color: rgba(80,220,200,0.95);
-  background: rgba(0,180,160,0.12);
-  box-shadow: 0 0 22px rgba(0,210,190,0.45), inset 0 0 16px rgba(0,210,190,0.1);
+  background: rgba(0,0,0,0.82);
+  box-shadow: 0 0 22px rgba(0,210,190,0.45), inset 0 0 16px rgba(0,210,190,0.08);
+}
+.eo-char-card.eo-selected .eo-card-name {
+  color: rgba(0,220,200,1);
+  text-shadow: 0 0 14px rgba(0,210,190,0.5);
 }
 .eo-card-num {
   font-size: 13px; font-weight: 700; letter-spacing: .14em;
@@ -1671,14 +1797,17 @@ body {
   text-shadow: 0 0 20px rgba(0,200,255,0.6);
 }
 .eo-center-empty {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 13px; font-weight: 600; letter-spacing: .2em; color: rgba(0,0,0,0.55);
-  text-transform: uppercase; margin-bottom: 60px;
+  text-transform: uppercase; white-space: nowrap;
 }
 
 /* ── right panel ── */
 .eo-right {
   width: 400px;
-  height: 420px;
+  height: 500px;
   flex-shrink: 0;
   align-self: center;
   margin-left: auto;
@@ -1715,7 +1844,7 @@ body {
   text-shadow: 0 0 18px rgba(255,255,255,0.3);
 }
 .eo-right-role {
-  font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.78);
+  font-size: 16px; line-height: 1.8; color: rgba(255,255,255,0.78);
   font-weight: 400; font-family: 'Rajdhani', sans-serif;
   letter-spacing: .02em; flex: 1; overflow-y: auto;
 }
@@ -1740,9 +1869,9 @@ body {
 /* ── AVANTI BUTTON ── */
 .eo-avanti-btn {
   padding: 13px 32px;
-  background: rgba(0,200,180,0.12);
-  border: 1.5px solid rgba(0,210,190,0.6);
-  color: rgba(0,220,200,1);
+  background: rgba(0,200,180,0.55);
+  border: 1.5px solid rgba(0,210,190,0.85);
+  color: #fff;
   font-family: 'Rajdhani', sans-serif;
   font-size: 15px;
   font-weight: 700;
@@ -1752,25 +1881,25 @@ body {
   transition: background .2s, box-shadow .2s, border-color .2s, opacity .2s;
   z-index: 10;
 }
-/* character tab: absolute below the left card column */
+/* character tab: inline in the flex column, below the cards */
 #eoAvantiChar {
-  position: absolute;
-  bottom: 28px;
-  left: 60px;
+  position: static;
+  align-self: flex-start;
+  margin-top: 8px;
 }
-/* customize tab: inline at bottom-left of the panel flow */
+/* customize tab: static, flows after the last band */
 .eo-avanti-inline {
   position: static;
   align-self: flex-start;
   margin-top: 4px;
 }
 .eo-avanti-btn:not(:disabled):hover {
-  background: rgba(0,210,190,0.22);
-  border-color: rgba(0,220,200,0.9);
-  box-shadow: 0 0 22px rgba(0,210,190,0.4);
+  background: rgba(0,210,190,0.75);
+  border-color: rgba(0,220,200,1);
+  box-shadow: 0 0 22px rgba(0,210,190,0.45);
 }
 .eo-avanti-btn:disabled {
-  opacity: 0.28;
+  opacity: 0.25;
   cursor: not-allowed;
   border-color: rgba(255,255,255,0.2);
   color: rgba(255,255,255,0.4);
@@ -1901,32 +2030,67 @@ body {
   justify-content: center;
   align-items: center;
 }
-.eo-customize-panel {
-  width: 560px;
-  background: rgba(0,0,0,0.82);
-  border: 1px solid rgba(255,255,255,0.18);
-  padding: 36px 40px 32px;
+.eo-cust-bands {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 26px;
   position: relative;
 }
-.eo-customize-panel::before {
-  content: ''; position: absolute;
-  top: -1px; left: -1px; width: 16px; height: 16px;
-  border-top: 1.5px solid rgba(255,255,255,0.6);
-  border-left: 1.5px solid rgba(255,255,255,0.6);
+.eo-cust-band {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  background: rgba(0,0,0,0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 28px 36px;
 }
-.eo-customize-panel::after {
-  content: ''; position: absolute;
-  bottom: -1px; right: -1px; width: 16px; height: 16px;
-  border-bottom: 1.5px solid rgba(255,255,255,0.6);
-  border-right: 1.5px solid rgba(255,255,255,0.6);
-}
-.eo-cust-section {
+.eo-cust-band-label {
+  flex-shrink: 0;
+  width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+}
+.eo-cust-band-num {
+  font-size: 12px; font-weight: 700; letter-spacing: .22em;
+  color: rgba(0,210,190,0.6);
+}
+.eo-cust-band-title {
+  font-size: 16px; font-weight: 700; letter-spacing: .18em;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+}
+.eo-imm-detail {
+  background: rgba(0,0,0,0.72);
+  border: 1px solid rgba(0,210,190,0.25);
+  border-left: 3px solid rgba(0,210,190,0.7);
+  padding: 18px 24px;
+  max-width: 700px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.eo-imm-detail.eo-imm-detail-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.eo-imm-detail-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .22em;
+  color: rgba(0,210,190,0.8); text-transform: uppercase;
+  display: block; margin-bottom: 8px;
+}
+.eo-imm-detail-text {
+  margin: 0;
+  font-size: 13px; line-height: 1.65;
+  color: rgba(255,255,255,0.65);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 400; letter-spacing: .02em;
+}
+.eo-cust-lang-select {
+  width: 280px;
+  font-size: 15px;
+  padding: 10px 14px;
 }
 .eo-cust-options {
   display: flex;
@@ -1938,11 +2102,12 @@ body {
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-family: 'Rajdhani', sans-serif;
-  padding: 14px 12px;
+  padding: 20px 18px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
+  min-width: 140px;
   text-align: left;
   transition: border-color .2s, background .2s, box-shadow .2s;
   position: relative;
@@ -1964,13 +2129,14 @@ body {
   color: rgba(80,220,200,0.9);
 }
 .eo-cust-opt-title {
-  font-size: 12px; font-weight: 700; letter-spacing: .18em;
+  font-size: 15px; font-weight: 700; letter-spacing: .18em;
   text-transform: uppercase;
 }
 .eo-cust-opt-desc {
-  font-size: 11px; color: rgba(255,255,255,0.5);
+  font-size: 13px; color: rgba(255,255,255,0.5);
   line-height: 1.4; font-weight: 400; letter-spacing: .02em;
 }
+
 
 /* ── CHARACTER IMAGE in center panel ── */
 .eo-center-img {
@@ -1986,4 +2152,159 @@ body {
 }
 .eo-center-img.eo-img-loaded {
   opacity: 1;
+}
+
+/* ── TIMELINE HUD ICONS ── */
+.tl-icons-hud {
+  position: fixed;
+  top: 32px;
+  right: 36px;
+  z-index: 5000;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ── TICKETS ICON ── */
+#eoTicketsBtn { position: relative; transition: border-color .3s, box-shadow .3s; }
+#eoTicketsBtn.eo-tickets-has-items {
+  border-color: rgba(0,220,200,0.9);
+  box-shadow: 0 0 18px rgba(0,210,190,0.55);
+}
+.eo-tickets-badge {
+  position: absolute; top: -6px; right: -6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(0,210,190,1); color: #000;
+  font-size: 11px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+
+/* ── CHECKOUT OVERLAY ── */
+.eo-checkout-overlay {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0,0,0,0.65);
+  display: flex; justify-content: flex-end;
+  opacity: 0; transition: opacity .3s ease;
+  pointer-events: none;
+}
+.eo-checkout-overlay.eo-cart-visible { opacity: 1; pointer-events: auto; }
+.eo-checkout-overlay.hidden { display: none; }
+.eo-checkout-panel {
+  width: 480px; height: 100%;
+  background: rgba(6,10,14,0.98);
+  border-left: 1px solid rgba(0,210,190,0.3);
+  display: flex; flex-direction: column;
+  transform: translateX(40px);
+  transition: transform .3s ease;
+  overflow-y: auto;
+}
+.eo-checkout-overlay.eo-cart-visible .eo-checkout-panel { transform: translateX(0); }
+.eo-checkout-body {
+  padding: 28px 28px 40px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.eo-checkout-section-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,220,200,0.7); text-transform: uppercase;
+  margin-bottom: -4px;
+}
+.eo-checkout-field { display: flex; flex-direction: column; gap: 6px; }
+.eo-checkout-row { display: flex; gap: 16px; }
+.eo-checkout-row .eo-checkout-field { flex: 1; }
+.eo-checkout-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .2em; color: rgba(255,255,255,0.4); text-transform: uppercase;
+}
+.eo-checkout-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 15px;
+  letter-spacing: .06em; padding: 12px 14px;
+  outline: none; transition: border-color .2s;
+}
+.eo-checkout-input:focus { border-color: rgba(0,210,190,0.7); }
+.eo-checkout-input::placeholder { color: rgba(255,255,255,0.2); }
+.eo-checkout-total-row {
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700;
+  letter-spacing: .12em; color: rgba(0,220,200,1); text-transform: uppercase;
+  padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: 8px;
+}
+.eo-checkout-error {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; letter-spacing: .08em;
+  color: rgba(255,100,100,0.9); padding: 10px 0;
+}
+
+/* ── TICKETS OVERLAY ── */
+.eo-tickets-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.55);
+  display: flex; justify-content: flex-start;
+  opacity: 0; transition: opacity .3s ease;
+  pointer-events: none;
+}
+.eo-tickets-overlay.eo-cart-visible { opacity: 1; pointer-events: auto; }
+.eo-tickets-overlay.hidden { display: none; }
+.eo-tickets-panel {
+  width: 500px; height: 100%;
+  background: rgba(8,12,16,0.97);
+  border-right: 1px solid rgba(0,210,190,0.25);
+  display: flex; flex-direction: column;
+  transform: translateX(-40px);
+  transition: transform .3s ease;
+}
+.eo-tickets-overlay.eo-cart-visible .eo-tickets-panel { transform: translateX(0); }
+.eo-tickets-list {
+  flex: 1; overflow-y: auto;
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* Ticket card — boarding-pass style */
+.eo-ticket-card {
+  border: 1px solid rgba(0,210,190,0.35);
+  background: rgba(0,210,190,0.04);
+  position: relative;
+}
+.eo-ticket-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 20px 22px 16px;
+}
+.eo-ticket-id {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,220,200,0.7); text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.eo-ticket-char {
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+  color: #fff; letter-spacing: .05em;
+}
+.eo-ticket-epoch {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.45); letter-spacing: .12em; text-transform: uppercase;
+  margin-top: 2px;
+}
+.eo-ticket-price {
+  font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700;
+  color: rgba(0,220,200,1); letter-spacing: .04em;
+}
+.eo-ticket-divider {
+  display: flex; align-items: center;
+  padding: 0 20px; margin: 0;
+}
+.eo-ticket-divider span {
+  flex: 1; border-top: 1px dashed rgba(0,210,190,0.3);
+}
+.eo-ticket-details {
+  padding: 14px 22px 20px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.eo-ticket-details > div {
+  display: flex; justify-content: space-between;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.6); letter-spacing: .1em; text-transform: uppercase;
+}
+.eo-ticket-label {
+  color: rgba(255,255,255,0.3);
 }
