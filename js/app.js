@@ -1139,7 +1139,7 @@
     <div class="eo-content eo-customize-content" id="eoTabCustomize" style="display:none;">
       <div class="eo-cust-bands">
 
-        <div class="eo-cust-band">
+        <div class="eo-cust-band eo-cust-band-imm">
           <div class="eo-cust-band-label">
             <div class="eo-cust-band-num">01</div>
             <div class="eo-cust-band-title">LIVELLO DI IMMERSIONE</div>
@@ -1158,10 +1158,10 @@
               <span class="eo-cust-opt-desc">Piena sincronizzazione genetica. Solo per esperti.</span>
             </button>
           </div>
-        </div>
-        <div class="eo-imm-detail" id="eoImmDetail" style="display:none;">
-          <span class="eo-imm-detail-label" id="eoImmDetailLabel"></span>
-          <p class="eo-imm-detail-text" id="eoImmDetailText"></p>
+          <div class="eo-imm-detail" id="eoImmDetail">
+            <span class="eo-imm-detail-label" id="eoImmDetailLabel"></span>
+            <p class="eo-imm-detail-text" id="eoImmDetailText"></p>
+          </div>
         </div>
 
         <div class="eo-cust-band">
@@ -1187,9 +1187,8 @@
             <option value="fr">Français</option>
             <option value="es">Español</option>
           </select>
+          <button class="eo-avanti-btn eo-avanti-inline" id="eoAvantiCust" disabled>AVANTI &rsaquo;</button>
         </div>
-
-        <button class="eo-avanti-btn eo-avanti-inline" id="eoAvantiCust" disabled>AVANTI &rsaquo;</button>
       </div>
     </div>
 
@@ -1440,7 +1439,6 @@
           const detailEl = document.getElementById('eoImmDetail');
           document.getElementById('eoImmDetailLabel').textContent = desc.label;
           document.getElementById('eoImmDetailText').textContent = desc.text;
-          detailEl.style.display = '';
           requestAnimationFrame(() => detailEl.classList.add('eo-imm-detail-visible'));
         }
       });
@@ -1663,8 +1661,94 @@
     eoUpdateTicketsIcon();
     eoHideCheckout();
     eoHideCart();
-    eoShowTickets();
+    const newTicket = eoTickets[eoTickets.length - 1];
+    eoShowTicketAnim(newTicket);
   });
+
+  // ── TICKET CONFIRMATION ANIMATION ──
+  const eoTicketAnimEl = document.createElement('div');
+  eoTicketAnimEl.id = 'eoTicketAnim';
+  eoTicketAnimEl.className = 'eo-ticket-anim hidden';
+  eoTicketAnimEl.innerHTML = `
+    <div class="eo-ta-inner">
+      <div class="eo-ta-tag" id="eoTaTag">⬡ ABSTERGO INDUSTRIES</div>
+      <div class="eo-ta-status" id="eoTaStatus">BIGLIETTO EMESSO</div>
+      <div class="eo-ta-card" id="eoTaCard">
+        <div class="eo-ta-scan"></div>
+        <div class="eo-ta-id" id="eoTaId"></div>
+        <div class="eo-ta-char" id="eoTaChar"></div>
+        <div class="eo-ta-epoch" id="eoTaEpoch"></div>
+        <div class="eo-ta-divider"><span></span></div>
+        <div class="eo-ta-bottom">
+          <div class="eo-ta-rows" id="eoTaRows"></div>
+          <canvas id="eoTaQr" class="eo-ta-qr"></canvas>
+        </div>
+      </div>
+      <div class="eo-ta-footer">SCANSIONA IL QR PER AVERE IL BIGLIETTO SUL TUO TELEFONO</div>
+    </div>`;
+  document.body.appendChild(eoTicketAnimEl);
+
+  function eoTicketUrl(ticket) {
+    const base = 'https://kekkopettine-droid.github.io/test/ticket.html';
+    const p = new URLSearchParams({
+      id:    ticket.ticketId,
+      char:  ticket.character,
+      epoch: ticket.epoch,
+      imm:   ticket.immersion,
+      dur:   ticket.duration,
+      date:  ticket.date,
+      time:  ticket.time,
+      loc:   ticket.location,
+      buyer: ticket.buyer,
+    });
+    return base + '?' + p.toString();
+  }
+
+  function eoShowTicketAnim(ticket) {
+    const el = eoTicketAnimEl;
+    document.getElementById('eoTaId').textContent    = ticket.ticketId;
+    document.getElementById('eoTaChar').textContent  = ticket.character;
+    document.getElementById('eoTaEpoch').textContent = ticket.epoch;
+    const rows = [
+      ['IMMERSIONE', ticket.immersion],
+      ['DURATA',     ticket.duration],
+      ['DATA',       ticket.date + ' · ' + ticket.time],
+      ['SEDE',       ticket.location],
+      ['INTESTATARIO', ticket.buyer],
+    ];
+    const rowsEl = document.getElementById('eoTaRows');
+    rowsEl.innerHTML = rows.map(([k,v]) =>
+      `<div class="eo-ta-row"><span class="eo-ta-row-label">${k}</span><span class="eo-ta-row-val">${v}</span></div>`
+    ).join('');
+
+    // Generate QR code
+    const qrCanvas = document.getElementById('eoTaQr');
+    if (window.QRCode) {
+      QRCode.toCanvas(qrCanvas, eoTicketUrl(ticket), {
+        width: 110, margin: 1,
+        color: { dark: '#00d2be', light: '#080e12' }
+      });
+    }
+
+    el.classList.remove('hidden');
+    requestAnimationFrame(() => el.classList.add('eo-ta-visible'));
+
+    // Stagger row reveal
+    rowsEl.querySelectorAll('.eo-ta-row').forEach((r, i) => {
+      r.style.opacity = '0';
+      r.style.transform = 'translateY(8px)';
+      setTimeout(() => {
+        r.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        r.style.opacity = '1';
+        r.style.transform = 'translateY(0)';
+      }, 900 + i * 140);
+    });
+
+    setTimeout(() => {
+      el.classList.remove('eo-ta-visible');
+      setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 500);
+    }, 4200);
+  }
 
   // Wire checkout from cart
   eoCartOverlay.addEventListener('click', e => {
@@ -1694,7 +1778,7 @@
     const list = document.getElementById('eoTicketsList');
     list.innerHTML = eoTickets.length === 0
       ? '<div class="eo-cart-empty">Nessun biglietto acquistato.</div>'
-      : eoTickets.map(t => `
+      : eoTickets.map((t, i) => `
           <div class="eo-ticket-card">
             <div class="eo-ticket-top">
               <div>
@@ -1702,21 +1786,32 @@
                 <div class="eo-ticket-char">${t.character}</div>
                 <div class="eo-ticket-epoch">${t.epoch}</div>
               </div>
-              <div class="eo-ticket-price">€ ${t.price}</div>
             </div>
             <div class="eo-ticket-divider"><span></span></div>
-            <div class="eo-ticket-details">
-              <div><span class="eo-ticket-label">IMMERSIONE</span><span>${t.immersion}</span></div>
-              <div><span class="eo-ticket-label">DURATA</span><span>${t.duration}</span></div>
-              <div><span class="eo-ticket-label">LINGUA</span><span>${t.language}</span></div>
-              <div><span class="eo-ticket-label">DATA</span><span>${t.date} · ${t.time}</span></div>
-              <div><span class="eo-ticket-label">SEDE</span><span>${t.location}</span></div>
-              <div><span class="eo-ticket-label">ACQUISTATO</span><span>${t.purchasedAt}</span></div>
-              <div><span class="eo-ticket-label">INTESTATARIO</span><span>${t.buyer}</span></div>
+            <div class="eo-ticket-body">
+              <div class="eo-ticket-details">
+                <div><span class="eo-ticket-label">IMMERSIONE</span><span>${t.immersion}</span></div>
+                <div><span class="eo-ticket-label">DURATA</span><span>${t.duration}</span></div>
+                <div><span class="eo-ticket-label">DATA</span><span>${t.date} · ${t.time}</span></div>
+                <div><span class="eo-ticket-label">SEDE</span><span>${t.location}</span></div>
+                <div><span class="eo-ticket-label">INTESTATARIO</span><span>${t.buyer}</span></div>
+              </div>
+              <canvas class="eo-ticket-qr" data-idx="${i}"></canvas>
             </div>
           </div>`).join('');
     eoTicketsOverlay.classList.remove('hidden');
-    requestAnimationFrame(() => eoTicketsOverlay.classList.add('eo-cart-visible'));
+    requestAnimationFrame(() => {
+      eoTicketsOverlay.classList.add('eo-cart-visible');
+      if (window.QRCode) {
+        list.querySelectorAll('.eo-ticket-qr').forEach(canvas => {
+          const t = eoTickets[+canvas.dataset.idx];
+          QRCode.toCanvas(canvas, eoTicketUrl(t), {
+            width: 90, margin: 1,
+            color: { dark: '#00d2be', light: '#080e12' }
+          });
+        });
+      }
+    });
   }
 
   function eoHideTickets() {
@@ -1748,7 +1843,7 @@
     document.getElementById('eoAvantiCust').disabled = true;
     document.getElementById('eoCenter').classList.remove('eo-center-lit');
     const _immDetail = document.getElementById('eoImmDetail');
-    if (_immDetail) { _immDetail.classList.remove('eo-imm-detail-visible'); _immDetail.style.display = 'none'; }
+    if (_immDetail) { _immDetail.classList.remove('eo-imm-detail-visible'); }
     document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
     // Reset date tab

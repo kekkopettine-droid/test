@@ -1711,7 +1711,7 @@ body {
   width: 320px;
   height: 120px;
   border: 1px solid rgba(255,255,255,0.45);
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.88);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1735,13 +1735,13 @@ body {
 }
 .eo-char-card:hover {
   border-color: rgba(255,255,255,0.85);
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.88);
   transform: scaleX(1.22) scaleY(1.18);
   box-shadow: 0 0 36px rgba(255,255,255,0.3), inset 0 0 22px rgba(255,255,255,0.06);
 }
 .eo-char-card.eo-selected {
   border-color: rgba(80,220,200,0.95);
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.88);
   box-shadow: 0 0 22px rgba(0,210,190,0.45), inset 0 0 16px rgba(0,210,190,0.08);
 }
 .eo-char-card.eo-selected .eo-card-name {
@@ -1791,7 +1791,7 @@ body {
 }
 .eo-center-name {
   width: 100%; padding: 22px 20px 18px;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.88);
   font-size: 22px; font-weight: 700; letter-spacing: .06em;
   color: #fff; text-align: center;
   text-shadow: 0 0 20px rgba(0,200,255,0.6);
@@ -1811,7 +1811,7 @@ body {
   flex-shrink: 0;
   align-self: center;
   margin-left: auto;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.88);
   border: 1px solid rgba(255,255,255,0.15);
   padding: 26px 22px;
   display: flex;
@@ -1914,7 +1914,7 @@ body {
 }
 .eo-date-panel {
   width: 520px;
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.88);
   border: 1px solid rgba(255,255,255,0.18);
   padding: 36px 40px 32px;
   display: flex;
@@ -2027,8 +2027,10 @@ body {
 
 /* ── PERSONALIZZAZIONE TAB ── */
 .eo-customize-content {
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow-y: auto;
+  padding-top: 80px;
 }
 .eo-cust-bands {
   display: flex;
@@ -2036,14 +2038,23 @@ body {
   align-items: flex-start;
   gap: 26px;
   position: relative;
+  margin-left: 80px;
 }
 .eo-cust-band {
   display: flex;
   align-items: center;
   gap: 60px;
-  background: rgba(0,0,0,0.72);
+  background: rgba(0,0,0,0.88);
   border: 1px solid rgba(255,255,255,0.08);
   padding: 28px 36px;
+  min-width: 680px;
+}
+.eo-cust-band-imm {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  max-width: 1060px;
+  width: 100%;
 }
 .eo-cust-band-label {
   flex-shrink: 0;
@@ -2062,18 +2073,20 @@ body {
   text-transform: uppercase;
 }
 .eo-imm-detail {
-  background: rgba(0,0,0,0.72);
-  border: 1px solid rgba(0,210,190,0.25);
+  border-top: 1px solid rgba(255,255,255,0.08);
   border-left: 3px solid rgba(0,210,190,0.7);
-  padding: 18px 24px;
-  max-width: 700px;
+  padding: 0 20px;
+  width: 100%;
+  box-sizing: border-box;
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition: max-height 0.4s ease, opacity 0.35s ease, padding 0.35s ease;
 }
 .eo-imm-detail.eo-imm-detail-visible {
+  max-height: 220px;
   opacity: 1;
-  transform: translateY(0);
+  padding: 16px 20px;
 }
 .eo-imm-detail-label {
   font-size: 10px; font-weight: 700; letter-spacing: .22em;
@@ -2082,7 +2095,7 @@ body {
 }
 .eo-imm-detail-text {
   margin: 0;
-  font-size: 13px; line-height: 1.65;
+  font-size: 15px; line-height: 1.65;
   color: rgba(255,255,255,0.65);
   font-family: 'Rajdhani', sans-serif;
   font-weight: 400; letter-spacing: .02em;
@@ -2095,6 +2108,7 @@ body {
 .eo-cust-options {
   display: flex;
   gap: 12px;
+  width: 100%;
 }
 .eo-cust-opt {
   flex: 1;
@@ -2102,12 +2116,11 @@ body {
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-family: 'Rajdhani', sans-serif;
-  padding: 20px 18px;
+  padding: 16px 14px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 140px;
   text-align: left;
   transition: border-color .2s, background .2s, box-shadow .2s;
   position: relative;
@@ -2307,4 +2320,104 @@ body {
 }
 .eo-ticket-label {
   color: rgba(255,255,255,0.3);
+}
+
+/* QR in tickets panel */
+.eo-ticket-body {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 22px 20px; gap: 16px;
+}
+.eo-ticket-details { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.eo-ticket-qr { flex-shrink: 0; display: block; border-radius: 2px; }
+
+/* ── TICKET CONFIRMATION ANIMATION ── */
+@keyframes eoTaScan {
+  0%   { top: 0; opacity: 1; }
+  90%  { top: 100%; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes eoTaPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(0,210,190,0.4), 0 0 80px rgba(0,180,160,0.15); }
+  50%       { box-shadow: 0 0 50px rgba(0,210,190,0.7), 0 0 120px rgba(0,180,160,0.3); }
+}
+@keyframes eoTaStatusBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.eo-ticket-anim {
+  position: fixed; inset: 0; z-index: 20000;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.eo-ticket-anim.eo-ta-visible { opacity: 1; pointer-events: auto; }
+.eo-ticket-anim.hidden { display: none; }
+
+.eo-ta-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.eo-ta-tag {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .32em; color: rgba(0,210,190,0.6); text-transform: uppercase;
+  animation: eoTaStatusBlink 2s ease infinite;
+}
+.eo-ta-status {
+  font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700;
+  letter-spacing: .22em; color: rgba(0,220,200,1); text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(0,210,190,0.8);
+}
+.eo-ta-card {
+  position: relative; overflow: hidden;
+  width: 480px;
+  background: rgba(8,14,18,0.98);
+  border: 1px solid rgba(0,210,190,0.5);
+  padding: 28px 32px 24px;
+  animation: eoTaPulse 2.5s ease infinite;
+}
+.eo-ta-scan {
+  position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,210,190,0.9), transparent);
+  animation: eoTaScan 1.2s ease forwards;
+  pointer-events: none;
+}
+.eo-ta-id {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,210,190,0.7); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.eo-ta-char {
+  font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
+  color: #fff; letter-spacing: .06em;
+}
+.eo-ta-epoch {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.4); letter-spacing: .14em; text-transform: uppercase;
+  margin-top: 3px; margin-bottom: 18px;
+}
+.eo-ta-divider {
+  display: flex; align-items: center; margin-bottom: 16px;
+}
+.eo-ta-divider span {
+  flex: 1; border-top: 1px dashed rgba(0,210,190,0.3);
+}
+.eo-ta-bottom {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+}
+.eo-ta-rows {
+  flex: 1; display: flex; flex-direction: column; gap: 8px;
+}
+.eo-ta-qr { flex-shrink: 0; display: block; border-radius: 2px; }
+.eo-ta-row {
+  display: flex; justify-content: space-between;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.eo-ta-row-label { color: rgba(255,255,255,0.3); }
+.eo-ta-row-val   { color: rgba(255,255,255,0.85); }
+.eo-ta-footer {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: .22em; color: rgba(255,255,255,0.2); text-transform: uppercase;
+  text-align: center;
 }

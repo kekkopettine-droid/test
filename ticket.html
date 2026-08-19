@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Biglietto Animus — Abstergo Industries</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #050a0e;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .logo-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px;
+  }
+  .logo-hex { font-size: 22px; color: rgba(0,210,190,0.8); }
+  .logo-text {
+    font-size: 14px; font-weight: 700; letter-spacing: .28em;
+    color: rgba(255,255,255,0.55); text-transform: uppercase;
+  }
+  .ticket {
+    width: 100%; max-width: 420px;
+    border: 1px solid rgba(0,210,190,0.5);
+    background: rgba(8,14,18,0.98);
+    box-shadow: 0 0 40px rgba(0,210,190,0.2), 0 0 100px rgba(0,180,160,0.08);
+    animation: pulse 3s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 40px rgba(0,210,190,0.2), 0 0 100px rgba(0,180,160,0.08); }
+    50%      { box-shadow: 0 0 60px rgba(0,210,190,0.4), 0 0 140px rgba(0,180,160,0.18); }
+  }
+  .ticket-top { padding: 24px 24px 18px; }
+  .ticket-id {
+    font-size: 11px; font-weight: 700; letter-spacing: .28em;
+    color: rgba(0,210,190,0.7); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .ticket-char {
+    font-size: 26px; font-weight: 700; letter-spacing: .05em; color: #fff;
+  }
+  .ticket-epoch {
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-top: 4px;
+  }
+  .ticket-divider {
+    padding: 0 20px;
+    border-top: 1px dashed rgba(0,210,190,0.3);
+    margin: 4px 0;
+  }
+  .ticket-details { padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .ticket-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+  }
+  .ticket-row-label { color: rgba(255,255,255,0.3); }
+  .ticket-row-val   { color: rgba(255,255,255,0.85); }
+  .ticket-qr-section {
+    border-top: 1px dashed rgba(0,210,190,0.3);
+    padding: 20px 24px;
+    display: flex; justify-content: center;
+  }
+  .ticket-qr-section canvas { display: block; }
+  .ticket-footer {
+    text-align: center; padding: 0 24px 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: .2em;
+    color: rgba(255,255,255,0.2); text-transform: uppercase;
+  }
+  .invalid {
+    text-align: center; padding: 60px 20px;
+    font-size: 14px; letter-spacing: .14em; color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="logo-row">
+  <span class="logo-hex">⬡</span>
+  <span class="logo-text">Abstergo Industries · Animus</span>
+</div>
+
+<div class="ticket" id="ticket">
+  <div class="invalid" id="invalidMsg" style="display:none;">Biglietto non valido o dati mancanti.</div>
+  <div id="ticketContent" style="display:none;">
+    <div class="ticket-top">
+      <div class="ticket-id" id="tId"></div>
+      <div class="ticket-char" id="tChar"></div>
+      <div class="ticket-epoch" id="tEpoch"></div>
+    </div>
+    <div class="ticket-divider"></div>
+    <div class="ticket-details" id="tDetails"></div>
+    <div class="ticket-qr-section">
+      <canvas id="tQr"></canvas>
+    </div>
+    <div class="ticket-footer">Presentare questo biglietto all'ingresso della struttura Abstergo</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+  const p = new URLSearchParams(location.search);
+  const id    = p.get('id');
+  const char  = p.get('char');
+  const epoch = p.get('epoch');
+  const imm   = p.get('imm');
+  const dur   = p.get('dur');
+  const date  = p.get('date');
+  const time  = p.get('time');
+  const loc   = p.get('loc');
+  const buyer = p.get('buyer');
+
+  if (!id || !char) {
+    document.getElementById('invalidMsg').style.display = '';
+  } else {
+    document.getElementById('ticketContent').style.display = '';
+    document.getElementById('tId').textContent    = id;
+    document.getElementById('tChar').textContent  = char;
+    document.getElementById('tEpoch').textContent = epoch || '';
+    const rows = [
+      ['Immersione', imm],
+      ['Durata',     dur],
+      ['Data',       date + (time ? ' · ' + time : '')],
+      ['Sede',       loc],
+      ['Intestatario', buyer],
+    ].filter(([,v]) => v);
+    document.getElementById('tDetails').innerHTML = rows.map(([k,v]) =>
+      `<div class="ticket-row"><span class="ticket-row-label">${k}</span><span class="ticket-row-val">${v}</span></div>`
+    ).join('');
+    QRCode.toCanvas(document.getElementById('tQr'), location.href, {
+      width: 120, margin: 1,
+      color: { dark: '#00d2be', light: '#050a0e' }
+    });
+  }
+</script>
+</body>
+</html>
