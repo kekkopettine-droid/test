@@ -1833,7 +1833,7 @@ body {
 .eo-rotation-panel.eo-rp-open { opacity: 1; pointer-events: auto; }
 
 .eo-rp-box {
-  width: 480px; max-width: 90vw;
+  width: 620px; max-width: 90vw;
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(0,210,190,0.35);
   box-shadow: 0 0 60px rgba(0,210,190,0.18), 0 0 120px rgba(0,0,0,0.8);
