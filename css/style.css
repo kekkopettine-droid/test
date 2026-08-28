@@ -1779,8 +1779,8 @@ body {
 .eo-rotation-chip {
   position: relative;
   width: 320px;
-  display: flex; align-items: center; gap: 9px;
-  padding: 9px 14px;
+  display: flex; align-items: center; gap: 0;
+  padding: 9px 12px;
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(0,210,190,0.22);
   cursor: pointer;
@@ -1790,19 +1790,33 @@ body {
   transition: border-color .2s, color .2s;
   user-select: none;
   z-index: 21;
+  overflow: hidden;
 }
 .eo-rotation-chip:hover, .eo-rotation-chip.eo-rc-open {
   border-color: rgba(0,210,190,0.55);
   color: rgba(0,210,190,0.95);
 }
 .eo-rc-icon {
-  font-size: 15px; display: inline-block;
+  flex-shrink: 0;
+  font-size: 15px; display: inline-block; margin-right: 10px;
   animation: eoRcSpin 5s linear infinite;
 }
 @keyframes eoRcSpin { to { transform: rotate(360deg); } }
-.eo-rc-text { flex: 1; }
+.eo-rc-ticker {
+  flex: 1; overflow: hidden; position: relative;
+}
+.eo-rc-text {
+  display: inline-block; white-space: nowrap;
+  animation: eoRcMarquee 12s linear infinite;
+  padding-right: 60px;
+}
+@keyframes eoRcMarquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
 .eo-rc-arrow {
-  font-size: 16px; display: inline-block;
+  flex-shrink: 0;
+  font-size: 16px; display: inline-block; margin-left: 10px;
   transition: transform .25s ease;
 }
 .eo-rc-open .eo-rc-arrow { transform: rotate(90deg); }
