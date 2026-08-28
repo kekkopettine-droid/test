@@ -1833,7 +1833,7 @@ body {
 .eo-rotation-panel.eo-rp-open { opacity: 1; pointer-events: auto; }
 
 .eo-rp-box {
-  width: 620px; max-width: 90vw;
+  width: 780px; max-width: 92vw;
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(0,210,190,0.35);
   box-shadow: 0 0 60px rgba(0,210,190,0.18), 0 0 120px rgba(0,0,0,0.8);
@@ -1857,63 +1857,63 @@ body {
 
 .eo-rp-top {
   position: relative;
-  padding: 20px 20px 14px;
+  padding: 28px 28px 18px;
   border-bottom: 1px solid rgba(0,210,190,0.15);
 }
 .eo-rp-close {
-  position: absolute; top: 14px; right: 16px;
+  position: absolute; top: 20px; right: 22px;
   background: none; border: none; cursor: pointer;
-  font-size: 14px; color: rgba(255,255,255,0.3);
+  font-size: 17px; color: rgba(255,255,255,0.3);
   line-height: 1; padding: 2px 4px;
   transition: color .2s;
 }
 .eo-rp-close:hover { color: rgba(255,255,255,0.7); }
 .eo-rp-tag {
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .28em; color: rgba(0,210,190,0.45);
-  text-transform: uppercase; margin-bottom: 4px;
+  text-transform: uppercase; margin-bottom: 6px;
 }
 .eo-rp-title {
-  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700;
   letter-spacing: .18em; color: rgba(0,210,190,0.85);
   text-transform: uppercase;
 }
 .eo-rp-body {
-  padding: 16px 20px;
-  font-family: 'Rajdhani', sans-serif; font-size: 14px; line-height: 1.7;
+  padding: 22px 28px;
+  font-family: 'Rajdhani', sans-serif; font-size: 17px; line-height: 1.75;
   color: rgba(255,255,255,0.5);
   border-bottom: 1px solid rgba(0,210,190,0.12);
 }
 .eo-rp-body strong { color: rgba(0,210,190,0.8); font-weight: 700; }
 .eo-rp-suggest {
-  padding: 16px 20px 20px;
+  padding: 22px 28px 26px;
 }
 .eo-rp-suggest-label {
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .26em; color: rgba(0,210,190,0.45);
-  text-transform: uppercase; margin-bottom: 9px;
+  text-transform: uppercase; margin-bottom: 12px;
 }
 .eo-rp-textarea {
-  width: 100%; min-height: 62px; resize: none;
+  width: 100%; min-height: 80px; resize: none;
   background: rgba(0,0,0,0.6);
   border: 1px solid rgba(0,210,190,0.28);
   color: rgba(255,255,255,0.8);
-  padding: 9px 11px;
-  font-family: 'Rajdhani', sans-serif; font-size: 13px; line-height: 1.5;
+  padding: 12px 14px;
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; line-height: 1.55;
   outline: none; border-radius: 0;
   transition: border-color .2s;
 }
 .eo-rp-textarea::placeholder { color: rgba(255,255,255,0.22); }
 .eo-rp-textarea:focus { border-color: rgba(0,210,190,0.6); }
 .eo-rp-actions {
-  display: flex; align-items: center; gap: 14px; margin-top: 9px;
+  display: flex; align-items: center; gap: 16px; margin-top: 12px;
 }
 .eo-rp-submit {
-  padding: 7px 18px;
+  padding: 9px 24px;
   background: transparent;
   border: 1px solid rgba(0,210,190,0.45);
   color: rgba(0,210,190,0.8); cursor: pointer;
-  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
   transition: background .2s, border-color .2s, color .2s;
 }
@@ -1923,13 +1923,13 @@ body {
   color: rgba(0,210,190,1);
 }
 .eo-rp-counter {
-  font-family: 'Rajdhani', sans-serif; font-size: 10px;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
   color: rgba(255,255,255,0.2); letter-spacing: .1em;
   margin-left: auto;
 }
 .eo-rp-confirm {
-  display: none; margin-top: 10px;
-  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  display: none; margin-top: 12px;
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
   letter-spacing: .24em; color: rgba(0,210,190,0.85); text-transform: uppercase;
 }
 .eo-rp-confirm.eo-rp-confirm-visible { display: block; }
