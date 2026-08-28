@@ -2219,19 +2219,12 @@ body {
 }
 
 /* ── TICKETS ICON ── */
-#eoTicketsBtn { position: relative; transition: border-color .3s, box-shadow .3s; }
-#eoTicketsBtn.eo-tickets-has-items {
-  border-color: rgba(0,220,200,0.9);
-  box-shadow: 0 0 18px rgba(0,210,190,0.55);
+#tlTicketsBtn { transition: border-color .3s, box-shadow .3s, background .2s; }
+#tlTicketsBtn.eo-tickets-has-items {
+  border-color: rgba(0,210,190,0.9);
+  box-shadow: 0 0 16px rgba(0,210,190,0.6), 0 0 36px rgba(0,180,160,0.25);
 }
-.eo-tickets-badge {
-  position: absolute; top: -6px; right: -6px;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: rgba(0,210,190,1); color: #000;
-  font-size: 11px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
-  display: flex; align-items: center; justify-content: center;
-  line-height: 1;
-}
+#tlTicketsBtn.eo-tickets-has-items svg { stroke: rgba(0,210,190,1); }
 
 /* ── CHECKOUT OVERLAY ── */
 .eo-checkout-overlay {

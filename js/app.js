@@ -1355,7 +1355,9 @@
   }
 
   function eoUpdateTicketsIcon() {
-    _syncIconBtn(document.getElementById('tlTicketsBtn'), eoTickets.length, 'eo-tickets-has-items', 'eo-tickets-badge');
+    const btn = document.getElementById('tlTicketsBtn');
+    if (!btn) return;
+    btn.classList.toggle('eo-tickets-has-items', eoTickets.length > 0);
   }
 
   // Timeline HUD icons (cart + tickets, visibili durante la timeline)
