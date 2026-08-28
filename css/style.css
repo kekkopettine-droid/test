@@ -1807,12 +1807,12 @@ body {
 }
 .eo-rc-text {
   display: inline-block; white-space: nowrap;
-  animation: eoRcMarquee 12s linear infinite;
+  animation: eoRcMarquee 18s linear infinite;
   padding-right: 60px;
 }
 @keyframes eoRcMarquee {
-  0%   { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 .eo-rc-arrow {
   flex-shrink: 0;
