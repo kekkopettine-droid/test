@@ -2378,93 +2378,268 @@ body {
 .eo-ticket-qr { flex-shrink: 0; display: block; border-radius: 2px; }
 
 /* ── TICKET CONFIRMATION ANIMATION ── */
-@keyframes eoTaScan {
-  0%   { top: 0; opacity: 1; }
-  90%  { top: 100%; opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-@keyframes eoTaPulse {
-  0%, 100% { box-shadow: 0 0 30px rgba(0,210,190,0.4), 0 0 80px rgba(0,180,160,0.15); }
-  50%       { box-shadow: 0 0 50px rgba(0,210,190,0.7), 0 0 120px rgba(0,180,160,0.3); }
-}
-@keyframes eoTaStatusBlink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
 
+/* base overlay */
 .eo-ticket-anim {
   position: fixed; inset: 0; z-index: 20000;
-  background: rgba(0,0,0,0.92);
+  background: #020608;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.5s ease;
-  pointer-events: none;
+  pointer-events: none; overflow: hidden;
 }
 .eo-ticket-anim.eo-ta-visible { opacity: 1; pointer-events: auto; }
 .eo-ticket-anim.hidden { display: none; }
 
+/* rain canvas */
+.eo-ta-rain {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0.22; pointer-events: none;
+}
+
+/* subtle hex grid bg */
+.eo-ta-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,210,190,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,210,190,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ─── Phase 1: Scanner ─── */
+.eo-ta-scanner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.4s ease; pointer-events: none;
+}
+.eo-ta-scanner.eo-ta-phase-active { opacity: 1; }
+
+/* Spinning rings */
+.eo-ta-ring {
+  position: absolute; border-radius: 50%; border-style: solid;
+}
+.eo-ta-ring-1 {
+  width: 200px; height: 200px;
+  border-width: 2px;
+  border-color: rgba(0,210,190,0.15) rgba(0,210,190,0.15) rgba(0,210,190,0.15) rgba(0,210,190,0.9);
+  animation: eoTaRingSpin 1.1s linear infinite;
+}
+.eo-ta-ring-2 {
+  width: 268px; height: 268px;
+  border-width: 1px;
+  border-color: rgba(0,210,190,0.6) rgba(0,210,190,0.1) rgba(0,210,190,0.1) rgba(0,210,190,0.1);
+  animation: eoTaRingSpin 1.8s linear infinite reverse;
+}
+.eo-ta-ring-3 {
+  width: 340px; height: 340px;
+  border-width: 1px;
+  border-color: transparent transparent rgba(0,210,190,0.4) transparent;
+  animation: eoTaRingSpin 2.8s linear infinite;
+}
+.eo-ta-ring-dot {
+  position: absolute;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(0,210,190,0.9);
+  box-shadow: 0 0 12px rgba(0,210,190,1);
+  animation: eoTaDotPulse 1.1s ease infinite;
+}
+
+/* Horizontal scan lines crossing the circle */
+.eo-ta-scan-lines { position: absolute; width: 340px; height: 340px; }
+.eo-ta-hline {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(0,210,190,0.4) 50%, transparent 90%);
+}
+.eo-ta-hline-1 { animation: eoTaHLineSweep 2s ease-in-out infinite; }
+.eo-ta-hline-2 { animation: eoTaHLineSweep 2s ease-in-out infinite 1s; }
+
+.eo-ta-scan-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: .36em; color: rgba(0,210,190,0.75);
+  text-transform: uppercase; margin-top: 210px;
+  animation: eoTaBlink 1.2s ease infinite;
+}
+.eo-ta-scan-sub {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px;
+  letter-spacing: .22em; color: rgba(0,210,190,0.4);
+  text-transform: uppercase; margin-top: 10px;
+}
+
+/* ─── Phase 2: Accesso Concesso ─── */
+.eo-ta-access {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  opacity: 0; pointer-events: none; transition: opacity 0.08s ease;
+}
+.eo-ta-access.eo-ta-phase-active { opacity: 1; }
+
+.eo-ta-access-line {
+  width: 420px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,210,190,0.8), transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+.eo-ta-access.eo-ta-phase-active .eo-ta-access-line { transform: scaleX(1); }
+.eo-ta-access-text {
+  font-family: 'Rajdhani', sans-serif; font-size: 56px; font-weight: 700;
+  letter-spacing: .25em; color: rgba(0,225,205,1);
+  text-transform: uppercase;
+  text-shadow: 0 0 50px rgba(0,210,190,1), 0 0 120px rgba(0,180,160,0.6);
+  animation: eoTaAccessIn 0.35s ease forwards;
+}
+.eo-ta-access-sub {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .3em; color: rgba(0,210,190,0.5);
+  text-transform: uppercase;
+  animation: eoTaAccessIn 0.35s ease 0.15s both;
+}
+
+/* ─── Phase 3: HUD + Card ─── */
+.eo-ta-hud {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: scale(0.95) translateY(10px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  pointer-events: none;
+}
+.eo-ta-hud.eo-ta-phase-active {
+  opacity: 1; transform: scale(1) translateY(0); pointer-events: auto;
+}
+
+/* Corner brackets */
+.eo-ta-corner {
+  position: absolute; width: 28px; height: 28px;
+  border-color: rgba(0,210,190,0.75); border-style: solid;
+  opacity: 0; transition: opacity 0.3s ease 0.3s, transform 0.45s ease 0.3s;
+}
+.eo-ta-hud.eo-ta-phase-active .eo-ta-corner { opacity: 1; transform: translate(0,0) !important; }
+.eo-ta-tl { top: 28px; left: 28px; border-width: 2px 0 0 2px; transform: translate(-14px,-14px); }
+.eo-ta-tr { top: 28px; right: 28px; border-width: 2px 2px 0 0; transform: translate(14px,-14px); }
+.eo-ta-bl { bottom: 28px; left: 28px; border-width: 0 0 2px 2px; transform: translate(-14px,14px); }
+.eo-ta-br { bottom: 28px; right: 28px; border-width: 0 2px 2px 0; transform: translate(14px,14px); }
+
+/* HUD labels */
+.eo-ta-hud-label {
+  position: absolute;
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,210,190,0.3);
+  text-transform: uppercase;
+  opacity: 0; transition: opacity 0.3s ease 0.5s;
+}
+.eo-ta-hud.eo-ta-phase-active .eo-ta-hud-label { opacity: 1; }
+.eo-ta-hud-tl { top: 36px; left: 66px; }
+.eo-ta-hud-tr { top: 36px; right: 66px; }
+
+/* Inner layout */
 .eo-ta-inner {
-  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 .eo-ta-tag {
   font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
-  letter-spacing: .32em; color: rgba(0,210,190,0.6); text-transform: uppercase;
-  animation: eoTaStatusBlink 2s ease infinite;
+  letter-spacing: .32em; color: rgba(0,210,190,0.55); text-transform: uppercase;
+  animation: eoTaBlink 2.5s ease infinite;
 }
 .eo-ta-status {
-  font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700;
-  letter-spacing: .22em; color: rgba(0,220,200,1); text-transform: uppercase;
-  text-shadow: 0 0 30px rgba(0,210,190,0.8);
+  font-family: 'Rajdhani', sans-serif; font-size: 30px; font-weight: 700;
+  letter-spacing: .2em; color: rgba(0,225,205,1); text-transform: uppercase;
+  text-shadow: 0 0 28px rgba(0,210,190,0.75);
 }
+
+/* Card */
 .eo-ta-card {
-  position: relative; overflow: hidden;
-  width: 480px;
-  background: rgba(8,14,18,0.98);
-  border: 1px solid rgba(0,210,190,0.5);
-  padding: 28px 32px 24px;
-  animation: eoTaPulse 2.5s ease infinite;
+  position: relative; overflow: hidden; width: 480px;
+  background: rgba(6,12,16,0.97);
+  border: 1px solid rgba(0,210,190,0.45);
+  padding: 26px 30px 22px;
+  animation: eoTaCardPulse 3s ease infinite;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s;
 }
+.eo-ta-hud.eo-ta-phase-active .eo-ta-card { clip-path: inset(0 0 0% 0); }
+
 .eo-ta-scan {
-  position: absolute; left: 0; right: 0; top: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(0,210,190,0.9), transparent);
-  animation: eoTaScan 1.2s ease forwards;
-  pointer-events: none;
+  position: absolute; left: 0; right: 0; top: -2px; height: 2px;
+  background: linear-gradient(90deg, transparent 5%, rgba(0,210,190,0.95) 50%, transparent 95%);
+  box-shadow: 0 0 12px rgba(0,210,190,0.8);
+  animation: eoTaScanLine 0.9s ease 0.9s forwards;
+  opacity: 0;
 }
 .eo-ta-id {
-  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
-  letter-spacing: .28em; color: rgba(0,210,190,0.7); text-transform: uppercase;
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,210,190,0.65); text-transform: uppercase;
   margin-bottom: 8px;
 }
 .eo-ta-char {
   font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
-  color: #fff; letter-spacing: .06em;
+  color: #fff; letter-spacing: .06em; min-height: 1.2em;
 }
 .eo-ta-epoch {
   font-family: 'Rajdhani', sans-serif; font-size: 12px;
-  color: rgba(255,255,255,0.4); letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); letter-spacing: .14em; text-transform: uppercase;
   margin-top: 3px; margin-bottom: 18px;
 }
-.eo-ta-divider {
-  display: flex; align-items: center; margin-bottom: 16px;
-}
-.eo-ta-divider span {
-  flex: 1; border-top: 1px dashed rgba(0,210,190,0.3);
-}
-.eo-ta-bottom {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
-}
-.eo-ta-rows {
-  flex: 1; display: flex; flex-direction: column; gap: 8px;
-}
-.eo-ta-qr { flex-shrink: 0; display: block; border-radius: 2px; }
+.eo-ta-divider { display: flex; align-items: center; margin-bottom: 14px; }
+.eo-ta-divider span { flex: 1; border-top: 1px dashed rgba(0,210,190,0.28); }
+.eo-ta-bottom { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.eo-ta-rows   { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.eo-ta-qr     { flex-shrink: 0; display: block; border-radius: 2px; }
 .eo-ta-row {
   display: flex; justify-content: space-between;
   font-family: 'Rajdhani', sans-serif; font-size: 13px;
   letter-spacing: .1em; text-transform: uppercase;
+  opacity: 0;
 }
-.eo-ta-row-label { color: rgba(255,255,255,0.3); }
-.eo-ta-row-val   { color: rgba(255,255,255,0.85); }
+.eo-ta-row.eo-ta-row-in { animation: eoTaRowIn 0.4s ease forwards; }
+.eo-ta-row-label { color: rgba(255,255,255,0.28); }
+.eo-ta-row-val   { color: rgba(255,255,255,0.88); }
 .eo-ta-footer {
-  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
-  letter-spacing: .22em; color: rgba(255,255,255,0.2); text-transform: uppercase;
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: .22em; color: rgba(255,255,255,0.18); text-transform: uppercase;
   text-align: center;
+}
+
+/* Flash overlay */
+.eo-ta-flash {
+  position: absolute; inset: 0;
+  background: rgba(0,210,190,0.88); opacity: 0; pointer-events: none;
+}
+.eo-ta-flash.eo-ta-flash-go { animation: eoTaFlash 0.55s ease forwards; }
+
+/* ── Keyframes ── */
+@keyframes eoTaRingSpin  { to { transform: rotate(360deg); } }
+@keyframes eoTaDotPulse  {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%     { transform: scale(1.6); opacity: 0.5; }
+}
+@keyframes eoTaHLineSweep {
+  0%   { top: 0%;   opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes eoTaBlink {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.3; }
+}
+@keyframes eoTaAccessIn {
+  0%   { transform: scale(1.35); opacity: 0; filter: blur(10px); }
+  45%  { transform: scale(0.97); opacity: 1; filter: blur(0); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+@keyframes eoTaFlash {
+  0%   { opacity: 0.88; }
+  30%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+@keyframes eoTaCardPulse {
+  0%,100% { box-shadow: 0 0 28px rgba(0,210,190,0.35), 0 0 70px rgba(0,180,160,0.12); }
+  50%     { box-shadow: 0 0 48px rgba(0,210,190,0.65), 0 0 110px rgba(0,180,160,0.28); }
+}
+@keyframes eoTaScanLine {
+  0%   { top: -2px; opacity: 1; }
+  88%  { top: 100%; opacity: 0.8; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes eoTaRowIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

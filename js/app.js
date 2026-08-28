@@ -1664,22 +1664,55 @@
   eoTicketAnimEl.id = 'eoTicketAnim';
   eoTicketAnimEl.className = 'eo-ticket-anim hidden';
   eoTicketAnimEl.innerHTML = `
-    <div class="eo-ta-inner">
-      <div class="eo-ta-tag" id="eoTaTag">⬡ ABSTERGO INDUSTRIES</div>
-      <div class="eo-ta-status" id="eoTaStatus">BIGLIETTO EMESSO</div>
-      <div class="eo-ta-card" id="eoTaCard">
-        <div class="eo-ta-scan"></div>
-        <div class="eo-ta-id" id="eoTaId"></div>
-        <div class="eo-ta-char" id="eoTaChar"></div>
-        <div class="eo-ta-epoch" id="eoTaEpoch"></div>
-        <div class="eo-ta-divider"><span></span></div>
-        <div class="eo-ta-bottom">
-          <div class="eo-ta-rows" id="eoTaRows"></div>
-          <canvas id="eoTaQr" class="eo-ta-qr"></canvas>
-        </div>
+    <canvas class="eo-ta-rain" id="eoTaRain"></canvas>
+    <div class="eo-ta-grid"></div>
+
+    <div class="eo-ta-scanner" id="eoTaScanner">
+      <div class="eo-ta-ring eo-ta-ring-1"></div>
+      <div class="eo-ta-ring eo-ta-ring-2"></div>
+      <div class="eo-ta-ring eo-ta-ring-3"></div>
+      <div class="eo-ta-ring-dot"></div>
+      <div class="eo-ta-scan-lines">
+        <div class="eo-ta-hline eo-ta-hline-1"></div>
+        <div class="eo-ta-hline eo-ta-hline-2"></div>
       </div>
-      <div class="eo-ta-footer">SCANSIONA IL QR PER AVERE IL BIGLIETTO SUL TUO TELEFONO</div>
-    </div>`;
+      <div class="eo-ta-scan-label">ELABORAZIONE TRANSAZIONE</div>
+      <div class="eo-ta-scan-sub" id="eoTaScanSub">ANALISI DNA IN CORSO...</div>
+    </div>
+
+    <div class="eo-ta-access" id="eoTaAccess">
+      <div class="eo-ta-access-line eo-ta-access-line-t"></div>
+      <div class="eo-ta-access-text">ACCESSO CONCESSO</div>
+      <div class="eo-ta-access-sub">IDENTITÀ VERIFICATA · TRANSAZIONE AUTORIZZATA</div>
+      <div class="eo-ta-access-line eo-ta-access-line-b"></div>
+    </div>
+
+    <div class="eo-ta-hud" id="eoTaHud">
+      <div class="eo-ta-corner eo-ta-tl"></div>
+      <div class="eo-ta-corner eo-ta-tr"></div>
+      <div class="eo-ta-corner eo-ta-bl"></div>
+      <div class="eo-ta-corner eo-ta-br"></div>
+      <div class="eo-ta-hud-label eo-ta-hud-tl">ANIMUS v3.28</div>
+      <div class="eo-ta-hud-label eo-ta-hud-tr" id="eoTaHudTr">SYS:OK</div>
+      <div class="eo-ta-inner">
+        <div class="eo-ta-tag">⬡ ABSTERGO INDUSTRIES</div>
+        <div class="eo-ta-status">BIGLIETTO EMESSO</div>
+        <div class="eo-ta-card" id="eoTaCard">
+          <div class="eo-ta-scan"></div>
+          <div class="eo-ta-id" id="eoTaId"></div>
+          <div class="eo-ta-char" id="eoTaChar"></div>
+          <div class="eo-ta-epoch" id="eoTaEpoch"></div>
+          <div class="eo-ta-divider"><span></span></div>
+          <div class="eo-ta-bottom">
+            <div class="eo-ta-rows" id="eoTaRows"></div>
+            <canvas id="eoTaQr" class="eo-ta-qr"></canvas>
+          </div>
+        </div>
+        <div class="eo-ta-footer">SCANSIONA IL QR PER AVERE IL BIGLIETTO SUL TUO TELEFONO</div>
+      </div>
+    </div>
+
+    <div class="eo-ta-flash" id="eoTaFlash"></div>`;
   document.body.appendChild(eoTicketAnimEl);
 
   function eoTicketUrl(ticket) {
@@ -1700,48 +1733,123 @@
 
   function eoShowTicketAnim(ticket) {
     const el = eoTicketAnimEl;
+
+    // ── populate data ──
     document.getElementById('eoTaId').textContent    = ticket.ticketId;
-    document.getElementById('eoTaChar').textContent  = ticket.character;
+    document.getElementById('eoTaChar').textContent  = '';
     document.getElementById('eoTaEpoch').textContent = ticket.epoch;
     const rows = [
-      ['IMMERSIONE', ticket.immersion],
-      ['DURATA',     ticket.duration],
-      ['DATA',       ticket.date + ' · ' + ticket.time],
-      ['SEDE',       ticket.location],
+      ['IMMERSIONE',   ticket.immersion],
+      ['DURATA',       ticket.duration],
+      ['DATA',         ticket.date + ' · ' + ticket.time],
+      ['SEDE',         ticket.location],
       ['INTESTATARIO', ticket.buyer],
     ];
     const rowsEl = document.getElementById('eoTaRows');
     rowsEl.innerHTML = rows.map(([k,v]) =>
       `<div class="eo-ta-row"><span class="eo-ta-row-label">${k}</span><span class="eo-ta-row-val">${v}</span></div>`
     ).join('');
-
-    // Generate QR code
-    const qrCanvas = document.getElementById('eoTaQr');
     if (window.QRCode) {
-      QRCode.toCanvas(qrCanvas, eoTicketUrl(ticket), {
+      QRCode.toCanvas(document.getElementById('eoTaQr'), eoTicketUrl(ticket), {
         width: 110, margin: 1,
         color: { dark: '#00d2be', light: '#080e12' }
       });
     }
 
+    // ── reset phase classes ──
+    ['eoTaScanner','eoTaAccess','eoTaHud'].forEach(id =>
+      document.getElementById(id).classList.remove('eo-ta-phase-active'));
+    const flashEl = document.getElementById('eoTaFlash');
+    flashEl.classList.remove('eo-ta-flash-go');
+    rowsEl.querySelectorAll('.eo-ta-row').forEach(r => r.classList.remove('eo-ta-row-in'));
+
+    // ── DNA rain canvas ──
+    const rainCanvas = document.getElementById('eoTaRain');
+    rainCanvas.width  = window.innerWidth;
+    rainCanvas.height = window.innerHeight;
+    const rainCtx = rainCanvas.getContext('2d');
+    const rChars  = 'ATCG01∞⬡ΔΩ∑≡◈';
+    const rCols   = Math.floor(rainCanvas.width / 16);
+    const rDrops  = Array.from({length: rCols}, () => Math.random() * -60);
+    let rainRAF;
+    function drawRain() {
+      rainCtx.fillStyle = 'rgba(0,0,0,0.06)';
+      rainCtx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
+      rDrops.forEach((y, i) => {
+        const bright = Math.random() > 0.92;
+        rainCtx.fillStyle = bright ? 'rgba(160,255,240,0.9)' : 'rgba(0,210,190,0.55)';
+        rainCtx.font = `${bright ? 'bold ' : ''}13px monospace`;
+        rainCtx.fillText(rChars[Math.floor(Math.random() * rChars.length)], i * 16, y * 16);
+        rDrops[i] = y > rainCanvas.height / 16 + Math.random() * 30 ? 0 : y + 0.6;
+      });
+      rainRAF = requestAnimationFrame(drawRain);
+    }
+    drawRain();
+
+    // ── cycling scan sub-text ──
+    const scanTexts = [
+      'ANALISI DNA IN CORSO...',
+      'CALIBRAZIONE ANIMUS...',
+      'VERIFICA IDENTITÀ...',
+      'ELABORAZIONE SEQUENZA GENETICA...',
+    ];
+    let scanIdx = 0;
+    const scanSubEl = document.getElementById('eoTaScanSub');
+    const scanTextInterval = setInterval(() => {
+      scanIdx = (scanIdx + 1) % scanTexts.length;
+      scanSubEl.textContent = scanTexts[scanIdx];
+    }, 500);
+
+    // ── show overlay ──
     el.classList.remove('hidden');
     requestAnimationFrame(() => el.classList.add('eo-ta-visible'));
 
-    // Stagger row reveal
-    rowsEl.querySelectorAll('.eo-ta-row').forEach((r, i) => {
-      r.style.opacity = '0';
-      r.style.transform = 'translateY(8px)';
-      setTimeout(() => {
-        r.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        r.style.opacity = '1';
-        r.style.transform = 'translateY(0)';
-      }, 900 + i * 140);
-    });
-
+    // Phase 1: Scanner (100ms)
     setTimeout(() => {
+      document.getElementById('eoTaScanner').classList.add('eo-ta-phase-active');
+    }, 100);
+
+    // Phase 2: Flash + ACCESSO CONCESSO (2200ms)
+    setTimeout(() => {
+      clearInterval(scanTextInterval);
+      document.getElementById('eoTaScanner').classList.remove('eo-ta-phase-active');
+      void flashEl.offsetWidth;
+      flashEl.classList.add('eo-ta-flash-go');
+      document.getElementById('eoTaAccess').classList.add('eo-ta-phase-active');
+      setTimeout(() => {
+        document.getElementById('eoTaAccess').classList.remove('eo-ta-phase-active');
+      }, 1100);
+    }, 2200);
+
+    // Phase 3: Card materialises (3500ms)
+    setTimeout(() => {
+      document.getElementById('eoTaHud').classList.add('eo-ta-phase-active');
+      // Scramble-then-reveal typewriter for character name
+      const charEl  = document.getElementById('eoTaChar');
+      const name    = ticket.character;
+      const sc      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let frame     = 0;
+      const total   = name.length * 4;
+      const scrambleInt = setInterval(() => {
+        charEl.textContent = name.split('').map((ch, i) => {
+          if (ch === ' ') return ' ';
+          return i < Math.floor(frame / 4) ? ch : sc[Math.floor(Math.random() * sc.length)];
+        }).join('');
+        if (++frame > total) { charEl.textContent = name; clearInterval(scrambleInt); }
+      }, 35);
+
+      // Row stagger
+      rowsEl.querySelectorAll('.eo-ta-row').forEach((r, i) => {
+        setTimeout(() => r.classList.add('eo-ta-row-in'), 500 + i * 160);
+      });
+    }, 3500);
+
+    // Phase 4: Dismiss (8000ms)
+    setTimeout(() => {
+      cancelAnimationFrame(rainRAF);
       el.classList.remove('eo-ta-visible');
-      setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 500);
-    }, 4200);
+      setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 600);
+    }, 8000);
   }
 
   // Wire checkout from cart
