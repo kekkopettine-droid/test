@@ -2066,6 +2066,14 @@
     const confirm  = rotPanel.querySelector('#eoRpConfirm');
     const submitBtn = rotPanel.querySelector('#eoRpSubmit');
     rotPanel.querySelector('#eoRpClose').addEventListener('click', closeRotPanel);
+
+    // ── Easter egg ──
+    textarea.addEventListener('input', () => {
+      if (textarea.value.trim().toLowerCase() === 'adolf hitler') {
+        closeRotPanel();
+        setTimeout(() => _eoHitlerEgg(left, document.getElementById('eoAvantiChar')), 350);
+      }
+    });
     textarea.addEventListener('input', () => {
       counter.textContent = `${textarea.value.length} / 220`;
     });
@@ -2136,8 +2144,77 @@
     document.getElementById('tlIconsHud').style.display = 'flex';
   }
 
+  // ── Easter egg: Hitler ──
+  function _eoHitlerEgg(left, avantiBtn) {
+    const overlay = document.getElementById('epochOverlay');
+
+    // Red glitch flash sequence
+    const flash = document.createElement('div');
+    flash.className = 'eo-easter-flash';
+    document.body.appendChild(flash);
+    let tog = true;
+    const blinkIv = setInterval(() => { flash.style.opacity = (tog = !tog) ? '0.75' : '0.2'; }, 70);
+    setTimeout(() => {
+      clearInterval(blinkIv);
+      flash.style.transition = 'opacity 0.6s';
+      flash.style.opacity = '0';
+      setTimeout(() => flash.remove(), 650);
+    }, 550);
+
+    // Apply red theme to overlay
+    overlay.classList.add('eo-easter-red');
+
+    // Push Hitler into character data so cart/checkout work
+    const hitlerChar = { name: 'Adolf Hitler', dates: '1889–1945', role: 'Dittatore · 1933–1945', img: null };
+    const hitlerIdx  = eoChars[eoEpochIdx].length;
+    eoChars[eoEpochIdx].push(hitlerChar);
+
+    // Rebuild left panel after glitch settles
+    setTimeout(() => {
+      const rotWrap = left.querySelector('.eo-rotation-wrap');
+      left.innerHTML = '';
+      if (rotWrap) left.appendChild(rotWrap);
+
+      // Warning banner
+      const warn = document.createElement('div');
+      warn.className = 'eo-easter-warn';
+      warn.textContent = '⚠ ACCESSO MEMORIA CORROTTA RILEVATO';
+      left.appendChild(warn);
+
+      // Hitler card
+      const card = document.createElement('div');
+      card.className = 'eo-char-card eo-char-card-red';
+      card.innerHTML = `<div class="eo-card-num">??</div>
+        <div class="eo-card-info">
+          <div class="eo-card-name">Adolf Hitler</div>
+          <div class="eo-card-dates">1889–1945</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        left.querySelectorAll('.eo-char-card').forEach(c => c.classList.remove('eo-selected'));
+        card.classList.add('eo-selected');
+        eoSelectedChar = hitlerIdx;
+        document.getElementById('eoCenterEmpty').style.display = 'none';
+        const imgEl = document.getElementById('eoCenterImg');
+        imgEl.style.display = 'none';
+        document.getElementById('eoCenterName').style.display = '';
+        document.getElementById('eoCenterName').textContent = 'Adolf Hitler';
+        document.getElementById('eoRightEpoch').textContent = 'Chi è Adolf Hitler?';
+        document.getElementById('eoRightRole').style.display = '';
+        document.getElementById('eoRightRole').textContent = 'Dittatore · 1933–1945';
+        document.getElementById('eoRightPlaceholder').style.display = 'none';
+        document.getElementById('eoConfirmBtn').style.display = '';
+        document.getElementById('eoAvantiChar').disabled = false;
+        document.getElementById('eoCenter').classList.add('eo-center-lit');
+        eoUpdateTabLocks();
+      });
+      left.appendChild(card);
+      left.appendChild(avantiBtn);
+    }, 400);
+  }
+
+
   function hideEpochOverlay() {
-    eoEl.classList.remove('eo-visible');
+    eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
     setTimeout(() => eoEl.classList.add('hidden'), 350);
