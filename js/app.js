@@ -1063,7 +1063,7 @@
         role: 'L\'esperienza ti introduce nella Firenze della seconda metà del Quattrocento, nella rete di relazioni politiche e culturali che ruotavano attorno alla famiglia Medici. Lorenzo fu banchiere, statista e mecenate: finanziò artisti come Botticelli e Michelangelo, sostenne l\'Accademia Neoplatonica e gestì alleanze diplomatiche con le principali corti italiane. Attraverso la sua memoria osserverai il funzionamento del potere rinascimentale — non fondato sulla forza militare ma sulla reputazione, sulle lettere e sul controllo delle risorse culturali. Una lettura diretta di come l\'arte e la politica si intrecciassero in modo indistinguibile.' },
       { name: 'Michelangelo',           dates: '1475–1564', img: 'assets/characters/michelangelo.webp',
         role: 'La sincronizzazione ti porta nella Roma pontificia del primo Cinquecento, nel periodo in cui Michelangelo lavorava alla volta della Cappella Sistina su commissione di papa Giulio II. Scultore di formazione, Michelangelo affrontò la pittura ad affresco come una sfida tecnica e concettuale: quattro anni di lavoro, un\'impalcatura progettata da lui stesso, una composizione che organizzava oltre trecento figure. L\'esperienza documenta il suo processo creativo, il rapporto con il committente e le condizioni materiali del lavoro artistico nel Rinascimento. Una prospettiva precisa sull\'incontro tra ambizione intellettuale e vincolo istituzionale.' } ],
-    [ { name: 'Barbanera',              dates: '1680–1718', img: 'assets/characters/barbanera.webp',
+    [ { name: 'Barbanera',              dates: '1680–1718', img: 'assets/characters/barbanera.jpg',
         role: 'L\'esperienza si situa nell\'Atlantico e nei Caraibi del primo Settecento, nel periodo di massima attività della pirateria organizzata. Edward Teach, noto come Barbanera, fu uno dei comandanti più documentati dell\'epoca: operava con una flotta propria, negoziava con le autorità coloniali e costruiva la propria reputazione in modo deliberato. La tua sessione esplora la struttura sociale e gerarchica delle imbarcazioni pirata, le rotte commerciali dell\'Atlantico e il contesto geopolitico in cui operavano i corsari tra tolleranza e criminalizzazione da parte delle potenze europee.' },
       { name: 'Anne Bonny',             dates: '1697–1782', img: 'assets/characters/anne-bonny.webp',
         role: 'La memoria genetica che esplorerai appartiene a una delle poche figure femminili documentate nella storia della pirateria caraibica del Settecento. Anne Bonny operò a bordo di imbarcazioni pirata in un contesto in cui la partecipazione delle donne era formalmente esclusa. La sua presenza è attestata da documenti processuali del 1720. L\'esperienza analizza il quadro sociale e giuridico dell\'epoca coloniale britannica, le strutture di genere che la regolavano e le forme in cui queste venivano aggirate o ignorate nelle comunità ai margini del diritto.' },
@@ -1103,14 +1103,7 @@
         <button class="eo-tab" data-tab="customize">PERSONALIZZAZIONE</button>
         <button class="eo-tab" data-tab="date">DATA</button>
       </div>
-      <div class="eo-topbar-right">
-        <button class="eo-icon-btn" id="eoTicketsBtn">
-          <svg viewBox="0 0 24 24"><path d="M2 9a1 1 0 011-1h18a1 1 0 011 1v2a2 2 0 000 4v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a2 2 0 000-4V9z"/><line x1="9" y1="8" x2="9" y2="16" stroke-dasharray="2 2"/></svg>
-        </button>
-        <button class="eo-icon-btn" id="eoCartBtn">
-          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        </button>
-      </div>
+      <div class="eo-topbar-right"></div>
     </div>
 
     <!-- PANELS TRACK (overflow hidden, pannelli in assoluto) -->
@@ -1122,9 +1115,12 @@
         <button class="eo-avanti-btn" id="eoAvantiChar" disabled>AVANTI &rsaquo;</button>
       </div>
       <div class="eo-center" id="eoCenter">
-        <img id="eoCenterImg" class="eo-center-img" src="" alt="" style="display:none;">
-        <div class="eo-center-empty" id="eoCenterEmpty">Seleziona un personaggio</div>
-        <div class="eo-center-name" id="eoCenterName" style="display:none;"></div>
+        <div class="eo-center-inner" id="eoCenterInner">
+          <img id="eoCenterImg" class="eo-center-img" src="" alt="" style="display:none;">
+          <div class="eo-center-scan" id="eoCenterScan"></div>
+          <div class="eo-center-empty" id="eoCenterEmpty">Seleziona un personaggio</div>
+          <div class="eo-center-name" id="eoCenterName" style="display:none;"></div>
+        </div>
       </div>
       <div class="eo-right" id="eoRight">
         <div class="eo-right-tag">PROFILO STORICO</div>
@@ -1353,12 +1349,10 @@
   }
 
   function eoUpdateCartIcon() {
-    _syncIconBtn(document.getElementById('eoCartBtn'),   eoCart.length,    'eo-cart-has-items',    'eo-cart-badge');
-    _syncIconBtn(document.getElementById('tlCartBtn'),   eoCart.length,    'eo-cart-has-items',    'eo-cart-badge');
+    _syncIconBtn(document.getElementById('tlCartBtn'), eoCart.length, 'eo-cart-has-items', 'eo-cart-badge');
   }
 
   function eoUpdateTicketsIcon() {
-    _syncIconBtn(document.getElementById('eoTicketsBtn'), eoTickets.length, 'eo-tickets-has-items', 'eo-tickets-badge');
     _syncIconBtn(document.getElementById('tlTicketsBtn'), eoTickets.length, 'eo-tickets-has-items', 'eo-tickets-badge');
   }
 
@@ -1821,9 +1815,40 @@
 
   document.getElementById('eoTicketsClose').addEventListener('click', eoHideTickets);
 
-  document.getElementById('eoCartBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowCart(); });
   document.getElementById('eoCartClose').addEventListener('click', eoHideCart);
-  document.getElementById('eoTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowTickets(); });
+
+  // ── CENTER PANEL 3D TILT + GLITCH ──
+  const _eoCenterEl = document.getElementById('eoCenter');
+  const _eoCenterInner = document.getElementById('eoCenterInner');
+
+  _eoCenterEl.addEventListener('mousemove', e => {
+    const rect = _eoCenterEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top  + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width  / 2); // -1 to 1
+    const dy = (e.clientY - cy) / (rect.height / 2); // -1 to 1
+    const rotX = -dy * 8;
+    const rotY =  dx * 8;
+    _eoCenterInner.style.transform = `perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  });
+  _eoCenterEl.addEventListener('mouseleave', () => {
+    _eoCenterInner.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg)';
+  });
+
+  // Periodic glitch
+  let _glitchTimer = null;
+  function _scheduleGlitch() {
+    _glitchTimer = setTimeout(() => {
+      const img = document.getElementById('eoCenterImg');
+      if (img && img.classList.contains('eo-img-loaded')) {
+        img.classList.add('eo-img-glitch');
+        setTimeout(() => { img.classList.remove('eo-img-glitch'); _scheduleGlitch(); }, 400);
+      } else {
+        _scheduleGlitch();
+      }
+    }, 3500 + Math.random() * 4000);
+  }
+  _scheduleGlitch();
 
   function showEpochOverlay(epochIdx) {
     eoEpochIdx = epochIdx;
@@ -1915,6 +1940,7 @@
     eoEl.classList.remove('hidden');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
     dnaBackArrow.style.display = 'none';
+    document.getElementById('tlIconsHud').style.display = 'flex';
   }
 
   function hideEpochOverlay() {
@@ -1922,6 +1948,7 @@
     charViewEpoch = -1;
     eoEpochIdx = -1;
     setTimeout(() => eoEl.classList.add('hidden'), 350);
+    document.getElementById('tlIconsHud').style.display = 'none';
   }
 
   document.getElementById('eoBackBtn').addEventListener('click', () => {
