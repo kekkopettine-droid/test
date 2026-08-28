@@ -1577,10 +1577,10 @@ body {
 /* Cart icon glow */
 #tlCartBtn { transition: border-color .3s, box-shadow .3s, background .2s; }
 #tlCartBtn.eo-cart-has-items {
-  border-color: rgba(0,230,80,0.9);
-  box-shadow: 0 0 16px rgba(0,220,70,0.6), 0 0 36px rgba(0,200,60,0.25);
+  border-color: rgba(0,210,190,0.9);
+  box-shadow: 0 0 16px rgba(0,210,190,0.6), 0 0 36px rgba(0,180,160,0.25);
 }
-#tlCartBtn.eo-cart-has-items svg { stroke: rgba(0,230,80,1); }
+#tlCartBtn.eo-cart-has-items svg { stroke: rgba(0,210,190,1); }
 
 /* Cart overlay */
 .eo-cart-overlay {
