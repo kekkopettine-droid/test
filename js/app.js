@@ -2028,34 +2028,44 @@
     const rotPanel = document.createElement('div');
     rotPanel.className = 'eo-rotation-panel';
     rotPanel.innerHTML = `
-      <div class="eo-rp-scroll">
-        <div class="eo-rp-top">
-          <div class="eo-rp-tag">&#11041; ARCHIVIO ANIMUS · AGGIORNAMENTO PERIODICO</div>
-          <div class="eo-rp-title">ROTAZIONE ESPERIENZE</div>
-        </div>
-        <div class="eo-rp-body">
-          L'archivio genetico dell'Animus si rinnova ogni <strong>2 mesi</strong>. I profili storici vengono sostituiti con nuovi soggetti per offrirti esperienze sempre diverse: nuove epoche, nuove vite, nuove memorie da esplorare. Torna regolarmente — il passato non finisce mai di sorprendere.
-        </div>
-        <div class="eo-rp-suggest">
-          <div class="eo-rp-suggest-label">QUALE PERSONAGGIO VORRESTI NELL'ANIMUS?</div>
-          <textarea class="eo-rp-textarea" id="eoRpTextarea" placeholder="Scrivi il nome di un personaggio storico che vorresti vivere in prima persona…" maxlength="220"></textarea>
-          <div class="eo-rp-actions">
-            <button class="eo-rp-submit" id="eoRpSubmit">INVIA PREFERENZA</button>
-            <span class="eo-rp-counter" id="eoRpCounter">0 / 220</span>
+      <div class="eo-rp-box">
+        <div class="eo-rp-scroll">
+          <div class="eo-rp-top">
+            <button class="eo-rp-close" id="eoRpClose">&#10005;</button>
+            <div class="eo-rp-tag">&#11041; ARCHIVIO ANIMUS · AGGIORNAMENTO PERIODICO</div>
+            <div class="eo-rp-title">ROTAZIONE ESPERIENZE</div>
           </div>
-          <div class="eo-rp-confirm" id="eoRpConfirm">&#10003; PREFERENZA REGISTRATA — GRAZIE</div>
+          <div class="eo-rp-body">
+            L'archivio genetico dell'Animus si rinnova ogni <strong>2 mesi</strong>. I profili storici vengono sostituiti con nuovi soggetti per offrirti esperienze sempre diverse: nuove epoche, nuove vite, nuove memorie da esplorare. Torna regolarmente — il passato non finisce mai di sorprendere.
+          </div>
+          <div class="eo-rp-suggest">
+            <div class="eo-rp-suggest-label">QUALE PERSONAGGIO VORRESTI NELL'ANIMUS?</div>
+            <textarea class="eo-rp-textarea" id="eoRpTextarea" placeholder="Scrivi il nome di un personaggio storico che vorresti vivere in prima persona…" maxlength="220"></textarea>
+            <div class="eo-rp-actions">
+              <button class="eo-rp-submit" id="eoRpSubmit">INVIA PREFERENZA</button>
+              <span class="eo-rp-counter" id="eoRpCounter">0 / 220</span>
+            </div>
+            <div class="eo-rp-confirm" id="eoRpConfirm">&#10003; PREFERENZA REGISTRATA — GRAZIE</div>
+          </div>
         </div>
       </div>`;
 
+    const closeRotPanel = () => {
+      rotPanel.classList.remove('eo-rp-open');
+      rotChip.classList.remove('eo-rc-open');
+    };
     rotChip.addEventListener('click', () => {
-      const open = rotPanel.classList.toggle('eo-rp-open');
-      rotChip.classList.toggle('eo-rc-open', open);
+      rotPanel.classList.add('eo-rp-open');
+      rotChip.classList.add('eo-rc-open');
     });
+    // close on backdrop click
+    rotPanel.addEventListener('click', e => { if (e.target === rotPanel) closeRotPanel(); });
 
     const textarea = rotPanel.querySelector('#eoRpTextarea');
     const counter  = rotPanel.querySelector('#eoRpCounter');
     const confirm  = rotPanel.querySelector('#eoRpConfirm');
     const submitBtn = rotPanel.querySelector('#eoRpSubmit');
+    rotPanel.querySelector('#eoRpClose').addEventListener('click', closeRotPanel);
     textarea.addEventListener('input', () => {
       counter.textContent = `${textarea.value.length} / 220`;
     });
@@ -2072,8 +2082,7 @@
         submitBtn.style.display = '';
         counter.style.display = '';
         confirm.classList.remove('eo-rp-confirm-visible');
-        rotPanel.classList.remove('eo-rp-open');
-        rotChip.classList.remove('eo-rc-open');
+        closeRotPanel();
       }, 3200);
     });
 

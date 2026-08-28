@@ -1821,19 +1821,32 @@ body {
 }
 .eo-rc-open .eo-rc-arrow { transform: rotate(90deg); }
 
-/* ── Rotation panel ── */
+/* ── Rotation modal ── */
 .eo-rotation-panel {
-  position: absolute;
-  top: 100%; left: 0;
-  width: 320px;
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.48s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease;
-  opacity: 0;
-  z-index: 20;
+  position: fixed; inset: 0;
+  z-index: 15000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.78);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
 }
-.eo-rotation-panel.eo-rp-open { max-height: 320px; opacity: 1; }
+.eo-rotation-panel.eo-rp-open { opacity: 1; pointer-events: auto; }
+
+.eo-rp-box {
+  width: 480px; max-width: 90vw;
+  background: rgba(0,0,0,0.88);
+  border: 1px solid rgba(0,210,190,0.35);
+  box-shadow: 0 0 60px rgba(0,210,190,0.18), 0 0 120px rgba(0,0,0,0.8);
+  animation: eoRpBoxIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
+}
+.eo-rotation-panel:not(.eo-rp-open) .eo-rp-box { animation: none; }
+@keyframes eoRpBoxIn {
+  from { transform: scale(0.92) translateY(16px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
 .eo-rp-scroll {
-  max-height: 320px;
+  max-height: 80vh;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0,210,190,0.3) transparent;
@@ -1843,11 +1856,18 @@ body {
 .eo-rp-scroll::-webkit-scrollbar-thumb { background: rgba(0,210,190,0.3); border-radius: 2px; }
 
 .eo-rp-top {
-  padding: 13px 15px 10px;
-  background: rgba(0,0,0,0.88);
-  border: 1px solid rgba(0,210,190,0.22);
-  border-top: none;
+  position: relative;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(0,210,190,0.15);
 }
+.eo-rp-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: rgba(255,255,255,0.3);
+  line-height: 1; padding: 2px 4px;
+  transition: color .2s;
+}
+.eo-rp-close:hover { color: rgba(255,255,255,0.7); }
 .eo-rp-tag {
   font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
   letter-spacing: .28em; color: rgba(0,210,190,0.45);
@@ -1859,19 +1879,14 @@ body {
   text-transform: uppercase;
 }
 .eo-rp-body {
-  padding: 11px 15px 13px;
-  font-family: 'Rajdhani', sans-serif; font-size: 13px; line-height: 1.65;
+  padding: 16px 20px;
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; line-height: 1.7;
   color: rgba(255,255,255,0.5);
-  background: rgba(0,0,0,0.88);
-  border: 1px solid rgba(0,210,190,0.15);
-  border-top: none;
+  border-bottom: 1px solid rgba(0,210,190,0.12);
 }
 .eo-rp-body strong { color: rgba(0,210,190,0.8); font-weight: 700; }
 .eo-rp-suggest {
-  padding: 13px 15px 15px;
-  background: rgba(0,0,0,0.88);
-  border: 1px solid rgba(0,210,190,0.2);
-  border-top: 1px solid rgba(0,210,190,0.1);
+  padding: 16px 20px 20px;
 }
 .eo-rp-suggest-label {
   font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
