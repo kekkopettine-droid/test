@@ -2075,8 +2075,11 @@
       }, 3200);
     });
 
-    left.appendChild(rotChip);
-    left.appendChild(rotPanel);
+    const rotWrap = document.createElement('div');
+    rotWrap.className = 'eo-rotation-wrap';
+    rotWrap.appendChild(rotChip);
+    rotWrap.appendChild(rotPanel);
+    left.appendChild(rotWrap);
 
     eoChars[epochIdx].forEach((ch, i) => {
       const card = document.createElement('div');
