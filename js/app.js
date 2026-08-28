@@ -1983,6 +1983,11 @@
     if (_immDetail) { _immDetail.classList.remove('eo-imm-detail-visible'); }
     document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
+    // Reset customize tab selections
+    document.querySelectorAll('#eoCustImmersion .eo-cust-selected, #eoCustDuration .eo-cust-selected, #eoCustLingua .eo-cust-selected')
+      .forEach(el => el.classList.remove('eo-cust-selected'));
+    document.getElementById('eoImmDetail')?.classList.remove('eo-imm-detail-visible');
+
     // Reset date tab
     document.getElementById('eoTime').value = '';
     document.getElementById('eoLocation').value = '';
