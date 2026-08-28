@@ -1349,7 +1349,9 @@
   }
 
   function eoUpdateCartIcon() {
-    _syncIconBtn(document.getElementById('tlCartBtn'), eoCart.length, 'eo-cart-has-items', 'eo-cart-badge');
+    const btn = document.getElementById('tlCartBtn');
+    if (!btn) return;
+    btn.classList.toggle('eo-cart-has-items', eoCart.length > 0);
   }
 
   function eoUpdateTicketsIcon() {
