@@ -2219,7 +2219,7 @@ body {
   position: fixed;
   top: 32px;
   right: 36px;
-  z-index: 5000;
+  z-index: 9500;
   display: flex;
   gap: 12px;
   align-items: center;
