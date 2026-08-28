@@ -3727,7 +3727,27 @@
       e.stopPropagation();
       if (window.audioEngine) window.audioEngine.playClick();
     });
+    // store original year text on label
+    const lbl = node.querySelector('.node-label');
+    if (lbl) lbl.dataset.year = lbl.textContent.trim();
   });
+
+  // periodic number scramble on timeline year labels
+  (function tlScrambleLoop() {
+    const labels = document.querySelectorAll('#floatingTimeline .node-label');
+    if (!labels.length) return;
+    const lbl = labels[Math.floor(Math.random() * labels.length)];
+    const orig = lbl.dataset.year || lbl.textContent.trim();
+    const chars = '0123456789';
+    let f = 0; const total = 10;
+    const iv = setInterval(() => {
+      lbl.textContent = orig.split('').map((c, i) =>
+        i < Math.floor(f / 2) ? c : chars[Math.floor(Math.random() * 10)]
+      ).join('');
+      if (++f > total) { lbl.textContent = orig; clearInterval(iv); }
+    }, 45);
+    setTimeout(tlScrambleLoop, 1800 + Math.random() * 2400);
+  })();
 
   // Make updateCartUI global so it can be called from inside handlers
   window.updateCartUI = function() {

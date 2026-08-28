@@ -458,16 +458,33 @@ body {
   left: 0;
   width: 100%;
   height: 2px;
-  background: rgba(0, 255, 255, 0.4);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  background: rgba(0, 255, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.45);
   z-index: 1;
+  overflow: hidden;
 }
+/* traveling energy pulse along the line */
+.timeline-line::after {
+  content: '';
+  position: absolute;
+  top: 0; height: 100%; width: 180px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,255,0.95) 50%, transparent);
+  box-shadow: 0 0 18px rgba(0,255,255,0.9);
+  animation: tlLinePulse 4.5s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+@keyframes tlLinePulse {
+  0%   { left: -180px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
 .timeline-nodes {
   position: relative;
   z-index: 2;
   display: flex;
   justify-content: space-between;
-  padding: 0 15px; /* Spazio per non far sbordare il primo e ultimo pallino */
+  padding: 0 15px;
 }
 .timeline-node {
   display: flex;
@@ -476,6 +493,8 @@ body {
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* ── dot animations ── */
 .node-dot {
   width: 16px;
   height: 16px;
@@ -484,29 +503,79 @@ body {
   border-radius: 50%;
   margin-bottom: 12px;
   box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.3), 0 0 8px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
   position: relative;
   pointer-events: none;
+  animation: tlDotBreath 3.8s ease-in-out infinite;
 }
+/* sonar ring expanding from dot */
+.node-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 255, 0.55);
+  animation: tlSonar 3.8s ease-out infinite;
+  pointer-events: none;
+}
+/* staggered delays per node */
+.timeline-node:nth-child(1) .node-dot,
+.timeline-node:nth-child(1) .node-dot::before { animation-delay: 0s; }
+.timeline-node:nth-child(2) .node-dot,
+.timeline-node:nth-child(2) .node-dot::before { animation-delay: 0.76s; }
+.timeline-node:nth-child(3) .node-dot,
+.timeline-node:nth-child(3) .node-dot::before { animation-delay: 1.52s; }
+.timeline-node:nth-child(4) .node-dot,
+.timeline-node:nth-child(4) .node-dot::before { animation-delay: 2.28s; }
+.timeline-node:nth-child(5) .node-dot,
+.timeline-node:nth-child(5) .node-dot::before { animation-delay: 3.04s; }
+
+@keyframes tlDotBreath {
+  0%,100% { box-shadow: inset 0 0 8px rgba(0,255,255,0.25), 0 0 6px rgba(0,0,0,0.5); }
+  50%     { box-shadow: inset 0 0 14px rgba(0,255,255,0.6), 0 0 22px rgba(0,255,255,0.45), 0 0 48px rgba(0,200,255,0.18); }
+}
+@keyframes tlSonar {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+
 .timeline-node:hover .node-dot, .timeline-node.active .node-dot {
   background: #00ffff;
   border-color: #ffffff;
   transform: scale(1.5);
   box-shadow: 0 0 25px rgba(0, 255, 255, 1), 0 0 15px rgba(255, 255, 255, 0.8);
+  animation: none;
 }
+.timeline-node:hover .node-dot::before,
+.timeline-node.active .node-dot::before { animation: none; opacity: 0; }
+
+/* ── year label animations ── */
 .node-label {
   color: rgba(0, 255, 255, 0.5);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: color 0.3s, text-shadow 0.3s;
   pointer-events: none;
   text-transform: uppercase;
+  animation: tlLabelFloat 4.5s ease-in-out infinite;
+  display: inline-block;
+}
+.timeline-node:nth-child(1) .node-label { animation-delay: 0.1s; }
+.timeline-node:nth-child(2) .node-label { animation-delay: 1.0s; }
+.timeline-node:nth-child(3) .node-label { animation-delay: 1.9s; }
+.timeline-node:nth-child(4) .node-label { animation-delay: 2.8s; }
+.timeline-node:nth-child(5) .node-label { animation-delay: 3.7s; }
+@keyframes tlLabelFloat {
+  0%,100% { transform: translateY(0);    opacity: 0.5; }
+  40%,60% { transform: translateY(-10px); opacity: 0.8; }
 }
 .timeline-node:hover .node-label, .timeline-node.active .node-label {
   color: #ffffff;
   text-shadow: 0 0 15px #00ffff, 0 0 5px rgba(255, 255, 255, 0.8);
   transform: scale(1.05);
+  animation: none;
+  opacity: 1;
 }
 .timeline-info {
   margin-top: 15px;
