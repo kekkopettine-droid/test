@@ -1126,6 +1126,7 @@
         <div class="eo-right-tag">PROFILO STORICO</div>
         <div class="eo-right-epoch" id="eoRightEpoch">—</div>
         <div class="eo-right-role" id="eoRightRole" style="display:none;"></div>
+        <div class="eo-right-desc" id="eoRightDesc" style="display:none;"></div>
         <div class="eo-right-placeholder" id="eoRightPlaceholder">Seleziona un personaggio</div>
         <button class="eo-right-btn" id="eoConfirmBtn">INIZIA ESPERIENZA</button>
       </div>
@@ -1248,6 +1249,8 @@
 
   let eoEpochIdx     = -1;
   let eoSelectedChar = -1;
+  let _eoEasterEpochIdx = -1;
+  let _eoEasterHitlerIdx = -1;
   let eoActiveTab    = 'character';
   let eoIsSliding    = false;
   const eoTabOrder   = ['character', 'customize', 'date'];
@@ -1974,6 +1977,7 @@
     document.getElementById('eoCenterImg').src = '';
     document.getElementById('eoCenterName').style.display = 'none';
     document.getElementById('eoRightRole').style.display = 'none';
+    document.getElementById('eoRightDesc').style.display = 'none';
     document.getElementById('eoRightPlaceholder').style.display = '';
     document.getElementById('eoConfirmBtn').style.display = 'none';
     document.getElementById('eoAvantiChar').disabled = true;
@@ -2069,7 +2073,8 @@
 
     // ── Easter egg ──
     textarea.addEventListener('input', () => {
-      if (textarea.value.trim().toLowerCase() === 'adolf hitler') {
+      const _tv = textarea.value.trim().toLowerCase();
+      if (_tv === 'adolf hitler' || _tv === 'hitler') {
         closeRotPanel();
         setTimeout(() => _eoHitlerEgg(left, document.getElementById('eoAvantiChar')), 350);
       }
@@ -2128,6 +2133,7 @@
         document.getElementById('eoRightEpoch').textContent = `Chi è ${ch.name}?`;
         document.getElementById('eoRightRole').style.display = '';
         document.getElementById('eoRightRole').textContent = ch.role;
+        document.getElementById('eoRightDesc').style.display = 'none';
         document.getElementById('eoRightPlaceholder').style.display = 'none';
         document.getElementById('eoConfirmBtn').style.display = '';
         document.getElementById('eoAvantiChar').disabled = false;
@@ -2165,9 +2171,11 @@
     overlay.classList.add('eo-easter-red');
 
     // Push Hitler into character data so cart/checkout work
-    const hitlerChar = { name: 'Adolf Hitler', dates: '1889–1945', role: 'Dittatore · 1933–1945', img: null };
+    const hitlerChar = { name: 'Adolf Hitler', dates: '1889–1945', img: 'assets/characters/adolf-hitler.jpg', role: 'La memoria a cui stai accedendo è classificata come corrotta e soggetta a restrizioni di accesso. Adolf Hitler guidò la Germania nazionalsocialista dal 1933 al 1945, conducendo il paese in una guerra che causò oltre sessanta milioni di morti. Fu l\'architetto dell\'Olocausto, il programma di sterminio sistematico di sei milioni di ebrei e milioni di altri individui. Questa simulazione non è stata approvata dai protocolli standard di Abstergo Industries. Proseguire comporta l\'accettazione piena delle condizioni di accesso ai dati genetici classificati.' };
     const hitlerIdx  = eoChars[eoEpochIdx].length;
     eoChars[eoEpochIdx].push(hitlerChar);
+    _eoEasterEpochIdx  = eoEpochIdx;
+    _eoEasterHitlerIdx = hitlerIdx;
 
     // Rebuild left panel after glitch settles
     setTimeout(() => {
@@ -2195,12 +2203,13 @@
         eoSelectedChar = hitlerIdx;
         document.getElementById('eoCenterEmpty').style.display = 'none';
         const imgEl = document.getElementById('eoCenterImg');
-        imgEl.style.display = 'none';
+        imgEl.src = 'assets/characters/adolf-hitler.jpg';
+        imgEl.style.display = '';
         document.getElementById('eoCenterName').style.display = '';
         document.getElementById('eoCenterName').textContent = 'Adolf Hitler';
         document.getElementById('eoRightEpoch').textContent = 'Chi è Adolf Hitler?';
         document.getElementById('eoRightRole').style.display = '';
-        document.getElementById('eoRightRole').textContent = 'Dittatore · 1933–1945';
+        document.getElementById('eoRightRole').textContent = hitlerChar.role;
         document.getElementById('eoRightPlaceholder').style.display = 'none';
         document.getElementById('eoConfirmBtn').style.display = '';
         document.getElementById('eoAvantiChar').disabled = false;
@@ -2214,6 +2223,11 @@
 
 
   function hideEpochOverlay() {
+    if (_eoEasterEpochIdx !== -1 && _eoEasterHitlerIdx !== -1) {
+      eoChars[_eoEasterEpochIdx].splice(_eoEasterHitlerIdx, 1);
+      _eoEasterEpochIdx  = -1;
+      _eoEasterHitlerIdx = -1;
+    }
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;

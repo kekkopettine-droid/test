@@ -2082,6 +2082,11 @@ body {
   font-weight: 400; font-family: 'Rajdhani', sans-serif;
   letter-spacing: .02em; flex: 1; overflow-y: auto;
 }
+.eo-right-desc {
+  font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.6);
+  font-family: 'Rajdhani', sans-serif; letter-spacing: .02em;
+  margin-top: 10px; flex: 1; overflow-y: auto;
+}
 .eo-right-placeholder {
   font-size: 13px; font-weight: 600; letter-spacing: .18em; color: rgba(255,255,255,0.55);
   text-transform: uppercase; margin: auto 0; text-align: center;
