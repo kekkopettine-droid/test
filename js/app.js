@@ -2022,7 +2022,7 @@
     rotChip.className = 'eo-rotation-chip';
     rotChip.innerHTML = `
       <span class="eo-rc-icon">&#8635;</span>
-      <span class="eo-rc-ticker"><span class="eo-rc-text">Rotazione archivio · ogni 2 mesi · i personaggi cambiano · nuove esperienze ti aspettano &nbsp;&nbsp;&nbsp; Rotazione archivio · ogni 2 mesi · i personaggi cambiano · nuove esperienze ti aspettano &nbsp;&nbsp;&nbsp;</span></span>
+      <span class="eo-rc-ticker"><span class="eo-rc-text">Rotazione archivio · ogni 2 mesi · i personaggi cambiano &nbsp;&nbsp;&nbsp; Rotazione archivio · ogni 2 mesi · i personaggi cambiano &nbsp;&nbsp;&nbsp;</span></span>
       <span class="eo-rc-arrow">&#8250;</span>`;
 
     const rotPanel = document.createElement('div');
