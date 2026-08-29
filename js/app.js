@@ -2150,6 +2150,7 @@
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'flex';
+    _eoParticleCompose();
   }
 
   // ── Easter egg: Hitler ──
@@ -2346,6 +2347,120 @@
   }
 
 
+  // ── Particle compose (open) ──
+  function _eoParticleCompose() {
+    const cvs = document.createElement('canvas');
+    cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9001;pointer-events:none;';
+    document.body.appendChild(cvs);
+    cvs.width  = window.innerWidth;
+    cvs.height = window.innerHeight;
+    const ctx = cvs.getContext('2d');
+    const cx = cvs.width / 2, cy = cvs.height / 2;
+    const N = 160;
+    const colors = ['#00d2be','rgba(0,210,190,0.7)','rgba(0,180,160,0.5)','rgba(180,240,235,0.6)','#ffffff'];
+
+    const pts = Array.from({length: N}, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 300 + Math.random() * Math.max(cvs.width, cvs.height) * 0.6;
+      return {
+        x:  cx + Math.cos(angle) * dist,
+        y:  cy + Math.sin(angle) * dist,
+        tx: cx + (Math.random() - 0.5) * cvs.width  * 0.85,
+        ty: cy + (Math.random() - 0.5) * cvs.height * 0.75,
+        size: 1 + Math.random() * 3.5,
+        spd:  0.055 + Math.random() * 0.055,
+        col:  colors[Math.floor(Math.random() * colors.length)],
+        alpha: 0.4 + Math.random() * 0.6,
+      };
+    });
+
+    let prog = 0, raf;
+    function draw() {
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      prog = Math.min(1, prog + 0.018);
+      let settled = 0;
+      pts.forEach(p => {
+        p.x += (p.tx - p.x) * p.spd;
+        p.y += (p.ty - p.y) * p.spd;
+        if (Math.hypot(p.tx - p.x, p.ty - p.y) < 4) settled++;
+        ctx.save();
+        ctx.globalAlpha = p.alpha * Math.min(1, prog * 2.5);
+        ctx.fillStyle = p.col;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+      if (settled > N * 0.75) {
+        cvs.style.transition = 'opacity 0.4s ease';
+        cvs.style.opacity = '0';
+        cancelAnimationFrame(raf);
+        setTimeout(() => cvs.remove(), 420);
+      } else {
+        raf = requestAnimationFrame(draw);
+      }
+    }
+    raf = requestAnimationFrame(draw);
+  }
+
+  // ── Particle decompose (close) ──
+  function _eoParticleDecompose() {
+    const cvs = document.createElement('canvas');
+    cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9001;pointer-events:none;';
+    document.body.appendChild(cvs);
+    cvs.width  = window.innerWidth;
+    cvs.height = window.innerHeight;
+    const ctx = cvs.getContext('2d');
+    const cx = cvs.width / 2, cy = cvs.height / 2;
+    const N = 160;
+    const colors = ['#00d2be','rgba(0,210,190,0.7)','rgba(0,180,160,0.5)','rgba(180,240,235,0.6)','#ffffff'];
+
+    const pts = Array.from({length: N}, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const r     = Math.random() * Math.max(cvs.width, cvs.height) * 0.55;
+      return {
+        x: cx + (Math.random() - 0.5) * cvs.width  * 0.85,
+        y: cy + (Math.random() - 0.5) * cvs.height * 0.75,
+        vx: Math.cos(angle) * (2 + Math.random() * 5),
+        vy: Math.sin(angle) * (2 + Math.random() * 5),
+        tx: cx + Math.cos(angle) * (r + 200),
+        ty: cy + Math.sin(angle) * (r + 200),
+        size: 1 + Math.random() * 3.5,
+        col:  colors[Math.floor(Math.random() * colors.length)],
+        alpha: 0.7,
+      };
+    });
+
+    let life = 0, raf;
+    function draw() {
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      life++;
+      pts.forEach(p => {
+        p.x  += p.vx;
+        p.y  += p.vy;
+        p.vx *= 1.04;
+        p.vy *= 1.04;
+        p.alpha = Math.max(0, 0.7 - life * 0.022);
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.col;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+      if (life > 32) {
+        cancelAnimationFrame(raf);
+        cvs.style.transition = 'opacity 0.2s ease';
+        cvs.style.opacity = '0';
+        setTimeout(() => cvs.remove(), 220);
+      } else {
+        raf = requestAnimationFrame(draw);
+      }
+    }
+    raf = requestAnimationFrame(draw);
+  }
+
   function hideEpochOverlay() {
     if (_eoEasterEpochIdx !== -1 && _eoEasterHitlerIdx !== -1) {
       eoChars[_eoEasterEpochIdx].splice(_eoEasterHitlerIdx, 1);
@@ -2359,6 +2474,7 @@
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
+    _eoParticleDecompose();
     setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-zoom-out'); }, 580);
     document.getElementById('tlIconsHud').style.display = 'none';
   }
