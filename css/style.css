@@ -1573,19 +1573,24 @@ body {
   font-family: 'Rajdhani', 'Segoe UI', sans-serif;
   pointer-events: auto;
   opacity: 0;
-  transform: scale(1.06);
-  transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1),
-              transform 0.65s cubic-bezier(0.22,1,0.36,1);
+  transform: scale(1.45);
+  filter: blur(8px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+              transform 0.7s cubic-bezier(0.16,1,0.3,1),
+              filter 0.6s cubic-bezier(0.16,1,0.3,1);
 }
 #epochOverlay.eo-visible {
   opacity: 1;
   transform: scale(1);
+  filter: blur(0px);
 }
 #epochOverlay.eo-zoom-out {
   opacity: 0;
-  transform: scale(0.94);
-  transition: opacity 0.5s ease,
-              transform 0.5s ease;
+  transform: scale(0.6);
+  filter: blur(10px);
+  transition: opacity 0.55s cubic-bezier(0.4,0,1,1),
+              transform 0.55s cubic-bezier(0.4,0,1,1),
+              filter 0.45s ease;
 }
 #epochOverlay.hidden { display: none !important; }
 
