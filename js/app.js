@@ -1712,10 +1712,12 @@
           <div class="eo-ta-divider"><span></span></div>
           <div class="eo-ta-bottom">
             <div class="eo-ta-rows" id="eoTaRows"></div>
+          </div>
+          <div class="eo-ta-qr-section">
+            <div class="eo-ta-qr-label">⬡ SCANSIONA PER IL BIGLIETTO MOBILE</div>
             <canvas id="eoTaQr" class="eo-ta-qr"></canvas>
           </div>
         </div>
-        <div class="eo-ta-footer">SCANSIONA IL QR PER AVERE IL BIGLIETTO SUL TUO TELEFONO</div>
       </div>
     </div>
 
@@ -1758,8 +1760,8 @@
     ).join('');
     if (window.QRCode) {
       QRCode.toCanvas(document.getElementById('eoTaQr'), eoTicketUrl(ticket), {
-        width: 110, margin: 1,
-        color: { dark: '#00d2be', light: '#080e12' }
+        width: 160, margin: 2,
+        color: { dark: '#00d2be', light: '#060c10' }
       });
     }
 

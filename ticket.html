@@ -65,9 +65,13 @@
   .ticket-qr-section {
     border-top: 1px dashed rgba(0,210,190,0.3);
     padding: 20px 24px;
-    display: flex; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
   }
-  .ticket-qr-section canvas { display: block; }
+  .ticket-qr-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .22em;
+    color: rgba(0,210,190,0.5); text-transform: uppercase;
+  }
+  .ticket-qr-section canvas { display: block; box-shadow: 0 0 20px rgba(0,210,190,0.2); border-radius: 4px; }
   .ticket-footer {
     text-align: center; padding: 0 24px 20px;
     font-size: 10px; font-weight: 700; letter-spacing: .2em;
@@ -98,6 +102,7 @@
     <div class="ticket-divider"></div>
     <div class="ticket-details" id="tDetails"></div>
     <div class="ticket-qr-section">
+      <div class="ticket-qr-label">⬡ Codice di accesso — presentare all'ingresso</div>
       <canvas id="tQr"></canvas>
     </div>
     <div class="ticket-footer">Presentare questo biglietto all'ingresso della struttura Abstergo</div>
@@ -135,7 +140,7 @@
       `<div class="ticket-row"><span class="ticket-row-label">${k}</span><span class="ticket-row-val">${v}</span></div>`
     ).join('');
     QRCode.toCanvas(document.getElementById('tQr'), location.href, {
-      width: 120, margin: 1,
+      width: 160, margin: 2,
       color: { dark: '#00d2be', light: '#050a0e' }
     });
   }
