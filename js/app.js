@@ -2146,11 +2146,11 @@
     });
     left.appendChild(avantiCharBtn);
 
-    eoEl.classList.remove('hidden', 'eo-zoom-out');
+    eoEl.classList.remove('hidden', 'eo-dematerialize');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'flex';
-    _eoParticleCompose();
+    _eoMatScan(true);
   }
 
   // ── Easter egg: Hitler ──
@@ -2347,139 +2347,31 @@
   }
 
 
-  // ── Shared particle canvas setup ──
-  function _mkParticleCanvas() {
-    const cvs = document.createElement('canvas');
-    cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9001;pointer-events:none;';
-    document.body.appendChild(cvs);
-    cvs.width  = window.innerWidth;
-    cvs.height = window.innerHeight;
-    return cvs;
-  }
+  // ── Materialization scan line ──
+  // open=true  → line sweeps top→bottom while panels appear
+  // open=false → line sweeps top→bottom as panels collapse
+  function _eoMatScan(open) {
+    const rect  = eoEl.getBoundingClientRect();
+    const start = open ? rect.top    : rect.top;
+    const end   = open ? rect.bottom : rect.bottom;
+    const dur   = open ? 620 : 480;
 
-  // Sample random target points WITHIN the actual panel content area
-  function _panelTargets(N) {
-    const rect   = eoEl.getBoundingClientRect();
-    const top    = rect.top + 58;          // skip topbar
-    const bottom = rect.bottom - 10;
-    const left   = rect.left + 8;
-    const right  = rect.right - 8;
-    return Array.from({length: N}, () => ({
-      tx: left + Math.random() * (right - left),
-      ty: top  + Math.random() * (bottom - top),
-    }));
-  }
+    const line = document.createElement('div');
+    line.className = 'eo-mat-scan';
+    line.style.top = start + 'px';
+    document.body.appendChild(line);
 
-  const _pcols = [
-    'rgba(0,210,190,1)',
-    'rgba(0,210,190,0.75)',
-    'rgba(0,180,160,0.6)',
-    'rgba(160,235,230,0.85)',
-    'rgba(255,255,255,0.7)',
-    'rgba(0,140,130,0.5)',
-  ];
-
-  // ── Particle compose (open): particles fly in from outside → panel area ──
-  function _eoParticleCompose() {
-    const cvs = _mkParticleCanvas();
-    const ctx = cvs.getContext('2d');
-    const W = cvs.width, H = cvs.height;
-    const N = 280;
-
-    const targets = _panelTargets(N);
-    const pts = targets.map(({tx, ty}) => {
-      // start: random point far outside the screen edges
-      const edge = Math.floor(Math.random() * 4);
-      let sx, sy;
-      if      (edge === 0) { sx = -80 + Math.random() * (W + 160); sy = -100 - Math.random() * 200; }
-      else if (edge === 1) { sx = W + 60 + Math.random() * 200;    sy = Math.random() * H; }
-      else if (edge === 2) { sx = -80 + Math.random() * (W + 160); sy = H + 80 + Math.random() * 200; }
-      else                 { sx = -100 - Math.random() * 200;       sy = Math.random() * H; }
-      return {
-        x: sx, y: sy, tx, ty,
-        size: 1 + Math.random() * 2.5,
-        spd:  0.055 + Math.random() * 0.065,
-        col:  _pcols[Math.floor(Math.random() * _pcols.length)],
-        alpha: 0.55 + Math.random() * 0.45,
-        delay: Math.random() * 18,   // frames before moving
-        age: 0,
-      };
-    });
-
-    let settled = 0, raf;
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      settled = 0;
-      pts.forEach(p => {
-        p.age++;
-        if (p.age < p.delay) return;
-        p.x += (p.tx - p.x) * p.spd;
-        p.y += (p.ty - p.y) * p.spd;
-        const d = Math.hypot(p.tx - p.x, p.ty - p.y);
-        if (d < 2.5) settled++;
-        // fade in as it approaches target
-        const progress = 1 - Math.min(1, d / 300);
-        ctx.globalAlpha = p.alpha * Math.min(1, (p.age - p.delay) * 0.06) * (0.4 + 0.6 * progress);
-        ctx.fillStyle = p.col;
-        ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
-      });
-      if (settled > N * 0.78) {
-        cvs.style.transition = 'opacity 0.45s ease';
-        cvs.style.opacity = '0';
-        cancelAnimationFrame(raf);
-        setTimeout(() => cvs.remove(), 470);
-      } else {
-        raf = requestAnimationFrame(draw);
-      }
+    const t0 = performance.now();
+    function step(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      // ease-in-out cubic
+      const e = p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+      line.style.top = (start + (end - start) * e) + 'px';
+      line.style.opacity = String(1 - p * 0.7);
+      if (p < 1) requestAnimationFrame(step);
+      else { line.style.transition = 'opacity 0.15s ease'; line.style.opacity = '0'; setTimeout(() => line.remove(), 180); }
     }
-    raf = requestAnimationFrame(draw);
-  }
-
-  // ── Particle decompose (close): particles burst from panel area → outside ──
-  function _eoParticleDecompose() {
-    const cvs = _mkParticleCanvas();
-    const ctx = cvs.getContext('2d');
-    const W = cvs.width, H = cvs.height;
-    const N = 280;
-
-    const targets = _panelTargets(N);
-    const pts = targets.map(({tx, ty}) => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * 4.5;
-      return {
-        x: tx, y: ty,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: 1 + Math.random() * 2.5,
-        col:  _pcols[Math.floor(Math.random() * _pcols.length)],
-        alpha: 0.8 + Math.random() * 0.2,
-      };
-    });
-
-    let life = 0, raf;
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      life++;
-      const fade = Math.max(0, 1 - life / 28);
-      pts.forEach(p => {
-        p.x  += p.vx;
-        p.y  += p.vy;
-        p.vx *= 1.055;
-        p.vy *= 1.055;
-        ctx.globalAlpha = p.alpha * fade;
-        ctx.fillStyle = p.col;
-        ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
-      });
-      if (life > 30) {
-        cancelAnimationFrame(raf);
-        cvs.style.transition = 'opacity 0.15s ease';
-        cvs.style.opacity = '0';
-        setTimeout(() => cvs.remove(), 180);
-      } else {
-        raf = requestAnimationFrame(draw);
-      }
-    }
-    raf = requestAnimationFrame(draw);
+    requestAnimationFrame(step);
   }
 
   function hideEpochOverlay() {
@@ -2491,12 +2383,12 @@
     const _gc = document.getElementById('eoGlitchCanvas');
     if (_gc) { _gc._stopLoop?.(); _gc.remove(); }
     document.getElementById('eoGlitchVfx')?.remove();
-    eoEl.classList.add('eo-zoom-out');
+    eoEl.classList.add('eo-dematerialize');
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
-    _eoParticleDecompose();
-    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-zoom-out'); }, 580);
+    _eoMatScan(false);
+    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-dematerialize'); }, 540);
     document.getElementById('tlIconsHud').style.display = 'none';
   }
 

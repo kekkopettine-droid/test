@@ -1573,26 +1573,37 @@ body {
   font-family: 'Rajdhani', 'Segoe UI', sans-serif;
   pointer-events: auto;
   opacity: 0;
-  transform: scale(1.45);
-  filter: blur(8px);
-  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
-              transform 0.7s cubic-bezier(0.16,1,0.3,1),
-              filter 0.6s cubic-bezier(0.16,1,0.3,1);
+  clip-path: inset(50% 0 50% 0);
+  filter: brightness(2.5) blur(8px);
+  transition: clip-path 0.6s cubic-bezier(0.16,1,0.3,1),
+              filter    0.55s cubic-bezier(0.16,1,0.3,1),
+              opacity   0.15s ease;
 }
 #epochOverlay.eo-visible {
   opacity: 1;
-  transform: scale(1);
-  filter: blur(0px);
+  clip-path: inset(0% 0 0% 0);
+  filter: brightness(1) blur(0px);
 }
-#epochOverlay.eo-zoom-out {
+#epochOverlay.eo-dematerialize {
   opacity: 0;
-  transform: scale(0.6);
-  filter: blur(10px);
-  transition: opacity 0.55s cubic-bezier(0.4,0,1,1),
-              transform 0.55s cubic-bezier(0.4,0,1,1),
-              filter 0.45s ease;
+  clip-path: inset(50% 0 50% 0) !important;
+  filter: brightness(2.5) blur(8px) !important;
+  transition: clip-path 0.5s cubic-bezier(0.55,0,1,1),
+              filter    0.4s ease,
+              opacity   0.15s ease 0.38s !important;
 }
 #epochOverlay.hidden { display: none !important; }
+
+/* ── Materialization scan line ── */
+.eo-mat-scan {
+  position: fixed; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(0,210,190,0.7) 15%,
+    rgba(255,255,255,1) 50%,
+    rgba(0,210,190,0.7) 85%, transparent 100%);
+  box-shadow: 0 0 14px rgba(0,210,190,0.9), 0 0 35px rgba(0,210,190,0.4);
+  z-index: 9002; pointer-events: none;
+}
 
 /* ── top bar ── */
 .eo-topbar {
