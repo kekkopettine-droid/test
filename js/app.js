@@ -2218,6 +2218,26 @@
       });
       left.appendChild(card);
       left.appendChild(avantiBtn);
+
+      // Auto-populate center panel with Hitler image
+      card.classList.add('eo-selected');
+      eoSelectedChar = hitlerIdx;
+      document.getElementById('eoCenterEmpty').style.display = 'none';
+      const imgEl = document.getElementById('eoCenterImg');
+      imgEl.src = 'assets/characters/adolf-hitler.jpg';
+      imgEl.style.display = '';
+      imgEl.classList.remove('eo-img-loaded');
+      imgEl.onload = () => imgEl.classList.add('eo-img-loaded');
+      document.getElementById('eoCenterName').style.display = '';
+      document.getElementById('eoCenterName').textContent = 'Adolf Hitler';
+      document.getElementById('eoRightEpoch').textContent = 'Chi è Adolf Hitler?';
+      document.getElementById('eoRightRole').style.display = '';
+      document.getElementById('eoRightRole').textContent = hitlerChar.role;
+      document.getElementById('eoRightPlaceholder').style.display = 'none';
+      document.getElementById('eoConfirmBtn').style.display = '';
+      document.getElementById('eoAvantiChar').disabled = false;
+      document.getElementById('eoCenter').classList.add('eo-center-lit');
+      eoUpdateTabLocks();
     }, 400);
   }
 
