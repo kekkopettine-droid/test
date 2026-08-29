@@ -2170,6 +2170,29 @@
     // Apply red theme to overlay
     overlay.classList.add('eo-easter-red');
 
+    // Spawn dynamic glitch slices during trigger burst
+    const sliceHeights = [6, 10, 4, 14, 8, 5, 12];
+    let sliceTop = Math.random() * 30;
+    sliceHeights.forEach((h, i) => {
+      setTimeout(() => {
+        const sl = document.createElement('div');
+        sl.className = 'eo-glitch-slice';
+        sl.style.top  = (sliceTop % 90) + '%';
+        sl.style.height = h + 'px';
+        sl.style.background = i % 2 === 0 ? 'rgba(200,0,0,0.35)' : 'rgba(255,40,40,0.2)';
+        sl.style.setProperty('--gx', (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 14) + 'px');
+        document.body.appendChild(sl);
+        sliceTop += 13 + Math.random() * 20;
+        setTimeout(() => sl.remove(), 200);
+      }, i * 55);
+    });
+
+    // Persistent glitch VFX layer
+    const vfx = document.createElement('div');
+    vfx.className = 'eo-glitch-vfx';
+    vfx.id = 'eoGlitchVfx';
+    document.body.appendChild(vfx);
+
     // Push Hitler into character data so cart/checkout work
     const hitlerChar = { name: 'Adolf Hitler', dates: '1889–1945', img: 'assets/characters/adolf-hitler.jpg', role: 'La memoria a cui stai accedendo è classificata come corrotta e soggetta a restrizioni di accesso. Adolf Hitler guidò la Germania nazionalsocialista dal 1933 al 1945, conducendo il paese in una guerra che causò oltre sessanta milioni di morti. Fu l\'architetto dell\'Olocausto, il programma di sterminio sistematico di sei milioni di ebrei e milioni di altri individui. Questa simulazione non è stata approvata dai protocolli standard di Abstergo Industries. Proseguire comporta l\'accettazione piena delle condizioni di accesso ai dati genetici classificati.' };
     const hitlerIdx  = eoChars[eoEpochIdx].length;
@@ -2248,6 +2271,7 @@
       _eoEasterEpochIdx  = -1;
       _eoEasterHitlerIdx = -1;
     }
+    document.getElementById('eoGlitchVfx')?.remove();
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
