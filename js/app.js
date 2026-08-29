@@ -2359,7 +2359,7 @@
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
-    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-zoom-out'); }, 370);
+    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-zoom-out'); }, 520);
     document.getElementById('tlIconsHud').style.display = 'none';
   }
 
