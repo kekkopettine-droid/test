@@ -1742,6 +1742,9 @@
 
   function eoShowTicketAnim(ticket) {
     const el = eoTicketAnimEl;
+    const isHitler = ticket.character === 'Adolf Hitler';
+    const card = document.getElementById('eoTaCard');
+    card.classList.toggle('eo-ta-card-red', isHitler);
 
     // ── populate data ──
     document.getElementById('eoTaId').textContent    = ticket.ticketId;
@@ -1761,7 +1764,7 @@
     if (window.QRCode) {
       QRCode.toCanvas(document.getElementById('eoTaQr'), eoTicketUrl(ticket), {
         width: 160, margin: 2,
-        color: { dark: '#00d2be', light: '#060c10' }
+        color: { dark: isHitler ? '#cc2020' : '#00d2be', light: isHitler ? '#0a0000' : '#060c10' }
       });
     }
 

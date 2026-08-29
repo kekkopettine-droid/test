@@ -2980,6 +2980,26 @@ body {
 }
 .eo-ta-hud.eo-ta-phase-active .eo-ta-card { clip-path: inset(0 0 0% 0); }
 
+.eo-ta-card-red {
+  background: rgba(14,2,2,0.97) !important;
+  border-color: rgba(200,40,40,0.6) !important;
+  box-shadow: 0 0 30px rgba(180,0,0,0.3), 0 0 80px rgba(140,0,0,0.12) !important;
+  animation: eoTaCardPulseRed 3s ease infinite !important;
+}
+.eo-ta-card-red .eo-ta-id   { color: rgba(200,60,60,0.7) !important; }
+.eo-ta-card-red .eo-ta-scan {
+  background: linear-gradient(90deg, transparent 5%, rgba(200,40,40,0.9) 50%, transparent 95%) !important;
+  box-shadow: 0 0 12px rgba(200,40,40,0.8) !important;
+}
+.eo-ta-card-red .eo-ta-divider span { border-color: rgba(200,40,40,0.3) !important; }
+.eo-ta-card-red .eo-ta-row-label    { color: rgba(200,80,80,0.4) !important; }
+.eo-ta-card-red .eo-ta-qr-section   { border-color: rgba(200,40,40,0.3) !important; }
+.eo-ta-card-red .eo-ta-qr-label     { color: rgba(200,60,60,0.55) !important; }
+@keyframes eoTaCardPulseRed {
+  0%,100% { box-shadow: 0 0 30px rgba(180,0,0,0.3),  0 0 80px  rgba(140,0,0,0.12); }
+  50%     { box-shadow: 0 0 50px rgba(200,0,0,0.5),  0 0 120px rgba(160,0,0,0.22); }
+}
+
 .eo-ta-scan {
   position: absolute; left: 0; right: 0; top: -2px; height: 2px;
   background: linear-gradient(90deg, transparent 5%, rgba(0,210,190,0.95) 50%, transparent 95%);
