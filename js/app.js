@@ -2347,55 +2347,87 @@
   }
 
 
-  // ── Particle compose (open) ──
-  function _eoParticleCompose() {
+  // ── Shared particle canvas setup ──
+  function _mkParticleCanvas() {
     const cvs = document.createElement('canvas');
     cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9001;pointer-events:none;';
     document.body.appendChild(cvs);
     cvs.width  = window.innerWidth;
     cvs.height = window.innerHeight;
-    const ctx = cvs.getContext('2d');
-    const cx = cvs.width / 2, cy = cvs.height / 2;
-    const N = 160;
-    const colors = ['#00d2be','rgba(0,210,190,0.7)','rgba(0,180,160,0.5)','rgba(180,240,235,0.6)','#ffffff'];
+    return cvs;
+  }
 
-    const pts = Array.from({length: N}, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const dist  = 300 + Math.random() * Math.max(cvs.width, cvs.height) * 0.6;
+  // Sample random target points WITHIN the actual panel content area
+  function _panelTargets(N) {
+    const rect   = eoEl.getBoundingClientRect();
+    const top    = rect.top + 58;          // skip topbar
+    const bottom = rect.bottom - 10;
+    const left   = rect.left + 8;
+    const right  = rect.right - 8;
+    return Array.from({length: N}, () => ({
+      tx: left + Math.random() * (right - left),
+      ty: top  + Math.random() * (bottom - top),
+    }));
+  }
+
+  const _pcols = [
+    'rgba(0,210,190,1)',
+    'rgba(0,210,190,0.75)',
+    'rgba(0,180,160,0.6)',
+    'rgba(160,235,230,0.85)',
+    'rgba(255,255,255,0.7)',
+    'rgba(0,140,130,0.5)',
+  ];
+
+  // ── Particle compose (open): particles fly in from outside → panel area ──
+  function _eoParticleCompose() {
+    const cvs = _mkParticleCanvas();
+    const ctx = cvs.getContext('2d');
+    const W = cvs.width, H = cvs.height;
+    const N = 280;
+
+    const targets = _panelTargets(N);
+    const pts = targets.map(({tx, ty}) => {
+      // start: random point far outside the screen edges
+      const edge = Math.floor(Math.random() * 4);
+      let sx, sy;
+      if      (edge === 0) { sx = -80 + Math.random() * (W + 160); sy = -100 - Math.random() * 200; }
+      else if (edge === 1) { sx = W + 60 + Math.random() * 200;    sy = Math.random() * H; }
+      else if (edge === 2) { sx = -80 + Math.random() * (W + 160); sy = H + 80 + Math.random() * 200; }
+      else                 { sx = -100 - Math.random() * 200;       sy = Math.random() * H; }
       return {
-        x:  cx + Math.cos(angle) * dist,
-        y:  cy + Math.sin(angle) * dist,
-        tx: cx + (Math.random() - 0.5) * cvs.width  * 0.85,
-        ty: cy + (Math.random() - 0.5) * cvs.height * 0.75,
-        size: 1 + Math.random() * 3.5,
-        spd:  0.055 + Math.random() * 0.055,
-        col:  colors[Math.floor(Math.random() * colors.length)],
-        alpha: 0.4 + Math.random() * 0.6,
+        x: sx, y: sy, tx, ty,
+        size: 1 + Math.random() * 2.5,
+        spd:  0.055 + Math.random() * 0.065,
+        col:  _pcols[Math.floor(Math.random() * _pcols.length)],
+        alpha: 0.55 + Math.random() * 0.45,
+        delay: Math.random() * 18,   // frames before moving
+        age: 0,
       };
     });
 
-    let prog = 0, raf;
+    let settled = 0, raf;
     function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-      prog = Math.min(1, prog + 0.018);
-      let settled = 0;
+      ctx.clearRect(0, 0, W, H);
+      settled = 0;
       pts.forEach(p => {
+        p.age++;
+        if (p.age < p.delay) return;
         p.x += (p.tx - p.x) * p.spd;
         p.y += (p.ty - p.y) * p.spd;
-        if (Math.hypot(p.tx - p.x, p.ty - p.y) < 4) settled++;
-        ctx.save();
-        ctx.globalAlpha = p.alpha * Math.min(1, prog * 2.5);
+        const d = Math.hypot(p.tx - p.x, p.ty - p.y);
+        if (d < 2.5) settled++;
+        // fade in as it approaches target
+        const progress = 1 - Math.min(1, d / 300);
+        ctx.globalAlpha = p.alpha * Math.min(1, (p.age - p.delay) * 0.06) * (0.4 + 0.6 * progress);
         ctx.fillStyle = p.col;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
       });
-      if (settled > N * 0.75) {
-        cvs.style.transition = 'opacity 0.4s ease';
+      if (settled > N * 0.78) {
+        cvs.style.transition = 'opacity 0.45s ease';
         cvs.style.opacity = '0';
         cancelAnimationFrame(raf);
-        setTimeout(() => cvs.remove(), 420);
+        setTimeout(() => cvs.remove(), 470);
       } else {
         raf = requestAnimationFrame(draw);
       }
@@ -2403,57 +2435,46 @@
     raf = requestAnimationFrame(draw);
   }
 
-  // ── Particle decompose (close) ──
+  // ── Particle decompose (close): particles burst from panel area → outside ──
   function _eoParticleDecompose() {
-    const cvs = document.createElement('canvas');
-    cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9001;pointer-events:none;';
-    document.body.appendChild(cvs);
-    cvs.width  = window.innerWidth;
-    cvs.height = window.innerHeight;
+    const cvs = _mkParticleCanvas();
     const ctx = cvs.getContext('2d');
-    const cx = cvs.width / 2, cy = cvs.height / 2;
-    const N = 160;
-    const colors = ['#00d2be','rgba(0,210,190,0.7)','rgba(0,180,160,0.5)','rgba(180,240,235,0.6)','#ffffff'];
+    const W = cvs.width, H = cvs.height;
+    const N = 280;
 
-    const pts = Array.from({length: N}, () => {
+    const targets = _panelTargets(N);
+    const pts = targets.map(({tx, ty}) => {
       const angle = Math.random() * Math.PI * 2;
-      const r     = Math.random() * Math.max(cvs.width, cvs.height) * 0.55;
+      const speed = 1.5 + Math.random() * 4.5;
       return {
-        x: cx + (Math.random() - 0.5) * cvs.width  * 0.85,
-        y: cy + (Math.random() - 0.5) * cvs.height * 0.75,
-        vx: Math.cos(angle) * (2 + Math.random() * 5),
-        vy: Math.sin(angle) * (2 + Math.random() * 5),
-        tx: cx + Math.cos(angle) * (r + 200),
-        ty: cy + Math.sin(angle) * (r + 200),
-        size: 1 + Math.random() * 3.5,
-        col:  colors[Math.floor(Math.random() * colors.length)],
-        alpha: 0.7,
+        x: tx, y: ty,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 1 + Math.random() * 2.5,
+        col:  _pcols[Math.floor(Math.random() * _pcols.length)],
+        alpha: 0.8 + Math.random() * 0.2,
       };
     });
 
     let life = 0, raf;
     function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      ctx.clearRect(0, 0, W, H);
       life++;
+      const fade = Math.max(0, 1 - life / 28);
       pts.forEach(p => {
         p.x  += p.vx;
         p.y  += p.vy;
-        p.vx *= 1.04;
-        p.vy *= 1.04;
-        p.alpha = Math.max(0, 0.7 - life * 0.022);
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
+        p.vx *= 1.055;
+        p.vy *= 1.055;
+        ctx.globalAlpha = p.alpha * fade;
         ctx.fillStyle = p.col;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
       });
-      if (life > 32) {
+      if (life > 30) {
         cancelAnimationFrame(raf);
-        cvs.style.transition = 'opacity 0.2s ease';
+        cvs.style.transition = 'opacity 0.15s ease';
         cvs.style.opacity = '0';
-        setTimeout(() => cvs.remove(), 220);
+        setTimeout(() => cvs.remove(), 180);
       } else {
         raf = requestAnimationFrame(draw);
       }
