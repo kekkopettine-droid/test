@@ -1573,9 +1573,20 @@ body {
   font-family: 'Rajdhani', 'Segoe UI', sans-serif;
   pointer-events: auto;
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transform: scale(1.06);
+  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1),
+              transform 0.45s cubic-bezier(0.22,1,0.36,1);
 }
-#epochOverlay.eo-visible { opacity: 1; }
+#epochOverlay.eo-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+#epochOverlay.eo-zoom-out {
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.35s ease,
+              transform 0.35s ease;
+}
 #epochOverlay.hidden { display: none !important; }
 
 /* ── top bar ── */

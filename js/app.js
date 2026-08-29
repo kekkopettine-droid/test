@@ -2146,7 +2146,7 @@
     });
     left.appendChild(avantiCharBtn);
 
-    eoEl.classList.remove('hidden');
+    eoEl.classList.remove('hidden', 'eo-zoom-out');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'flex';
@@ -2355,10 +2355,11 @@
     const _gc = document.getElementById('eoGlitchCanvas');
     if (_gc) { _gc._stopLoop?.(); _gc.remove(); }
     document.getElementById('eoGlitchVfx')?.remove();
+    eoEl.classList.add('eo-zoom-out');
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
     eoEpochIdx = -1;
-    setTimeout(() => eoEl.classList.add('hidden'), 350);
+    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-zoom-out'); }, 370);
     document.getElementById('tlIconsHud').style.display = 'none';
   }
 
