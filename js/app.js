@@ -2193,6 +2193,85 @@
     vfx.id = 'eoGlitchVfx';
     document.body.appendChild(vfx);
 
+    // Glitch noise canvas on background
+    const gc = document.createElement('canvas');
+    gc.id = 'eoGlitchCanvas';
+    gc.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9996;pointer-events:none;opacity:0;mix-blend-mode:screen;';
+    document.body.appendChild(gc);
+    gc.width  = window.innerWidth;
+    gc.height = window.innerHeight;
+    const gctx = gc.getContext('2d');
+
+    let _glitchLoopId = null;
+    function _spawnGlitchSlices(count) {
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          if (!document.getElementById('eoGlitchVfx')) return;
+          const sl = document.createElement('div');
+          sl.className = 'eo-glitch-slice';
+          const h = 3 + Math.random() * 18;
+          sl.style.top    = (Math.random() * 92) + '%';
+          sl.style.height = h + 'px';
+          const r = Math.floor(150 + Math.random() * 105);
+          sl.style.background = `rgba(${r},${Math.floor(Math.random()*30)},${Math.floor(Math.random()*30)},${0.2 + Math.random() * 0.45})`;
+          sl.style.setProperty('--gx', (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 22) + 'px');
+          const dur = 80 + Math.random() * 180;
+          sl.style.animationDuration = dur + 'ms';
+          document.body.appendChild(sl);
+          setTimeout(() => sl.remove(), dur + 50);
+        }, i * (30 + Math.random() * 60));
+      }
+    }
+
+    function _drawGlitchNoise() {
+      if (!document.getElementById('eoGlitchCanvas')) return;
+      const w = gc.width, h = gc.height;
+      gctx.clearRect(0, 0, w, h);
+      // random noise blocks
+      const blocks = 6 + Math.floor(Math.random() * 10);
+      for (let i = 0; i < blocks; i++) {
+        const bw = 20 + Math.random() * 200;
+        const bh = 1 + Math.random() * 6;
+        const bx = Math.random() * (w - bw);
+        const by = Math.random() * h;
+        const alpha = 0.08 + Math.random() * 0.22;
+        gctx.fillStyle = `rgba(255,${Math.floor(Math.random()*40)},${Math.floor(Math.random()*40)},${alpha})`;
+        gctx.fillRect(bx, by, bw, bh);
+      }
+      // vertical RGB bleed
+      if (Math.random() > 0.5) {
+        const bx = Math.random() * w;
+        gctx.fillStyle = `rgba(255,0,0,${0.04 + Math.random() * 0.08})`;
+        gctx.fillRect(bx, 0, 2 + Math.random() * 3, h);
+        gctx.fillStyle = `rgba(0,0,180,${0.03 + Math.random() * 0.06})`;
+        gctx.fillRect(bx + 4, 0, 2, h);
+      }
+    }
+
+    function _glitchLoop() {
+      if (!document.getElementById('eoGlitchVfx')) return;
+      const isBurst = Math.random() > 0.72;
+      if (isBurst) {
+        // intense burst: many slices + noise flash
+        _spawnGlitchSlices(4 + Math.floor(Math.random() * 6));
+        gc.style.opacity = '1';
+        _drawGlitchNoise();
+        setTimeout(() => { if (gc.isConnected) gc.style.opacity = '0'; }, 120 + Math.random() * 180);
+      } else {
+        // subtle: 1-2 slices
+        _spawnGlitchSlices(1 + Math.floor(Math.random() * 2));
+        if (Math.random() > 0.5) {
+          gc.style.opacity = '0.6';
+          _drawGlitchNoise();
+          setTimeout(() => { if (gc.isConnected) gc.style.opacity = '0'; }, 60 + Math.random() * 80);
+        }
+      }
+      const nextIn = isBurst ? 600 + Math.random() * 1200 : 200 + Math.random() * 700;
+      _glitchLoopId = setTimeout(_glitchLoop, nextIn);
+    }
+    _glitchLoopId = setTimeout(_glitchLoop, 500);
+    gc._stopLoop = () => { clearTimeout(_glitchLoopId); };
+
     // Push Hitler into character data so cart/checkout work
     const hitlerChar = { name: 'Adolf Hitler', dates: '1889–1945', img: 'assets/characters/adolf-hitler.jpg', role: 'La memoria a cui stai accedendo è classificata come corrotta e soggetta a restrizioni di accesso. Adolf Hitler guidò la Germania nazionalsocialista dal 1933 al 1945, conducendo il paese in una guerra che causò oltre sessanta milioni di morti. Fu l\'architetto dell\'Olocausto, il programma di sterminio sistematico di sei milioni di ebrei e milioni di altri individui. Questa simulazione non è stata approvata dai protocolli standard di Abstergo Industries. Proseguire comporta l\'accettazione piena delle condizioni di accesso ai dati genetici classificati.' };
     const hitlerIdx  = eoChars[eoEpochIdx].length;
@@ -2271,6 +2350,8 @@
       _eoEasterEpochIdx  = -1;
       _eoEasterHitlerIdx = -1;
     }
+    const _gc = document.getElementById('eoGlitchCanvas');
+    if (_gc) { _gc._stopLoop?.(); _gc.remove(); }
     document.getElementById('eoGlitchVfx')?.remove();
     eoEl.classList.remove('eo-visible', 'eo-easter-red');
     charViewEpoch = -1;
