@@ -2365,9 +2365,53 @@
 
   document.getElementById('eoBackBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
-    hideEpochOverlay();
-    showTimelineView();
+    if (_eoEasterEpochIdx !== -1) {
+      _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(); });
+    } else {
+      hideEpochOverlay();
+      showTimelineView();
+    }
   });
+
+  function _eoDeglitch(onDone) {
+    const overlay = document.getElementById('epochOverlay');
+    // final burst of slices
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => {
+        const sl = document.createElement('div');
+        sl.className = 'eo-glitch-slice';
+        sl.style.top    = (Math.random() * 90) + '%';
+        sl.style.height = (4 + Math.random() * 20) + 'px';
+        sl.style.background = `rgba(220,${Math.floor(Math.random()*30)},${Math.floor(Math.random()*30)},${0.3 + Math.random() * 0.5})`;
+        sl.style.setProperty('--gx', (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 28) + 'px');
+        sl.style.animationDuration = '150ms';
+        document.body.appendChild(sl);
+        setTimeout(() => sl.remove(), 200);
+      }, i * 40);
+    }
+    // strobe flash that fades to nothing
+    const flash = document.createElement('div');
+    flash.className = 'eo-easter-flash';
+    flash.style.animation = 'none';
+    flash.style.opacity = '0.7';
+    document.body.appendChild(flash);
+    let tog = true;
+    const iv = setInterval(() => { flash.style.opacity = (tog = !tog) ? '0.6' : '0.1'; }, 55);
+    setTimeout(() => {
+      clearInterval(iv);
+      flash.style.transition = 'opacity 0.35s ease';
+      flash.style.opacity = '0';
+      // simultaneously remove red class with a blur-out
+      overlay.style.transition = 'background 0.4s ease, filter 0.4s ease';
+      overlay.style.filter = 'saturate(0) brightness(0.4)';
+      setTimeout(() => {
+        overlay.style.filter = '';
+        overlay.style.transition = '';
+        flash.remove();
+        onDone();
+      }, 420);
+    }, 380);
+  }
 
   document.getElementById('eoConfirmBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
