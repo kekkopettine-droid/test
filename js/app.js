@@ -2354,7 +2354,7 @@
     const rect  = eoEl.getBoundingClientRect();
     const start = open ? rect.top    : rect.top;
     const end   = open ? rect.bottom : rect.bottom;
-    const dur   = open ? 620 : 480;
+    const dur   = open ? 1100 : 880;
 
     const line = document.createElement('div');
     line.className = 'eo-mat-scan';
@@ -2388,7 +2388,7 @@
     charViewEpoch = -1;
     eoEpochIdx = -1;
     _eoMatScan(false);
-    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-dematerialize'); }, 540);
+    setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-dematerialize'); }, 920);
     document.getElementById('tlIconsHud').style.display = 'none';
   }
 

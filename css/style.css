@@ -1575,8 +1575,8 @@ body {
   opacity: 0;
   clip-path: inset(50% 0 50% 0);
   filter: brightness(2.5) blur(8px);
-  transition: clip-path 0.6s cubic-bezier(0.16,1,0.3,1),
-              filter    0.55s cubic-bezier(0.16,1,0.3,1),
+  transition: clip-path 1.1s cubic-bezier(0.16,1,0.3,1),
+              filter    1.0s cubic-bezier(0.16,1,0.3,1),
               opacity   0.15s ease;
 }
 #epochOverlay.eo-visible {
@@ -1588,9 +1588,9 @@ body {
   opacity: 0;
   clip-path: inset(50% 0 50% 0) !important;
   filter: brightness(2.5) blur(8px) !important;
-  transition: clip-path 0.5s cubic-bezier(0.55,0,1,1),
-              filter    0.4s ease,
-              opacity   0.15s ease 0.38s !important;
+  transition: clip-path 0.9s cubic-bezier(0.55,0,1,1),
+              filter    0.75s ease,
+              opacity   0.15s ease 0.72s !important;
 }
 #epochOverlay.hidden { display: none !important; }
 
