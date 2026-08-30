@@ -939,34 +939,46 @@
     tlTickObjs.push(tk);
   }
 
-  // 5 nodi CSS3D alternati sopra/sotto la linea
+  // 5 nodi 2D — posizionati tramite proiezione Three.js, non CSS3D
   tlNodeEls  = [];
   tlNodeCsss = [];
+  const _tlNodeWorldPos = []; // posizioni 3D world per proiezione
   for (let s = 0; s < 5; s++) {
     const t     = s / 4;
     const cx    = -14.0 + t * 28.0;
     const cz    = -12.0;
     const yNode = TL_Y + tlNodeOffsets[s];
+    _tlNodeWorldPos.push(new THREE.Vector3(cx, yNode, cz + 5)); // +5 per gridGroup.position.z
     const el    = document.createElement('div');
     el.className = 'tl-node-item';
     el.dataset.idx = s;
-    el.innerHTML = `<div class="tl-node-dot"></div><div class="tl-node-year">${tlNodeData[s].year}</div>`;
+    el.innerHTML = `
+      <div class="tl-node-glitch">
+        <div class="tl-ng-year">${tlNodeData[s].year}</div>
+        <div class="tl-ng-ghost tl-ng-r">${tlNodeData[s].year}</div>
+        <div class="tl-ng-ghost tl-ng-b">${tlNodeData[s].year}</div>
+      </div>`;
     el.style.opacity = '0';
     el.style.pointerEvents = 'none';
+    el.style.position = 'fixed';
+    el.style.transform = 'translate(-50%, -50%)';
     el.style.zIndex = '1000';
     document.getElementById('hud-container').appendChild(el);
     tlNodeEls.push(el);
-    const cssN = new THREE.CSS3DObject(el);
-    cssN.position.set(cx, yNode, cz);
-    cssN.scale.set(0.018, 0.018, 0.018);
-    // Visto che è piatto, guarda dritto in asse Z
-    cssN.rotation.set(0, 0, 0);
-    // FIX SAFARI BUG: microscopica rotazione per evitare che il piano sia perfettamente ortogonale
-    cssN.rotation.y += 0.001;
-    cssN.rotation.x += 0.001;
-    gridGroup.add(cssN);
-    tlNodeCsss.push(cssN);
   }
+
+  function _positionTlNodes2D() {
+    const v = new THREE.Vector3();
+    _tlNodeWorldPos.forEach((wp, s) => {
+      v.copy(wp).project(camera);
+      const x = ((v.x + 1) / 2) * window.innerWidth;
+      const y = ((-v.y + 1) / 2) * window.innerHeight;
+      tlNodeEls[s].style.left = x + 'px';
+      tlNodeEls[s].style.top  = y + 'px';
+    });
+  }
+  _positionTlNodes2D();
+  window.addEventListener('resize', _positionTlNodes2D);
 
   // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
   const guideText  = "";
@@ -1083,7 +1095,7 @@
         role: 'Robespierre è la figura più rappresentativa del periodo del Terrore, la fase più radicale della Rivoluzione francese compresa tra il 1793 e il 1794. Avvocato di formazione, membro del Comitato di salute pubblica, fu il principale teorico dell\'utilizzo della violenza istituzionale come strumento di difesa della Repubblica. La sua memoria offre accesso al dibattito politico rivoluzionario — la tensione tra libertà e sicurezza, tra ideale e prassi — e al funzionamento delle assemblee e dei tribunali del periodo. Un\'esperienza di osservazione diretta del momento in cui un sistema di valori si confronta con le proprie contraddizioni.' } ],
     [ { name: 'Nikola Tesla',           dates: '1856–1943', img: 'assets/characters/nikola-tesla.jpg',
         role: 'Tesla fu il principale responsabile dello sviluppo del sistema di corrente alternata che rese possibile la distribuzione dell\'elettricità su scala industriale. Lavorò inizialmente con Thomas Edison, poi in modo autonomo, brevettando il motore a induzione e sviluppando il sistema polifase adottato nella centrale di Niagara Falls nel 1895. La sua memoria consente di osservare i laboratori sperimentali di fine Ottocento, le logiche economiche che guidavano la ricerca applicata e il dibattito tecnico e commerciale tra corrente continua e alternata. Un\'esperienza centrata sul rapporto tra innovazione scientifica, industria e riconoscimento istituzionale.' },
-      { name: 'Charles Darwin',         dates: '1809–1882', img: 'assets/characters/charles-darwin.jpg',
+      { name: 'Charles Darwin',         dates: '1809–1882', img: 'assets/characters/charles-darwin-new.jpg',
         role: 'Darwin impiegò oltre vent\'anni a raccogliere le evidenze e a strutturare la teoria dell\'evoluzione per selezione naturale, pubblicata in L\'Origine delle Specie nel 1859. Il viaggio a bordo del Beagle tra il 1831 e il 1836 lo portò nelle Galapagos, in Sudamerica e in Oceania, dove raccolse osservazioni sistematiche sulla variabilità delle specie. L\'esperienza documenta il metodo di ricerca darwiniano — osservazione, classificazione, ipotesi — e il contesto scientifico e religioso in cui la teoria fu elaborata e ricevuta. Una sessione dedicata a comprendere come si costruisce e si afferma un paradigma scientifico.' },
       { name: 'Thomas Edison',          dates: '1847–1931', img: 'assets/characters/thomas-edison.jpg',
         role: 'Edison è considerato il principale artefice della transizione verso un\'economia basata sull\'energia elettrica nella seconda metà dell\'Ottocento. Nel laboratorio di Menlo Park, da lui fondato nel 1876, sviluppò un metodo sistematico di ricerca applicata che portò alla realizzazione della lampada a incandescenza commerciale, del fonografo e dei primi sistemi di distribuzione elettrica urbana. La tua sessione esplora il funzionamento di un laboratorio industriale di fine Ottocento, la logica dei brevetti come strumento competitivo e il processo attraverso cui l\'innovazione tecnologica si trasforma in infrastruttura di massa.' } ],
@@ -1095,13 +1107,14 @@
   eoEl.id = 'epochOverlay';
   eoEl.className = 'hidden';
   const eoToday = new Date().toISOString().split('T')[0];
+  const _eoDefaultDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().split('T')[0]; })();
   eoEl.innerHTML = `
     <div class="eo-topbar">
       <button class="eo-back-btn" id="eoBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="eo-tabs">
         <button class="eo-tab eo-active" data-tab="character">PERSONAGGIO</button>
         <button class="eo-tab" data-tab="customize">PERSONALIZZAZIONE</button>
-        <button class="eo-tab" data-tab="date">DATA</button>
+        <button class="eo-tab" data-tab="date">PRENOTAZIONE</button>
       </div>
       <div class="eo-topbar-right"></div>
     </div>
@@ -1178,12 +1191,14 @@
             <div class="eo-cust-band-num">03</div>
             <div class="eo-cust-band-title">LINGUA NARRAZIONE</div>
           </div>
-          <select id="eoCustLang" class="eo-date-input eo-cust-lang-select">
-            <option value="it">Italiano</option>
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
-          </select>
+          <input type="hidden" id="eoCustLang" value="">
+          <div class="eo-pick-chips" id="eoCustLingua">
+            <div class="eo-pick-chip" data-for="eoCustLang" data-val="orig">ORIGINALE</div>
+            <div class="eo-pick-chip" data-for="eoCustLang" data-val="it">ITALIANO</div>
+            <div class="eo-pick-chip" data-for="eoCustLang" data-val="en">ENGLISH</div>
+            <div class="eo-pick-chip" data-for="eoCustLang" data-val="fr">FRANÇAIS</div>
+            <div class="eo-pick-chip" data-for="eoCustLang" data-val="es">ESPAÑOL</div>
+          </div>
           <button class="eo-avanti-btn eo-avanti-inline" id="eoAvantiCust" disabled>AVANTI &rsaquo;</button>
         </div>
       </div>
@@ -1191,41 +1206,50 @@
 
     <!-- TAB: DATA -->
     <div class="eo-content eo-date-content" id="eoTabDate" style="display:none;">
-      <div class="eo-date-panel">
-        <div class="eo-date-tag">⬡ ABSTERGO INDUSTRIES — PRENOTAZIONE</div>
-        <div class="eo-date-title" id="eoDateTitle">PIANIFICA LA TUA ESPERIENZA</div>
+      <input type="hidden" id="eoDate" value="${_eoDefaultDate}">
+      <input type="hidden" id="eoTime" value="">
+      <input type="hidden" id="eoLocation" value="">
+
+      <!-- pannello 1: pianifica -->
+      <div class="eo-date-box">
+        <div class="eo-date-box-header">
+          <div class="eo-date-tag">⬡ PRENOTAZIONE</div>
+          <div class="eo-date-title" id="eoDateTitle">PIANIFICA</div>
+        </div>
         <div class="eo-date-divider"></div>
-
-        <div class="eo-date-fields">
-          <div class="eo-date-field">
-            <label class="eo-date-label">DATA</label>
-            <input type="date" id="eoDate" class="eo-date-input" min="${eoToday}" value="${eoToday}">
-          </div>
-          <div class="eo-date-field">
-            <label class="eo-date-label">ORARIO</label>
-            <select id="eoTime" class="eo-date-input">
-              <option value="">— Seleziona —</option>
-              <option>09:00</option><option>10:00</option><option>11:00</option>
-              <option>12:00</option><option>14:00</option><option>15:00</option>
-              <option>16:00</option><option>17:00</option>
-            </select>
+        <div class="eo-pick-row">
+          <div class="eo-date-label">DATA</div>
+          <div class="eo-pick-chips" id="eoDateChips"></div>
+        </div>
+        <div class="eo-pick-row">
+          <div class="eo-date-label">ORARIO</div>
+          <div class="eo-pick-chips" id="eoTimeChips">
+            <div class="eo-pick-chip" data-for="eoTime" data-val="09:00">09:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="10:00">10:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="11:00">11:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="12:00">12:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="14:00">14:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="15:00">15:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="16:00">16:00</div>
+            <div class="eo-pick-chip" data-for="eoTime" data-val="17:00">17:00</div>
           </div>
         </div>
+      </div>
 
-        <div class="eo-date-field" style="margin-top:8px;">
-          <label class="eo-date-label">SEDE ABSTERGO</label>
-          <select id="eoLocation" class="eo-date-input">
-            <option value="">— Seleziona una sede —</option>
-            <option>Milano — Torre Abstergo, Via della Scienza 1</option>
-            <option>Roma — Complesso EUR, Viale dell'Impero 42</option>
-            <option>Firenze — Palazzo Animus, Piazza della Repubblica 8</option>
-            <option>Venezia — Centro Genetico, Fondamenta dei Ricordi 3</option>
-            <option>Napoli — Hub Meridionale, Via del Futuro 17</option>
-          </select>
+      <!-- pannello 2: sede + riepilogo + carrello -->
+      <div class="eo-date-box">
+        <div class="eo-date-box-header">
+          <div class="eo-date-tag">⬡ SEDE</div>
+          <div class="eo-date-title">SCEGLI LA SEDE</div>
         </div>
-
-        <div class="eo-date-divider" style="margin-top:28px;"></div>
-
+        <div class="eo-date-divider"></div>
+        <div class="eo-pick-locs" id="eoLocChips">
+          <div class="eo-pick-loc" data-for="eoLocation" data-val="Milano — Torre Abstergo, Via della Scienza 1">Milano — Torre Abstergo</div>
+          <div class="eo-pick-loc" data-for="eoLocation" data-val="New York — Abstergo East Campus, 5th Avenue 200">New York — East Campus</div>
+          <div class="eo-pick-loc" data-for="eoLocation" data-val="Madrid — Centro Animus Ibérico, Calle de la Memoria 14">Madrid — Centro Ibérico</div>
+          <div class="eo-pick-loc" data-for="eoLocation" data-val="Paris — Complexe Abstergo Seine, Avenue des Ancêtres 7">Paris — Complexe Seine</div>
+        </div>
+        <div class="eo-date-divider"></div>
         <div class="eo-date-summary" id="eoDateSummary" style="display:none;">
           <div class="eo-date-summary-row"><span>PERSONAGGIO</span><span id="eoSumChar">—</span></div>
           <div class="eo-date-summary-row"><span>EPOCA</span><span id="eoSumEpoch">—</span></div>
@@ -1236,10 +1260,7 @@
           <div class="eo-date-summary-row"><span>SEDE</span><span id="eoSumLoc">—</span></div>
           <div class="eo-date-summary-row eo-sum-price-row" style="display:none;"><span>TOTALE</span><span id="eoSumPrice">—</span></div>
         </div>
-
-        <button class="eo-date-cart-btn" id="eoDateCartBtn" disabled>
-          &#43; AGGIUNGI AL CARRELLO
-        </button>
+        <button class="eo-date-cart-btn" id="eoDateCartBtn" disabled>&#43; AGGIUNGI AL CARRELLO</button>
         <div class="eo-date-confirm-msg" id="eoDateConfirmMsg" style="display:none;">⬡ AGGIUNTO AL CARRELLO</div>
       </div>
     </div>
@@ -1326,11 +1347,11 @@
   const eoCart    = [];
   const eoTickets = [];
 
-  const eoPriceImm    = { osservatore: 500, partecipante: 800, totale: 1000 };
-  const eoPriceDur    = { '1h': 100, '2h': 150, '3h': 300 };
+  const eoPriceImm    = { osservatore: 900, partecipante: 1500, totale: 2500 };
+  const eoPriceDur    = { '1h': 250, '2h': 450, '3h': 800 };
   const eoImmLabel    = { osservatore: 'Osservatore', partecipante: 'Partecipante', totale: 'Totale' };
   const eoDurLabel    = { '1h': '1 ora', '2h': '2 ore', '3h': '3 ore' };
-  const eoLangLabel   = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español' };
+  const eoLangLabel   = { orig: 'Originale', it: 'Italiano', en: 'English', fr: 'Français', es: 'Español' };
 
   function eoComputePrice() {
     const imm = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val || 'osservatore';
@@ -1432,7 +1453,8 @@
         btn.classList.add('eo-cust-selected');
         const immOk = document.querySelector('#eoCustImmersion .eo-cust-selected');
         const durOk = document.querySelector('#eoCustDuration .eo-cust-selected');
-        document.getElementById('eoAvantiCust').disabled = !(immOk && durOk);
+        const langOk = document.querySelector('#eoCustLingua .eo-picked');
+        document.getElementById('eoAvantiCust').disabled = !(immOk && durOk && langOk);
         eoUpdateTabLocks();
         if (groupId === 'eoCustImmersion') {
           const val = btn.dataset.val;
@@ -1478,14 +1500,63 @@
     });
   });
 
-  // Date field change → update summary + btn state
+  // Generate date chips (9 slots spread across ~3–9 months from today)
+  (function() {
+    const wrap    = document.getElementById('eoDateChips');
+    const days    = ['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
+    const mons    = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC'];
+    const today   = new Date();
+    const offsets = [90, 113, 138, 160, 185, 207, 232, 255, 278];
+    offsets.forEach((off, i) => {
+      const d   = new Date(today);
+      d.setDate(today.getDate() + off);
+      const val = d.toISOString().split('T')[0];
+      const el  = document.createElement('div');
+      el.className = 'eo-pick-chip eo-pick-chip-date' + (i === 0 ? ' eo-picked' : '');
+      el.dataset.for = 'eoDate';
+      el.dataset.val = val;
+      el.innerHTML = `<span class="eo-chip-day">${days[d.getDay()]}</span><span class="eo-chip-num">${d.getDate()}</span><span class="eo-chip-mon">${mons[d.getMonth()]}</span>`;
+      wrap.appendChild(el);
+    });
+  })();
+
+  // Generic chip/loc click handler
+  eoEl.addEventListener('click', e => {
+    const chip = e.target.closest('.eo-pick-chip, .eo-pick-loc');
+    if (!chip) return;
+    if (window.audioEngine) window.audioEngine.playClick();
+    const inputId = chip.dataset.for;
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    chip.closest('.eo-pick-chips, .eo-pick-locs')
+      .querySelectorAll('.eo-pick-chip, .eo-pick-loc')
+      .forEach(c => c.classList.remove('eo-picked'));
+    chip.classList.add('eo-picked');
+    inp.value = chip.dataset.val;
+    inp.dispatchEvent(new Event('change'));
+  });
+  eoEl.addEventListener('mouseover', e => {
+    if (e.target.closest('.eo-pick-chip, .eo-pick-loc')) {
+      if (window.audioEngine) window.audioEngine.playHover();
+    }
+  });
+
+  // Hidden input change → update summary + btn state
   ['eoDate','eoTime','eoLocation'].forEach(id => {
     document.getElementById(id).addEventListener('change', eoUpdateDateSummary);
   });
 
+  // Language chip → update AVANTI state
+  document.getElementById('eoCustLang').addEventListener('change', () => {
+    const immOk = document.querySelector('#eoCustImmersion .eo-cust-selected');
+    const durOk = document.querySelector('#eoCustDuration .eo-cust-selected');
+    const langOk = document.querySelector('#eoCustLingua .eo-picked');
+    document.getElementById('eoAvantiCust').disabled = !(immOk && durOk && langOk);
+  });
+
   // Cart button — save item and update icon
   document.getElementById('eoDateCartBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
+    if (window.audioEngine) window.audioEngine.playCart();
     const ch   = eoChars[eoEpochIdx][eoSelectedChar];
     const imm  = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val || 'osservatore';
     const dur  = document.querySelector('#eoCustDuration .eo-cust-selected')?.dataset.val || '1h';
@@ -1535,7 +1606,7 @@
     items.innerHTML = eoCart.length === 0
       ? '<div class="eo-cart-empty">Il carrello è vuoto.</div>'
       : eoCart.map((item, i) => `
-          <div class="eo-cart-item">
+          <div class="eo-cart-item${item.character === 'Adolf Hitler' ? ' eo-cart-item-red' : ''}">
             <div class="eo-cart-item-header">
               <span class="eo-cart-item-name">${item.character}</span>
               <span class="eo-cart-item-price">€ ${item.price}</span>
@@ -1656,14 +1727,15 @@
     }
     // Purchase: move cart → tickets
     const purchasedAt = new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
+    const _prevCount = eoTickets.length;
     eoCart.forEach(item => eoTickets.push({ ...item, buyer: name, email, purchasedAt, ticketId: 'ANM-' + Math.random().toString(36).substring(2,8).toUpperCase() }));
+    const newTickets = eoTickets.slice(_prevCount);
     eoCart.length = 0;
     eoUpdateCartIcon();
     eoUpdateTicketsIcon();
     eoHideCheckout();
     eoHideCart();
-    const newTicket = eoTickets[eoTickets.length - 1];
-    eoShowTicketAnim(newTicket);
+    eoShowTicketAnim(newTickets);
   });
 
   // ── TICKET CONFIRMATION ANIMATION ──
@@ -1671,197 +1743,205 @@
   eoTicketAnimEl.id = 'eoTicketAnim';
   eoTicketAnimEl.className = 'eo-ticket-anim hidden';
   eoTicketAnimEl.innerHTML = `
-    <canvas class="eo-ta-rain" id="eoTaRain"></canvas>
-    <div class="eo-ta-grid"></div>
+    <div class="eo-ta-card" id="eoTaCard">
+      <div class="eo-ta-shine" id="eoTaShine"></div>
+      <div class="eo-ta-gloss"></div>
+      <div class="eo-ta-scan"></div>
 
-    <div class="eo-ta-scanner" id="eoTaScanner">
-      <div class="eo-ta-ring eo-ta-ring-1"></div>
-      <div class="eo-ta-ring eo-ta-ring-2"></div>
-      <div class="eo-ta-ring eo-ta-ring-3"></div>
-      <div class="eo-ta-ring-dot"></div>
-      <div class="eo-ta-scan-lines">
-        <div class="eo-ta-hline eo-ta-hline-1"></div>
-        <div class="eo-ta-hline eo-ta-hline-2"></div>
+      <div class="eo-ta-left">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410 370" class="eo-ta-logo-sym">
+          <path class="eo-ta-sym-p1" d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301"/>
+          <path class="eo-ta-sym-p2" d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557"/>
+          <path class="eo-ta-sym-p3" d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006"/>
+        </svg>
+        <div class="eo-ta-brand-name">ABSTERGO</div>
+        <div class="eo-ta-brand-sub">INDUSTRIES</div>
       </div>
-      <div class="eo-ta-scan-label">ELABORAZIONE TRANSAZIONE</div>
-      <div class="eo-ta-scan-sub" id="eoTaScanSub">ANALISI DNA IN CORSO...</div>
-    </div>
 
-    <div class="eo-ta-access" id="eoTaAccess">
-      <div class="eo-ta-access-line eo-ta-access-line-t"></div>
-      <div class="eo-ta-access-text">ACCESSO CONCESSO</div>
-      <div class="eo-ta-access-sub">IDENTITÀ VERIFICATA · TRANSAZIONE AUTORIZZATA</div>
-      <div class="eo-ta-access-line eo-ta-access-line-b"></div>
-    </div>
+      <div class="eo-ta-vert-sep"></div>
 
-    <div class="eo-ta-hud" id="eoTaHud">
-      <div class="eo-ta-corner eo-ta-tl"></div>
-      <div class="eo-ta-corner eo-ta-tr"></div>
-      <div class="eo-ta-corner eo-ta-bl"></div>
-      <div class="eo-ta-corner eo-ta-br"></div>
-      <div class="eo-ta-hud-label eo-ta-hud-tl">ANIMUS v3.28</div>
-      <div class="eo-ta-hud-label eo-ta-hud-tr" id="eoTaHudTr">SYS:OK</div>
-      <div class="eo-ta-inner">
-        <div class="eo-ta-tag">⬡ ABSTERGO INDUSTRIES</div>
-        <div class="eo-ta-status">BIGLIETTO EMESSO</div>
-        <div class="eo-ta-card" id="eoTaCard">
-          <div class="eo-ta-scan"></div>
-          <div class="eo-ta-id" id="eoTaId"></div>
+      <div class="eo-ta-right">
+        <div class="eo-ta-block">
+          <div class="eo-ta-section-label">PERSONAGGIO STORICO</div>
           <div class="eo-ta-char" id="eoTaChar"></div>
-          <div class="eo-ta-epoch" id="eoTaEpoch"></div>
-          <div class="eo-ta-divider"><span></span></div>
-          <div class="eo-ta-bottom">
-            <div class="eo-ta-rows" id="eoTaRows"></div>
-          </div>
-          <div class="eo-ta-qr-section">
-            <div class="eo-ta-qr-label">⬡ SCANSIONA PER IL BIGLIETTO MOBILE</div>
-            <canvas id="eoTaQr" class="eo-ta-qr"></canvas>
-          </div>
+          <div class="eo-ta-immersione" id="eoTaImmersione"></div>
         </div>
+        <div class="eo-ta-dash-sep"></div>
+        <div class="eo-ta-block">
+          <div class="eo-ta-section-label">INTESTATARIO</div>
+          <div class="eo-ta-buyer" id="eoTaBuyer"></div>
+        </div>
+        <div class="eo-ta-dash-sep"></div>
+        <div class="eo-ta-rows" id="eoTaRows"></div>
+        <div class="eo-ta-id" id="eoTaId"></div>
       </div>
-    </div>
-
-    <div class="eo-ta-flash" id="eoTaFlash"></div>`;
+    </div>`;
   document.body.appendChild(eoTicketAnimEl);
 
-  function eoTicketUrl(ticket) {
-    const base = 'https://kekkopettine-droid.github.io/test/ticket.html';
-    const p = new URLSearchParams({
-      id:    ticket.ticketId,
-      char:  ticket.character,
-      epoch: ticket.epoch,
-      imm:   ticket.immersion,
-      dur:   ticket.duration,
-      date:  ticket.date,
-      time:  ticket.time,
-      loc:   ticket.location,
-      buyer: ticket.buyer,
+  // 3D TILT
+  (function () {
+    const MAX_ROT = 18;
+    let _tiltRaf = null;
+    let _curX = 0, _curY = 0, _tarX = 0, _tarY = 0;
+    function _tiltLoop() {
+      _curX += (_tarX - _curX) * 0.1;
+      _curY += (_tarY - _curY) * 0.1;
+      const card = document.getElementById('eoTaCard');
+      if (card && card.classList.contains('eo-ta-mat-active')) {
+        card.style.transform = `rotateY(${_curX}deg) rotateX(${-_curY}deg)`;
+        const shine = document.getElementById('eoTaShine');
+        if (shine) {
+          const px = 50 + _curX / MAX_ROT * 30;
+          const py = 50 + _curY / MAX_ROT * 30;
+          shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.18) 35%, transparent 65%)`;
+          shine.style.opacity = '1';
+        }
+      }
+      _tiltRaf = requestAnimationFrame(_tiltLoop);
+    }
+    eoTicketAnimEl.addEventListener('mousemove', e => {
+      const card = document.getElementById('eoTaCard');
+      if (!card || !card.classList.contains('eo-ta-mat-active')) return;
+      const r = card.getBoundingClientRect();
+      _tarX = ((e.clientX - (r.left + r.width / 2))  / (r.width / 2))  * MAX_ROT;
+      _tarY = ((e.clientY - (r.top  + r.height / 2)) / (r.height / 2)) * MAX_ROT;
     });
-    return base + '?' + p.toString();
-  }
+    eoTicketAnimEl.addEventListener('mouseleave', () => {
+      _tarX = 0; _tarY = 0;
+      const shine = document.getElementById('eoTaShine');
+      if (shine) shine.style.opacity = '0';
+    });
+    eoTicketAnimEl.addEventListener('mouseenter', () => { if (!_tiltRaf) _tiltLoop(); });
+    eoTicketAnimEl.addEventListener('transitionend', e => {
+      if (e.target === eoTicketAnimEl && !eoTicketAnimEl.classList.contains('eo-ta-visible')) {
+        const card = document.getElementById('eoTaCard');
+        if (card) card.style.transform = '';
+        _tarX = 0; _tarY = 0;
+        if (_tiltRaf) { cancelAnimationFrame(_tiltRaf); _tiltRaf = null; }
+      }
+    });
+  })();
 
-  function eoShowTicketAnim(ticket) {
-    const el = eoTicketAnimEl;
-    const isHitler = ticket.character === 'Adolf Hitler';
-    const card = document.getElementById('eoTaCard');
-    card.classList.toggle('eo-ta-card-red', isHitler);
+  function eoShowTicketAnim(tickets) {
+    const list = Array.isArray(tickets) ? tickets : [tickets];
+    let idx = 0;
 
-    // ── populate data ──
-    document.getElementById('eoTaId').textContent    = ticket.ticketId;
-    document.getElementById('eoTaChar').textContent  = '';
-    document.getElementById('eoTaEpoch').textContent = ticket.epoch;
-    const rows = [
-      ['IMMERSIONE',   ticket.immersion],
-      ['DURATA',       ticket.duration],
-      ['DATA',         ticket.date + ' · ' + ticket.time],
-      ['SEDE',         ticket.location],
-      ['INTESTATARIO', ticket.buyer],
-    ];
-    const rowsEl = document.getElementById('eoTaRows');
-    rowsEl.innerHTML = rows.map(([k,v]) =>
-      `<div class="eo-ta-row"><span class="eo-ta-row-label">${k}</span><span class="eo-ta-row-val">${v}</span></div>`
-    ).join('');
-    if (window.QRCode) {
-      QRCode.toCanvas(document.getElementById('eoTaQr'), eoTicketUrl(ticket), {
-        width: 160, margin: 2,
-        color: { dark: isHitler ? '#cc2020' : '#00d2be', light: isHitler ? '#0a0000' : '#060c10' }
-      });
+    function _taGlitch(n, col) {
+      for (let i = 0; i < n; i++) {
+        setTimeout(() => {
+          const sl = document.createElement('div');
+          sl.className = 'eo-glitch-slice';
+          const h  = 2 + Math.random() * 18;
+          const y  = Math.random() * (window.innerHeight - h);
+          const gx = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 20);
+          sl.style.cssText = `top:${y}px;height:${h}px;background:${col};--gx:${gx}px;`;
+          document.body.appendChild(sl);
+          setTimeout(() => sl.remove(), 160);
+        }, i * 28);
+      }
     }
 
-    // ── reset phase classes ──
-    ['eoTaScanner','eoTaAccess','eoTaHud'].forEach(id =>
-      document.getElementById(id).classList.remove('eo-ta-phase-active'));
-    const flashEl = document.getElementById('eoTaFlash');
-    flashEl.classList.remove('eo-ta-flash-go');
-    rowsEl.querySelectorAll('.eo-ta-row').forEach(r => r.classList.remove('eo-ta-row-in'));
+    function _showOne(ticket, isFirst) {
+      const el       = eoTicketAnimEl;
+      const isHitler = ticket.character === 'Adolf Hitler';
+      const card     = document.getElementById('eoTaCard');
 
-    // ── DNA rain canvas ──
-    const rainCanvas = document.getElementById('eoTaRain');
-    rainCanvas.width  = window.innerWidth;
-    rainCanvas.height = window.innerHeight;
-    const rainCtx = rainCanvas.getContext('2d');
-    const rChars  = 'ATCG01∞⬡ΔΩ∑≡◈';
-    const rCols   = Math.floor(rainCanvas.width / 16);
-    const rDrops  = Array.from({length: rCols}, () => Math.random() * -60);
-    let rainRAF;
-    function drawRain() {
-      rainCtx.fillStyle = 'rgba(0,0,0,0.06)';
-      rainCtx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
-      rDrops.forEach((y, i) => {
-        const bright = Math.random() > 0.92;
-        rainCtx.fillStyle = bright ? 'rgba(160,255,240,0.9)' : 'rgba(0,210,190,0.55)';
-        rainCtx.font = `${bright ? 'bold ' : ''}13px monospace`;
-        rainCtx.fillText(rChars[Math.floor(Math.random() * rChars.length)], i * 16, y * 16);
-        rDrops[i] = y > rainCanvas.height / 16 + Math.random() * 30 ? 0 : y + 0.6;
-      });
-      rainRAF = requestAnimationFrame(drawRain);
-    }
-    drawRain();
+      card.classList.remove('eo-ta-mat-active', 'eo-ta-imm-osservatore', 'eo-ta-imm-partecipante', 'eo-ta-imm-totale');
+      card.classList.toggle('eo-ta-card-red', isHitler);
+      const _immClass = { 'Osservatore': 'eo-ta-imm-osservatore', 'Partecipante': 'eo-ta-imm-partecipante', 'Totale': 'eo-ta-imm-totale' };
+      if (_immClass[ticket.immersion]) card.classList.add(_immClass[ticket.immersion]);
+      void card.offsetWidth;
 
-    // ── cycling scan sub-text ──
-    const scanTexts = [
-      'ANALISI DNA IN CORSO...',
-      'CALIBRAZIONE ANIMUS...',
-      'VERIFICA IDENTITÀ...',
-      'ELABORAZIONE SEQUENZA GENETICA...',
-    ];
-    let scanIdx = 0;
-    const scanSubEl = document.getElementById('eoTaScanSub');
-    const scanTextInterval = setInterval(() => {
-      scanIdx = (scanIdx + 1) % scanTexts.length;
-      scanSubEl.textContent = scanTexts[scanIdx];
-    }, 500);
+      document.getElementById('eoTaId').textContent         = ticket.ticketId;
+      document.getElementById('eoTaBuyer').textContent      = ticket.buyer || '—';
+      document.getElementById('eoTaChar').textContent       = '';
+      document.getElementById('eoTaImmersione').textContent = ticket.immersion;
 
-    // ── show overlay ──
-    el.classList.remove('hidden');
-    requestAnimationFrame(() => el.classList.add('eo-ta-visible'));
+      const rowsEl = document.getElementById('eoTaRows');
+      rowsEl.innerHTML = [
+        ['DURATA', ticket.duration],
+        ['DATA',   ticket.date + ' · ' + ticket.time],
+        ['SEDE',   ticket.location],
+      ].map(([k, v]) =>
+        `<div class="eo-ta-row"><span class="eo-ta-row-label">${k}</span><span class="eo-ta-row-val">${v}</span></div>`
+      ).join('');
 
-    // Phase 1: Scanner (100ms)
-    setTimeout(() => {
-      document.getElementById('eoTaScanner').classList.add('eo-ta-phase-active');
-    }, 100);
+      const _accentMap = { 'Osservatore': ['rgba(255,255,255,0.75)', 'rgba(255,255,255,0.4)'], 'Totale': ['rgba(215,170,55,0.88)', 'rgba(215,170,55,0.5)'] };
+      const [_gc, _gc2] = isHitler ? ['rgba(200,40,40,0.88)', 'rgba(200,40,40,0.5)'] : (_accentMap[ticket.immersion] || ['rgba(0,210,190,0.85)', 'rgba(0,210,190,0.5)']);
 
-    // Phase 2: Flash + ACCESSO CONCESSO (2200ms)
-    setTimeout(() => {
-      clearInterval(scanTextInterval);
-      document.getElementById('eoTaScanner').classList.remove('eo-ta-phase-active');
-      void flashEl.offsetWidth;
-      flashEl.classList.add('eo-ta-flash-go');
-      document.getElementById('eoTaAccess').classList.add('eo-ta-phase-active');
+      if (isFirst) {
+        el.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          el.classList.add('eo-ta-visible');
+          _taGlitch(9, _gc);
+          el.classList.add('eo-ta-glitch-burst');
+          setTimeout(() => el.classList.remove('eo-ta-glitch-burst'), 600);
+        });
+        setTimeout(() => { _taGlitch(6, _gc2); card.classList.add('eo-ta-mat-active'); }, 320);
+      } else {
+        // transizione leggera tra biglietti
+        _taGlitch(7, _gc);
+        el.classList.add('eo-ta-glitch-burst');
+        setTimeout(() => el.classList.remove('eo-ta-glitch-burst'), 500);
+        setTimeout(() => { _taGlitch(5, _gc2); card.classList.add('eo-ta-mat-active'); }, 200);
+      }
+
+      setTimeout(() => _taGlitch(5, _gc), isFirst ? 900 : 600);
+
       setTimeout(() => {
-        document.getElementById('eoTaAccess').classList.remove('eo-ta-phase-active');
-      }, 1100);
-    }, 2200);
+        const charEl = document.getElementById('eoTaChar');
+        const name   = ticket.character;
+        const sc     = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let frame = 0;
+        const total = name.length * 6;
+        const si = setInterval(() => {
+          charEl.textContent = name.split('').map((ch, i) =>
+            ch === ' ' ? ' ' : i < Math.floor(frame / 6) ? ch : sc[Math.floor(Math.random() * sc.length)]
+          ).join('');
+          if (++frame > total) { charEl.textContent = name; clearInterval(si); }
+        }, 40);
+      }, isFirst ? 800 : 400);
 
-    // Phase 3: Card materialises (3500ms)
-    setTimeout(() => {
-      document.getElementById('eoTaHud').classList.add('eo-ta-phase-active');
-      // Scramble-then-reveal typewriter for character name
-      const charEl  = document.getElementById('eoTaChar');
-      const name    = ticket.character;
-      const sc      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let frame     = 0;
-      const total   = name.length * 4;
-      const scrambleInt = setInterval(() => {
-        charEl.textContent = name.split('').map((ch, i) => {
-          if (ch === ' ') return ' ';
-          return i < Math.floor(frame / 4) ? ch : sc[Math.floor(Math.random() * sc.length)];
-        }).join('');
-        if (++frame > total) { charEl.textContent = name; clearInterval(scrambleInt); }
-      }, 35);
+      setTimeout(() => {
+        const rect = card.getBoundingClientRect();
+        const _scanC = isHitler ? [220,40,40] : ticket.immersion === 'Osservatore' ? [240,240,240] : ticket.immersion === 'Totale' ? [215,170,55] : [0,220,200];
+        const bg = `linear-gradient(90deg,transparent 5%,rgba(${_scanC},0.9) 50%,transparent 95%)`;
+        const sh = `0 0 18px 5px rgba(${_scanC},0.7),0 0 50px 10px rgba(${_scanC},0.3)`;
+        const line = document.createElement('div');
+        line.className = 'eo-mat-scan';
+        line.style.background = bg; line.style.boxShadow = sh; line.style.top = rect.top + 'px';
+        document.body.appendChild(line);
+        const dur = 1400, t0 = performance.now();
+        (function step(now) {
+          const p = Math.min(1, (now - t0) / dur);
+          const e = p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+          line.style.top     = (rect.top + e * (rect.bottom - rect.top)) + 'px';
+          line.style.opacity = p > 0.85 ? String(1 - (p - 0.85) / 0.15) : '1';
+          p < 1 ? requestAnimationFrame(step) : line.remove();
+        })(performance.now());
+      }, isFirst ? 2600 : 1800);
 
-      // Row stagger
-      rowsEl.querySelectorAll('.eo-ta-row').forEach((r, i) => {
-        setTimeout(() => r.classList.add('eo-ta-row-in'), 500 + i * 160);
-      });
-    }, 3500);
+      rowsEl.querySelectorAll('.eo-ta-row').forEach((r, i) =>
+        setTimeout(() => r.classList.add('eo-ta-row-in'), (isFirst ? 3000 : 2200) + i * 160)
+      );
 
-    // Phase 4: Dismiss (8000ms)
-    setTimeout(() => {
-      cancelAnimationFrame(rainRAF);
-      el.classList.remove('eo-ta-visible');
-      setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 600);
-    }, 8000);
+      function _onClick() {
+        el.removeEventListener('click', _onClick);
+        idx++;
+        if (idx < list.length) {
+          // mostra il prossimo biglietto — fade out rapido poi rebuild
+          card.classList.remove('eo-ta-mat-active');
+          setTimeout(() => _showOne(list[idx], false), 350);
+        } else {
+          // tutti mostrati — chiudi
+          el.classList.remove('eo-ta-visible');
+          setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 700);
+        }
+      }
+      el.addEventListener('click', _onClick);
+    }
+
+    _showOne(list[0], true);
   }
 
   // Wire checkout from cart
@@ -1892,37 +1972,39 @@
     const list = document.getElementById('eoTicketsList');
     list.innerHTML = eoTickets.length === 0
       ? '<div class="eo-cart-empty">Nessun biglietto acquistato.</div>'
-      : eoTickets.map((t, i) => `
-          <div class="eo-ticket-card">
-            <div class="eo-ticket-top">
-              <div>
-                <div class="eo-ticket-id">${t.ticketId}</div>
-                <div class="eo-ticket-char">${t.character}</div>
-                <div class="eo-ticket-epoch">${t.epoch}</div>
-              </div>
+      : eoTickets.map((t, i) => {
+          const immClass = t.character === 'Adolf Hitler' ? '' :
+            t.immersion === 'Osservatore' ? ' eo-ticket-imm-osservatore' :
+            t.immersion === 'Totale'      ? ' eo-ticket-imm-totale' : ' eo-ticket-imm-partecipante';
+          return `
+          <div class="eo-ticket-card${t.character === 'Adolf Hitler' ? ' eo-ticket-card-red' : ''}${immClass}" data-idx="${i}" style="cursor:pointer;" title="Clicca per visualizzare il biglietto">
+            <div class="eo-ticket-info">
+              <div class="eo-ticket-char">${t.character}</div>
+              <div class="eo-ticket-epoch">${t.epoch}</div>
+              <div class="eo-ticket-imm">${t.immersion}</div>
+              <div class="eo-ticket-buyer">${t.buyer}</div>
             </div>
-            <div class="eo-ticket-divider"><span></span></div>
-            <div class="eo-ticket-body">
-              <div class="eo-ticket-details">
-                <div><span class="eo-ticket-label">IMMERSIONE</span><span>${t.immersion}</span></div>
-                <div><span class="eo-ticket-label">DURATA</span><span>${t.duration}</span></div>
-                <div><span class="eo-ticket-label">DATA</span><span>${t.date} · ${t.time}</span></div>
-                <div><span class="eo-ticket-label">SEDE</span><span>${t.location}</span></div>
-                <div><span class="eo-ticket-label">INTESTATARIO</span><span>${t.buyer}</span></div>
-              </div>
-              <canvas class="eo-ticket-qr" data-idx="${i}"></canvas>
-            </div>
-          </div>`).join('');
+            <svg class="eo-ticket-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 380">
+              <g transform="translate(10,0) scale(1)">
+                <path d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301" class="eo-tl-p1"/>
+                <path d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557" class="eo-tl-p2"/>
+                <path d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006" class="eo-tl-p3"/>
+              </g>
+            </svg>
+          </div>`;
+        }).join('');
     eoTicketsOverlay.classList.remove('hidden');
     requestAnimationFrame(() => {
       eoTicketsOverlay.classList.add('eo-cart-visible');
       if (window.QRCode) {
-        list.querySelectorAll('.eo-ticket-qr').forEach(canvas => {
-          const t = eoTickets[+canvas.dataset.idx];
-          QRCode.toCanvas(canvas, eoTicketUrl(t), {
+        list.querySelectorAll('.eo-ticket-qr').forEach(img => {
+          const t   = eoTickets[+img.dataset.idx];
+          const isH = t.character === 'Adolf Hitler';
+          const tmpC = document.createElement('canvas');
+          QRCode.toCanvas(tmpC, eoTicketUrl(t), {
             width: 90, margin: 1,
-            color: { dark: '#00d2be', light: '#080e12' }
-          });
+            color: { dark: isH ? '#cc2020' : '#00d2be', light: isH ? '#0a0000' : '#080e12' }
+          }, err => { if (!err) img.src = tmpC.toDataURL('image/png'); });
         });
       }
     });
@@ -1932,6 +2014,17 @@
     eoTicketsOverlay.classList.remove('eo-cart-visible');
     setTimeout(() => eoTicketsOverlay.classList.add('hidden'), 300);
   }
+
+  // Click su una card biglietto → mostra animazione
+  document.getElementById('eoTicketsList').addEventListener('click', e => {
+    const card = e.target.closest('.eo-ticket-card[data-idx]');
+    if (!card) return;
+    if (window.audioEngine) window.audioEngine.playClick();
+    const ticket = eoTickets[+card.dataset.idx];
+    if (!ticket) return;
+    eoHideTickets();
+    setTimeout(() => eoShowTicketAnim(ticket), 350);
+  });
 
   document.getElementById('eoTicketsClose').addEventListener('click', eoHideTickets);
 
@@ -1993,14 +2086,19 @@
     document.getElementById('eoRightEpoch').textContent = eoEpochLabels[epochIdx];
 
     // Reset customize tab selections
-    document.querySelectorAll('#eoCustImmersion .eo-cust-selected, #eoCustDuration .eo-cust-selected, #eoCustLingua .eo-cust-selected')
+    document.querySelectorAll('#eoCustImmersion .eo-cust-selected, #eoCustDuration .eo-cust-selected')
       .forEach(el => el.classList.remove('eo-cust-selected'));
+    document.querySelectorAll('#eoCustLingua .eo-picked')
+      .forEach(el => el.classList.remove('eo-picked'));
+    document.getElementById('eoCustLang').value = '';
     document.getElementById('eoImmDetail')?.classList.remove('eo-imm-detail-visible');
 
     // Reset date tab
     document.getElementById('eoTime').value = '';
     document.getElementById('eoLocation').value = '';
-    document.getElementById('eoDate').value = eoToday;
+    document.getElementById('eoDate').value = document.querySelector('#eoDateChips .eo-pick-chip')?.dataset.val || eoToday;
+    document.querySelectorAll('#eoTimeChips .eo-pick-chip, #eoLocChips .eo-pick-loc').forEach(c => c.classList.remove('eo-picked'));
+    document.querySelectorAll('#eoDateChips .eo-pick-chip').forEach((c, i) => c.classList.toggle('eo-picked', i === 0));
     document.getElementById('eoDateCartBtn').style.display = '';
     document.getElementById('eoDateCartBtn').disabled = true;
     document.getElementById('eoDateConfirmMsg').style.display = 'none';
@@ -2151,6 +2249,7 @@
 
     eoEl.classList.remove('hidden', 'eo-dematerialize');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
+    if (window.audioEngine) window.audioEngine.playEpoch();
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'flex';
     _eoMatScan(true);
@@ -2357,7 +2456,7 @@
     const rect  = eoEl.getBoundingClientRect();
     const start = open ? rect.top    : rect.top;
     const end   = open ? rect.bottom : rect.bottom;
-    const dur   = open ? 1100 : 880;
+    const dur   = open ? 1500 : 1200;
 
     const line = document.createElement('div');
     line.className = 'eo-mat-scan';
@@ -2471,14 +2570,10 @@
     tlArcLine.visible = true;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
     tlTickObjs.forEach(t => { t.visible = true; });
-    tlNodeEls.forEach((el, s) => { 
-      el.style.opacity = '1'; 
-      el.style.pointerEvents = 'auto'; 
-      el.style.zIndex = '1000'; 
-      if (el.parentElement) el.parentElement.style.zIndex = '1000';
-      if (tlNodeCsss && tlNodeCsss[s]) {
-        tlNodeCsss[s].position.y = TL_Y + tlNodeOffsets[s];
-      }
+    tlNodeEls.forEach((el) => {
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+      el.style.zIndex = '1000';
     });
     dnaBackArrow.style.display = 'block';
     document.getElementById('tlIconsHud').style.display = 'flex';
@@ -2514,13 +2609,10 @@
     tlArcLine.visible = false;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
     tlTickObjs.forEach(t => { t.visible = false; });
-    tlNodeEls.forEach((el, s) => { 
-      el.style.opacity = '0'; 
-      el.style.pointerEvents = 'none'; 
-      el.classList.remove('active'); 
-      if (tlNodeCsss && tlNodeCsss[s]) {
-        tlNodeCsss[s].position.y = 1000;
-      }
+    tlNodeEls.forEach((el) => {
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.classList.remove('active');
     });
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'none';

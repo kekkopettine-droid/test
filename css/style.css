@@ -204,45 +204,122 @@ body {
   transform: translateY(-50%) scale(1.1);
 }
 
-/* ── CURVED TIMELINE NODES ── */
+/* ── CURVED TIMELINE NODES — GLITCH ── */
 .tl-node-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
   cursor: pointer;
   pointer-events: auto;
   transition: opacity 0.3s;
+  animation: tlngFloat 4s ease-in-out infinite;
 }
-.tl-node-dot {
-  width: 24px;
-  height: 24px;
-  background: rgba(30, 30, 30, 0.9);
-  border: 3px solid rgba(255, 255, 255, 1);
-  border-radius: 50%;
-  box-shadow: 0 0 15px rgba(255,255,255,0.9), inset 0 0 8px rgba(255,255,255,0.4);
-  transition: all 0.3s ease;
-  pointer-events: none;
+.tl-node-item[data-idx="0"] { animation-delay: 0s; }
+.tl-node-item[data-idx="1"] { animation-delay: 0.8s; }
+.tl-node-item[data-idx="2"] { animation-delay: 1.6s; }
+.tl-node-item[data-idx="3"] { animation-delay: 2.4s; }
+.tl-node-item[data-idx="4"] { animation-delay: 3.2s; }
+@keyframes tlngFloat {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+  50%       { transform: translate(-50%, -50%) translateY(-8px); }
 }
-.tl-node-item:hover .tl-node-dot,
-.tl-node-item.active .tl-node-dot {
-  background: #ffffff;
-  box-shadow: 0 0 25px #ffffff, 0 0 10px rgba(200,220,255,0.8);
-  transform: scale(1.6);
+
+.tl-node-glitch {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+  animation: tlngIdle 7s ease-in-out infinite;
 }
-.tl-node-year {
+@keyframes tlngIdle {
+  0%,78%,100% { transform: translateX(0) skewX(0); filter: brightness(1); }
+  79%  { transform: translateX(-3px) skewX(-0.4deg); filter: brightness(1.5); }
+  80%  { transform: translateX(3px)  skewX(0.3deg);  filter: brightness(0.8); }
+  81%  { transform: translateX(0); filter: brightness(1); }
+  82%  { transform: translateX(-2px) skewX(0.2deg); filter: brightness(1.3); }
+  83%  { transform: translateX(0) skewX(0); filter: brightness(1); }
+}
+.tl-node-item[data-idx="0"] .tl-node-glitch { animation-delay: 0s; }
+.tl-node-item[data-idx="1"] .tl-node-glitch { animation-delay: 1.4s; }
+.tl-node-item[data-idx="2"] .tl-node-glitch { animation-delay: 2.8s; }
+.tl-node-item[data-idx="3"] .tl-node-glitch { animation-delay: 4.2s; }
+.tl-node-item[data-idx="4"] .tl-node-glitch { animation-delay: 5.6s; }
+
+/* anno */
+.tl-ng-year {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 34px; font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: .08em;
+  line-height: 1;
+  position: relative; z-index: 2;
+  pointer-events: none; user-select: none;
+  text-shadow: 0 0 14px rgba(255,255,255,0.3);
+  display: block;
+}
+
+/* nascondi elementi non necessari */
+.tl-ng-name, .tl-ng-scan, .tl-ng-c { display: none; }
+
+/* ghost RGB */
+.tl-ng-ghost {
+  position: absolute;
+  top: 0; left: 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 34px; font-weight: 700; letter-spacing: .08em;
+  line-height: 1;
+  pointer-events: none; user-select: none;
+  z-index: 1; opacity: 0;
+  animation: tlngGhost 7s ease-in-out infinite;
+}
+.tl-ng-r { color: rgba(255,40,40,0.75); }
+.tl-ng-b { color: rgba(40,90,255,0.75); }
+@keyframes tlngGhost {
+  0%,78%,100% { opacity:0; transform: translateX(0); }
+  79%  { opacity:0.8; transform: translateX(5px); }
+  80%  { opacity:0.5; transform: translateX(-4px); }
+  81%  { opacity:0; }
+  82%  { opacity:0.7; transform: translateX(-5px); }
+  83%  { opacity:0; transform: translateX(0); }
+}
+.tl-node-item[data-idx="0"] .tl-ng-ghost { animation-delay: 0s; }
+.tl-node-item[data-idx="1"] .tl-ng-ghost { animation-delay: 1.4s; }
+.tl-node-item[data-idx="2"] .tl-ng-ghost { animation-delay: 2.8s; }
+.tl-node-item[data-idx="3"] .tl-ng-ghost { animation-delay: 4.2s; }
+.tl-node-item[data-idx="4"] .tl-ng-ghost { animation-delay: 5.6s; }
+.tl-ng-r { animation-delay: inherit; }
+.tl-ng-b { animation-delay: calc(inherit + 0.05s); }
+
+/* hover / active */
+.tl-node-item:hover .tl-node-glitch,
+.tl-node-item.active .tl-node-glitch {
+  transform: scale(1.35);
+  animation: tlngHoverGlitch 0.4s steps(1) infinite;
+}
+@keyframes tlngHoverGlitch {
+  0%,60%,100% { transform: scale(1.35) translateX(0); }
+  20%  { transform: scale(1.35) translateX(-2px) skewX(-0.3deg); }
+  40%  { transform: scale(1.35) translateX(2px); }
+  80%  { transform: scale(1.35) translateX(-1px); }
+}
+.tl-node-item:hover,
+.tl-node-item.active {
+  animation: tlngFloatHover 4s ease-in-out infinite;
+}
+@keyframes tlngFloatHover {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px) scale(1); }
+  50%       { transform: translate(-50%, -50%) translateY(-8px) scale(1); }
+}
+.tl-node-item:hover .tl-ng-year,
+.tl-node-item.active .tl-ng-year {
   color: #ffffff;
-  font-size: var(--H3);
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-shadow: 0 0 12px rgba(255,255,255,0.9);
-  transition: color 0.3s;
-  pointer-events: none;
+  text-shadow: 0 0 24px rgba(255,255,255,0.85), 0 0 8px rgba(255,255,255,0.5);
 }
-.tl-node-item:hover .tl-node-year,
-.tl-node-item.active .tl-node-year {
-  color: #fff;
-  text-shadow: 0 0 15px rgba(255,255,255,0.9);
+.tl-node-item:hover .tl-ng-ghost,
+.tl-node-item.active .tl-ng-ghost {
+  opacity: 0.5;
+  animation: tlngGhostHover 0.18s linear infinite;
+}
+@keyframes tlngGhostHover {
+  0%   { transform: translateX(5px); }
+  50%  { transform: translateX(-5px); }
+  100% { transform: translateX(5px); }
 }
 
 /* ── DNA SEZIONE LABELS ── */
@@ -473,7 +550,8 @@ body {
 }
 .timeline-line {
   position: absolute;
-  top: 7px;
+  top: 50%;
+  transform: translateY(-50%);
   left: 0;
   width: 100%;
   height: 2px;
@@ -507,95 +585,175 @@ body {
 }
 .timeline-node {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   pointer-events: auto;
 }
 
-/* ── dot animations ── */
-.node-dot {
-  width: 16px;
-  height: 16px;
-  background: rgba(0, 15, 25, 0.8);
-  border: 2px solid rgba(0, 255, 255, 0.5);
-  border-radius: 50%;
-  margin-bottom: 12px;
-  box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.3), 0 0 8px rgba(0, 0, 0, 0.5);
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+/* ── GLITCH NODE ── */
+.node-glitch {
   position: relative;
-  pointer-events: none;
-  animation: tlDotBreath 3.8s ease-in-out infinite;
+  width: 140px; height: 76px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 18, 28, 0.72);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  animation: ngIdle 7s ease-in-out infinite;
 }
-/* sonar ring expanding from dot */
-.node-dot::before {
-  content: '';
+
+@keyframes ngIdle {
+  0%,78%,100% { transform: translateX(0) skewX(0); filter: brightness(1); }
+  79%   { transform: translateX(-3px) skewX(-0.4deg); filter: brightness(1.3); }
+  80%   { transform: translateX(3px)  skewX(0.4deg);  filter: brightness(0.9); clip-path: inset(18% 0 62% 0); }
+  81%   { transform: translateX(0)    skewX(0);        filter: brightness(1);   clip-path: none; }
+  82%   { transform: translateX(-2px); clip-path: inset(55% 0 8% 0); }
+  83%   { transform: translateX(0);   clip-path: none; }
+}
+
+/* stagger per nodo */
+.timeline-node:nth-child(1) .node-glitch  { animation-delay: 0s; }
+.timeline-node:nth-child(2) .node-glitch  { animation-delay: 1.4s; }
+.timeline-node:nth-child(3) .node-glitch  { animation-delay: 2.8s; }
+.timeline-node:nth-child(4) .node-glitch  { animation-delay: 4.2s; }
+.timeline-node:nth-child(5) .node-glitch  { animation-delay: 5.6s; }
+
+/* strisce glitch pseudo-elements */
+.node-glitch::before, .node-glitch::after {
+  content: ''; position: absolute; left: 0; right: 0;
+  height: 2px; background: rgba(0,255,255,0.65);
+  opacity: 0; pointer-events: none;
+  animation: ngStripe 7s ease-in-out infinite;
+}
+.node-glitch::after { background: rgba(0,255,255,0.35); animation-delay: 0.08s; }
+@keyframes ngStripe {
+  0%,78%,100% { opacity: 0; top: 50%; }
+  79%  { opacity: 1; top: 18%; }
+  80%  { opacity: 0.6; top: 68%; }
+  81%  { opacity: 0; }
+  82%  { opacity: 0.8; top: 35%; }
+  83%  { opacity: 0; }
+}
+.timeline-node:nth-child(1) .node-glitch::before,
+.timeline-node:nth-child(1) .node-glitch::after  { animation-delay: 0s; }
+.timeline-node:nth-child(2) .node-glitch::before,
+.timeline-node:nth-child(2) .node-glitch::after  { animation-delay: 1.4s; }
+.timeline-node:nth-child(3) .node-glitch::before,
+.timeline-node:nth-child(3) .node-glitch::after  { animation-delay: 2.8s; }
+.timeline-node:nth-child(4) .node-glitch::before,
+.timeline-node:nth-child(4) .node-glitch::after  { animation-delay: 4.2s; }
+.timeline-node:nth-child(5) .node-glitch::before,
+.timeline-node:nth-child(5) .node-glitch::after  { animation-delay: 5.6s; }
+
+/* anno principale */
+.ng-year {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 40px; font-weight: 700;
+  color: rgba(0, 255, 255, 0.82);
+  letter-spacing: .08em;
+  position: relative; z-index: 2;
+  pointer-events: none; user-select: none;
+  transition: color 0.2s, text-shadow 0.2s;
+  animation: none !important;
+}
+
+/* canale RGB ghost */
+.ng-ghost {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 255, 255, 0.55);
-  animation: tlSonar 3.8s ease-out infinite;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 40px; font-weight: 700;
+  letter-spacing: .08em;
+  pointer-events: none; user-select: none;
+  z-index: 1; opacity: 0;
+  animation: ngGhost 7s ease-in-out infinite;
+}
+.ng-ghost-r { color: rgba(255, 40, 40, 0.7);  animation-delay: 0.04s; }
+.ng-ghost-b { color: rgba(40, 100, 255, 0.7); animation-delay: -0.05s; }
+@keyframes ngGhost {
+  0%,78%,100% { opacity: 0; transform: translateX(0); }
+  79%  { opacity: 0.8; transform: translateX(4px); }
+  80%  { opacity: 0.5; transform: translateX(-3px); }
+  81%  { opacity: 0; }
+  82%  { opacity: 0.7; transform: translateX(-4px); }
+  83%  { opacity: 0; transform: translateX(0); }
+}
+.timeline-node:nth-child(1) .ng-ghost { animation-delay: 0s; }
+.timeline-node:nth-child(2) .ng-ghost { animation-delay: 1.4s; }
+.timeline-node:nth-child(3) .ng-ghost { animation-delay: 2.8s; }
+.timeline-node:nth-child(4) .ng-ghost { animation-delay: 4.2s; }
+.timeline-node:nth-child(5) .ng-ghost { animation-delay: 5.6s; }
+.timeline-node:nth-child(1) .ng-ghost-r { animation-delay: 0.04s; }
+.timeline-node:nth-child(2) .ng-ghost-r { animation-delay: 1.44s; }
+.timeline-node:nth-child(3) .ng-ghost-r { animation-delay: 2.84s; }
+.timeline-node:nth-child(4) .ng-ghost-r { animation-delay: 4.24s; }
+.timeline-node:nth-child(5) .ng-ghost-r { animation-delay: 5.64s; }
+
+/* scanline */
+.ng-scanline {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,255,0.7) 50%, transparent);
+  box-shadow: 0 0 5px rgba(0,255,255,0.9);
   pointer-events: none;
+  animation: ngScan 3.5s linear infinite;
 }
-/* staggered delays per node */
-.timeline-node:nth-child(1) .node-dot,
-.timeline-node:nth-child(1) .node-dot::before { animation-delay: 0s; }
-.timeline-node:nth-child(2) .node-dot,
-.timeline-node:nth-child(2) .node-dot::before { animation-delay: 0.76s; }
-.timeline-node:nth-child(3) .node-dot,
-.timeline-node:nth-child(3) .node-dot::before { animation-delay: 1.52s; }
-.timeline-node:nth-child(4) .node-dot,
-.timeline-node:nth-child(4) .node-dot::before { animation-delay: 2.28s; }
-.timeline-node:nth-child(5) .node-dot,
-.timeline-node:nth-child(5) .node-dot::before { animation-delay: 3.04s; }
-
-@keyframes tlDotBreath {
-  0%,100% { box-shadow: inset 0 0 8px rgba(0,255,255,0.25), 0 0 6px rgba(0,0,0,0.5); }
-  50%     { box-shadow: inset 0 0 14px rgba(0,255,255,0.6), 0 0 22px rgba(0,255,255,0.45), 0 0 48px rgba(0,200,255,0.18); }
-}
-@keyframes tlSonar {
-  0%   { transform: scale(1);   opacity: 0.7; }
-  100% { transform: scale(3.2); opacity: 0; }
+.timeline-node:nth-child(1) .ng-scanline { animation-delay: 0s; }
+.timeline-node:nth-child(2) .ng-scanline { animation-delay: 0.7s; }
+.timeline-node:nth-child(3) .ng-scanline { animation-delay: 1.4s; }
+.timeline-node:nth-child(4) .ng-scanline { animation-delay: 2.1s; }
+.timeline-node:nth-child(5) .ng-scanline { animation-delay: 2.8s; }
+@keyframes ngScan {
+  0%   { top: -2px; opacity: 0; }
+  4%   { opacity: 0.9; }
+  92%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
 }
 
-.timeline-node:hover .node-dot, .timeline-node.active .node-dot {
-  background: #00ffff;
-  border-color: #ffffff;
-  transform: scale(1.5);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 1), 0 0 15px rgba(255, 255, 255, 0.8);
-  animation: none;
-}
-.timeline-node:hover .node-dot::before,
-.timeline-node.active .node-dot::before { animation: none; opacity: 0; }
-
-/* ── year label animations ── */
-.node-label {
-  color: rgba(0, 255, 255, 0.5);
-  font-size: var(--C1);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  transition: color 0.3s, text-shadow 0.3s;
+/* angoli HUD */
+.ng-corner {
+  position: absolute; width: 9px; height: 9px;
   pointer-events: none;
-  text-transform: uppercase;
-  animation: tlLabelFloat 4.5s ease-in-out infinite;
-  display: inline-block;
+  border-color: rgba(0,255,255,0.5);
+  border-style: solid;
+  transition: border-color 0.2s;
 }
-.timeline-node:nth-child(1) .node-label { animation-delay: 0.1s; }
-.timeline-node:nth-child(2) .node-label { animation-delay: 1.0s; }
-.timeline-node:nth-child(3) .node-label { animation-delay: 1.9s; }
-.timeline-node:nth-child(4) .node-label { animation-delay: 2.8s; }
-.timeline-node:nth-child(5) .node-label { animation-delay: 3.7s; }
-@keyframes tlLabelFloat {
-  0%,100% { transform: translateY(0);    opacity: 0.5; }
-  40%,60% { transform: translateY(-10px); opacity: 0.8; }
+.ng-tl { top: 4px; left: 4px;   border-width: 1px 0 0 1px; }
+.ng-tr { top: 4px; right: 4px;  border-width: 1px 1px 0 0; }
+.ng-bl { bottom: 4px; left: 4px;  border-width: 0 0 1px 1px; }
+.ng-br { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+/* hover / active */
+.timeline-node:hover .node-glitch,
+.timeline-node.active .node-glitch {
+  border-color: rgba(0,255,255,0.7);
+  box-shadow: 0 0 24px rgba(0,255,255,0.28), inset 0 0 18px rgba(0,255,255,0.08);
+  animation: ngHoverGlitch 0.4s steps(1) infinite;
 }
-.timeline-node:hover .node-label, .timeline-node.active .node-label {
+@keyframes ngHoverGlitch {
+  0%,80%,100% { transform: translateX(0); }
+  33%  { transform: translateX(-2px) skewX(-0.3deg); }
+  66%  { transform: translateX(2px);  }
+}
+.timeline-node:hover .ng-year,
+.timeline-node.active .ng-year {
   color: #ffffff;
-  text-shadow: 0 0 15px #00ffff, 0 0 5px rgba(255, 255, 255, 0.8);
-  transform: scale(1.05);
-  animation: none;
-  opacity: 1;
+  text-shadow: 0 0 18px rgba(0,255,255,1), 0 0 5px rgba(255,255,255,0.9);
 }
+.timeline-node:hover .ng-corner,
+.timeline-node.active .ng-corner { border-color: rgba(0,255,255,0.95); }
+.timeline-node:hover .ng-ghost,
+.timeline-node.active .ng-ghost {
+  animation: ngGhostHover 0.25s linear infinite;
+  opacity: 0.5;
+}
+@keyframes ngGhostHover {
+  0%   { transform: translateX(3px); opacity: 0.55; }
+  50%  { transform: translateX(-3px); opacity: 0.4; }
+  100% { transform: translateX(3px); opacity: 0.55; }
+}
+
+/* ── node-label compat (testo scramble JS) ── */
+.node-label { animation: none !important; opacity: 1 !important; transform: none !important; }
 .timeline-info {
   margin-top: 15px;
   min-height: 60px;
@@ -1575,8 +1733,8 @@ body {
   opacity: 0;
   clip-path: inset(50% 0 50% 0);
   filter: brightness(2.5) blur(8px);
-  transition: clip-path 1.1s cubic-bezier(0.16,1,0.3,1),
-              filter    1.0s cubic-bezier(0.16,1,0.3,1),
+  transition: clip-path 1.5s cubic-bezier(0.16,1,0.3,1),
+              filter    1.4s cubic-bezier(0.16,1,0.3,1),
               opacity   0.15s ease;
 }
 #epochOverlay.eo-visible {
@@ -1588,9 +1746,9 @@ body {
   opacity: 0;
   clip-path: inset(50% 0 50% 0) !important;
   filter: brightness(2.5) blur(8px) !important;
-  transition: clip-path 0.9s cubic-bezier(0.55,0,1,1),
-              filter    0.75s ease,
-              opacity   0.15s ease 0.72s !important;
+  transition: clip-path 1.2s cubic-bezier(0.55,0,1,1),
+              filter    1.0s ease,
+              opacity   0.15s ease 1.0s !important;
 }
 #epochOverlay.hidden { display: none !important; }
 
@@ -1763,6 +1921,15 @@ body {
   transition: border-color .2s, color .2s;
 }
 .eo-cart-remove:hover { border-color: rgba(255,80,80,0.6); color: rgba(255,80,80,0.8); }
+.eo-cart-item-red {
+  background: rgba(14,2,2,0.97) !important;
+  border-color: rgba(200,40,40,0.6) !important;
+  box-shadow: 0 0 20px rgba(180,0,0,0.2), inset 0 0 30px rgba(120,0,0,0.08) !important;
+  animation: eoTaCardPulseRed 3s ease infinite !important;
+}
+.eo-cart-item-red .eo-cart-item-name { color: rgba(220,60,60,1) !important; }
+.eo-cart-item-red .eo-cart-item-details { color: rgba(200,80,80,0.5) !important; }
+.eo-cart-item-red .eo-cart-remove { border-color: rgba(200,40,40,0.25) !important; color: rgba(200,80,80,0.4) !important; }
 .eo-cart-footer {
   padding: 20px 28px 32px;
   border-top: 1px solid rgba(255,255,255,0.08);
@@ -1813,24 +1980,24 @@ body {
   flex-direction: column;
   gap: 18px;
   flex-shrink: 0;
-  margin-left: 60px;
+  margin-left: 20px;
 }
 /* ── Rotation chip wrapper ── */
 .eo-rotation-wrap {
   position: relative;
-  width: 320px;
+  width: 390px;
 }
 
 /* ── Rotation chip ── */
 .eo-rotation-chip {
   position: relative;
-  width: 320px;
+  width: 100%;
   display: flex; align-items: center; gap: 0;
-  padding: 9px 12px;
+  padding: 13px 16px;
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(0,210,190,0.22);
   cursor: pointer;
-  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
   color: rgba(0,210,190,0.6);
   transition: border-color .2s, color .2s;
@@ -1981,7 +2148,7 @@ body {
 .eo-rp-confirm.eo-rp-confirm-visible { display: block; }
 
 .eo-char-card {
-  width: 320px;
+  width: 390px;
   height: 120px;
   border: 1px solid rgba(255,255,255,0.45);
   background: rgba(0,0,0,0.88);
@@ -2009,7 +2176,7 @@ body {
 .eo-char-card:hover {
   border-color: rgba(255,255,255,0.85);
   background: rgba(0,0,0,0.88);
-  transform: scaleX(1.22) scaleY(1.18);
+  transform: scaleX(1.06) scaleY(1.06);
   box-shadow: 0 0 36px rgba(255,255,255,0.3), inset 0 0 22px rgba(255,255,255,0.06);
 }
 .eo-char-card.eo-selected {
@@ -2199,28 +2366,36 @@ body {
 .eo-date-content {
   justify-content: center;
   align-items: center;
+  flex-direction: row;
+  gap: 20px;
 }
-.eo-date-panel {
-  width: 520px;
+.eo-date-box {
+  width: 420px;
+  flex-shrink: 0;
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(255,255,255,0.18);
-  padding: 36px 40px 32px;
+  padding: 36px 36px 34px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
   position: relative;
 }
-.eo-date-panel::before {
+.eo-date-box::before {
   content: ''; position: absolute;
   top: -1px; left: -1px; width: 16px; height: 16px;
   border-top: 1.5px solid rgba(255,255,255,0.6);
   border-left: 1.5px solid rgba(255,255,255,0.6);
 }
-.eo-date-panel::after {
+.eo-date-box::after {
   content: ''; position: absolute;
   bottom: -1px; right: -1px; width: 16px; height: 16px;
   border-bottom: 1.5px solid rgba(255,255,255,0.6);
   border-right: 1.5px solid rgba(255,255,255,0.6);
+}
+.eo-date-box-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .eo-date-tag {
   font-size: var(--L1); font-weight: 700; letter-spacing: .28em;
@@ -2233,28 +2408,61 @@ body {
 .eo-date-divider {
   height: 1px; background: rgba(255,255,255,0.12);
 }
-.eo-date-fields {
-  display: flex; gap: 20px;
-}
-.eo-date-field {
-  flex: 1; display: flex; flex-direction: column; gap: 7px;
+.eo-pick-row {
+  display: flex; flex-direction: column; gap: 8px;
 }
 .eo-date-label {
   font-size: var(--L1); font-weight: 700; letter-spacing: .26em;
   color: rgba(255,255,255,0.4); text-transform: uppercase;
 }
-.eo-date-input {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.22);
-  color: #fff;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: var(--C1); font-weight: 600; letter-spacing: .04em;
-  padding: 10px 12px; outline: none; cursor: pointer; width: 100%;
-  -webkit-appearance: none; appearance: none; color-scheme: dark;
-  transition: border-color .2s, box-shadow .2s;
+/* Date / time chips */
+.eo-pick-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
 }
-.eo-date-input:focus { border-color: rgba(255,255,255,0.6); box-shadow: 0 0 12px rgba(255,255,255,0.1); }
-.eo-date-input option { background: #060c14; color: #fff; }
+.eo-pick-chip {
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.6);
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  letter-spacing: .08em; padding: 6px 14px; cursor: pointer;
+  transition: border-color .18s, color .18s, background .18s;
+  user-select: none;
+}
+.eo-pick-chip:hover {
+  border-color: rgba(0,210,190,0.5); color: rgba(0,220,200,0.9);
+}
+.eo-pick-chip.eo-picked {
+  border-color: rgba(0,210,190,0.8); background: rgba(0,210,190,0.1);
+  color: rgba(0,220,200,1); box-shadow: 0 0 10px rgba(0,210,190,0.2);
+}
+/* Date chips — taller with 3 lines */
+.eo-pick-chip-date {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 12px; gap: 1px; min-width: 52px;
+}
+.eo-chip-day { font-size: var(--L1); opacity: .55; }
+.eo-chip-num { font-size: var(--H4); line-height: 1; }
+.eo-chip-mon { font-size: var(--L1); opacity: .55; }
+/* Location list */
+.eo-pick-locs {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.eo-pick-loc {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.55);
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 600;
+  letter-spacing: .06em; padding: 9px 14px; cursor: pointer;
+  transition: border-color .18s, color .18s, background .18s;
+  user-select: none;
+}
+.eo-pick-loc:hover {
+  border-color: rgba(0,210,190,0.45); color: rgba(0,220,200,0.85);
+}
+.eo-pick-loc.eo-picked {
+  border-color: rgba(0,210,190,0.75); background: rgba(0,210,190,0.08);
+  color: rgba(0,220,200,1);
+}
 
 .eo-date-summary {
   display: flex; flex-direction: column; gap: 8px;
@@ -2596,57 +2804,68 @@ body {
 .eo-ticket-card {
   border: 1px solid rgba(0,210,190,0.35);
   background: rgba(0,210,190,0.04);
-  position: relative;
+  padding: 18px 22px;
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+  position: relative; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
 }
-.eo-ticket-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  padding: 20px 22px 16px;
+.eo-ticket-info {
+  display: flex; flex-direction: column; gap: 4px;
 }
-.eo-ticket-id {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
-  letter-spacing: .28em; color: rgba(0,220,200,0.7); text-transform: uppercase;
-  margin-bottom: 6px;
+.eo-ticket-logo {
+  width: 64px; height: 64px; flex-shrink: 0; opacity: 0.55;
+  transition: opacity 0.2s;
 }
+.eo-ticket-card:hover .eo-ticket-logo { opacity: 0.85; }
+.eo-tl-p1 { fill: rgba(0,210,190,0.6); }
+.eo-tl-p2 { fill: rgba(0,210,190,1); }
+.eo-tl-p3 { fill: rgba(0,210,190,0.35); }
+.eo-ticket-card-red .eo-tl-p1 { fill: rgba(200,40,40,0.6) !important; }
+.eo-ticket-card-red .eo-tl-p2 { fill: rgba(220,40,40,1) !important; }
+.eo-ticket-card-red .eo-tl-p3 { fill: rgba(180,30,30,0.35) !important; }
+.eo-ticket-card:hover {
+  background: rgba(0,210,190,0.08);
+  border-color: rgba(0,210,190,0.6);
+}
+.eo-ticket-card-red {
+  border-color: rgba(200,40,40,0.6) !important;
+  background: rgba(14,2,2,0.97) !important;
+  box-shadow: 0 0 20px rgba(180,0,0,0.2) !important;
+}
+.eo-ticket-card-red:hover { background: rgba(30,4,4,0.97) !important; }
 .eo-ticket-char {
   font-family: 'Rajdhani', sans-serif; font-size: var(--H4); font-weight: 700;
   color: #fff; letter-spacing: .05em;
 }
 .eo-ticket-epoch {
   font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
-  color: rgba(255,255,255,0.45); letter-spacing: .12em; text-transform: uppercase;
-  margin-top: 2px;
+  color: rgba(255,255,255,0.38); letter-spacing: .12em; text-transform: uppercase;
 }
-.eo-ticket-price {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--H3); font-weight: 700;
-  color: rgba(0,220,200,1); letter-spacing: .04em;
+.eo-ticket-imm {
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(0,210,190,0.85);
+  margin-top: 3px;
 }
-.eo-ticket-divider {
-  display: flex; align-items: center;
-  padding: 0 20px; margin: 0;
-}
-.eo-ticket-divider span {
-  flex: 1; border-top: 1px dashed rgba(0,210,190,0.3);
-}
-.eo-ticket-details {
-  padding: 14px 22px 20px;
-  display: flex; flex-direction: column; gap: 6px;
-}
-.eo-ticket-details > div {
-  display: flex; justify-content: space-between;
+.eo-ticket-buyer {
   font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
-  color: rgba(255,255,255,0.6); letter-spacing: .1em; text-transform: uppercase;
-}
-.eo-ticket-label {
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.42); letter-spacing: .12em; text-transform: uppercase;
+  margin-top: 6px;
 }
 
-/* QR in tickets panel */
-.eo-ticket-body {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 14px 22px 20px; gap: 16px;
-}
-.eo-ticket-details { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.eo-ticket-qr { flex-shrink: 0; display: block; border-radius: 2px; }
+/* varianti colore per esperienza */
+.eo-ticket-imm-osservatore .eo-ticket-imm { color: rgba(255,255,255,0.75); }
+.eo-ticket-imm-osservatore .eo-tl-p1 { fill: rgba(255,255,255,0.45); }
+.eo-ticket-imm-osservatore .eo-tl-p2 { fill: rgba(255,255,255,0.85); }
+.eo-ticket-imm-osservatore .eo-tl-p3 { fill: rgba(255,255,255,0.25); }
+
+.eo-ticket-imm-totale .eo-ticket-imm { color: rgba(215,170,55,0.9); }
+.eo-ticket-imm-totale .eo-tl-p1 { fill: rgba(215,170,55,0.6); }
+.eo-ticket-imm-totale .eo-tl-p2 { fill: rgba(215,170,55,1); }
+.eo-ticket-imm-totale .eo-tl-p3 { fill: rgba(215,170,55,0.35); }
+
+.eo-ticket-card-red .eo-ticket-imm  { color: rgba(200,60,60,0.8) !important; }
+.eo-ticket-card-red .eo-ticket-buyer { color: rgba(255,255,255,0.4) !important; }
 
 /* ── EASTER EGG: HITLER ── */
 .eo-easter-flash {
@@ -2806,13 +3025,55 @@ body {
 /* base overlay */
 .eo-ticket-anim {
   position: fixed; inset: 0; z-index: 20000;
-  background: #020608;
+  background: rgba(2,6,8,0.55);
+  backdrop-filter: blur(3px) brightness(0.6);
+  -webkit-backdrop-filter: blur(3px) brightness(0.6);
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity 0.5s ease;
+  perspective: 900px;
+  opacity: 0; transition: opacity 0.4s ease;
   pointer-events: none; overflow: hidden;
 }
 .eo-ticket-anim.eo-ta-visible { opacity: 1; pointer-events: auto; }
 .eo-ticket-anim.hidden { display: none; }
+
+/* riflesso luminoso che segue il mouse */
+.eo-ta-shine {
+  position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, rgba(0,210,190,0.12) 0%, transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.eo-ta-card:hover .eo-ta-shine { opacity: 1; }
+
+/* glitch chromatic aberration sull'overlay del biglietto */
+@keyframes eoTaOverlayChr {
+  0%            { box-shadow: none; }
+  8%            { box-shadow: -5px 0 0 rgba(0,210,190,0.25) inset, 5px 0 0 rgba(255,40,40,0.2) inset; }
+  16%           { box-shadow: 4px 0 0 rgba(0,210,190,0.2) inset, -4px 0 0 rgba(255,40,40,0.15) inset; }
+  24%           { box-shadow: none; }
+  40%           { box-shadow: -3px 0 0 rgba(0,210,190,0.15) inset; }
+  50%,100%      { box-shadow: none; }
+}
+.eo-ticket-anim.eo-ta-glitch-burst {
+  animation: eoTaOverlayChr 0.55s steps(1) forwards;
+}
+
+/* shake del card durante glitch */
+@keyframes eoTaCardGlitch {
+  0%       { transform: translateX(0) skewX(0deg); filter: brightness(1); }
+  10%      { transform: translateX(-5px) skewX(-1deg); filter: brightness(1.6) hue-rotate(30deg); }
+  20%      { transform: translateX(6px) skewX(0.5deg); filter: brightness(1.3) hue-rotate(-20deg); }
+  30%      { transform: translateX(-3px); filter: brightness(1.5); }
+  45%      { transform: translateX(4px) skewX(1deg); filter: brightness(1.2) hue-rotate(15deg); }
+  60%      { transform: translateX(-2px); filter: brightness(1.1); }
+  75%      { transform: translateX(2px); filter: brightness(1); }
+  100%     { transform: translateX(0) skewX(0deg); filter: brightness(1); }
+}
+.eo-ta-card.eo-ta-glitch-shake {
+  animation: eoTaCardGlitch 0.5s steps(1) forwards !important;
+  clip-path: none !important; filter: none !important;
+}
 
 /* rain canvas */
 .eo-ta-rain {
@@ -2968,89 +3229,257 @@ body {
   text-shadow: 0 0 28px rgba(0,210,190,0.75);
 }
 
-/* Card */
+/* ── ticket stack container ── */
+.eo-ta-stack {
+  position: relative;
+  flex-shrink: 0;
+  perspective: 1000px;
+}
+
+/* ═══════════════════════════════════════════
+   TICKET CARD — white physical card
+═══════════════════════════════════════════ */
 .eo-ta-card {
-  position: relative; overflow: hidden; width: 480px;
-  background: rgba(6,12,16,0.97);
-  border: 1px solid rgba(0,210,190,0.45);
-  padding: 26px 30px 22px;
-  animation: eoTaCardPulse 3s ease infinite;
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 0.7s cubic-bezier(0.22,1,0.36,1) 0.15s;
+  position: relative; overflow: hidden; width: 680px;
+  background: linear-gradient(160deg, #0d1518 0%, #080e10 100%);
+  border: none;
+  border-radius: 6px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.75),
+    0 10px 30px rgba(0,0,0,0.55),
+    0  2px  6px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  padding: 0;
+  display: flex; flex-direction: row; gap: 0;
+  will-change: transform;
+  transform-style: preserve-3d;
+  clip-path: inset(50% 0 50% 0);
+  filter: brightness(4) blur(18px);
+  transition: clip-path 2.2s cubic-bezier(0.16,1,0.3,1),
+              filter    2.0s cubic-bezier(0.16,1,0.3,1);
 }
-.eo-ta-hud.eo-ta-phase-active .eo-ta-card { clip-path: inset(0 0 0% 0); }
-
-.eo-ta-card-red {
-  background: rgba(14,2,2,0.97) !important;
-  border-color: rgba(200,40,40,0.6) !important;
-  box-shadow: 0 0 30px rgba(180,0,0,0.3), 0 0 80px rgba(140,0,0,0.12) !important;
-  animation: eoTaCardPulseRed 3s ease infinite !important;
-}
-.eo-ta-card-red .eo-ta-id   { color: rgba(200,60,60,0.7) !important; }
-.eo-ta-card-red .eo-ta-scan {
-  background: linear-gradient(90deg, transparent 5%, rgba(200,40,40,0.9) 50%, transparent 95%) !important;
-  box-shadow: 0 0 12px rgba(200,40,40,0.8) !important;
-}
-.eo-ta-card-red .eo-ta-divider span { border-color: rgba(200,40,40,0.3) !important; }
-.eo-ta-card-red .eo-ta-row-label    { color: rgba(200,80,80,0.4) !important; }
-.eo-ta-card-red .eo-ta-qr-section   { border-color: rgba(200,40,40,0.3) !important; }
-.eo-ta-card-red .eo-ta-qr-label     { color: rgba(200,60,60,0.55) !important; }
-@keyframes eoTaCardPulseRed {
-  0%,100% { box-shadow: 0 0 30px rgba(180,0,0,0.3),  0 0 80px  rgba(140,0,0,0.12); }
-  50%     { box-shadow: 0 0 50px rgba(200,0,0,0.5),  0 0 120px rgba(160,0,0,0.22); }
+.eo-ta-card.eo-ta-mat-active {
+  clip-path: inset(0 0 0% 0);
+  filter: brightness(1) blur(0px);
+  transition: clip-path 2.2s cubic-bezier(0.16,1,0.3,1),
+              filter    2.0s cubic-bezier(0.16,1,0.3,1),
+              transform 0.6s cubic-bezier(0.25,1,0.5,1);
 }
 
+/* colonna sinistra — logo */
+.eo-ta-left {
+  width: 190px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 24px;
+  gap: 10px;
+}
+.eo-ta-logo-sym {
+  width: 100px; height: 90px;
+  animation: eoTaLogoGlow 3s ease-in-out infinite;
+}
+.eo-ta-sym-p1 { fill: rgba(0,148,138,0.75); }
+.eo-ta-sym-p2 { fill: rgba(0,168,155,1); }
+.eo-ta-sym-p3 { fill: rgba(0,128,118,0.5); }
+.eo-ta-brand-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: .3em; color: rgba(255,255,255,0.85); text-transform: uppercase;
+}
+.eo-ta-brand-sub {
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 600;
+  letter-spacing: .35em; color: rgba(0,210,190,0.65); text-transform: uppercase;
+  margin-top: -4px;
+}
+
+/* separatore verticale */
+.eo-ta-vert-sep {
+  width: 1px; flex-shrink: 0; align-self: stretch;
+  background: rgba(255,255,255,0.07);
+}
+
+/* colonna destra — info */
+.eo-ta-right {
+  flex: 1; padding: 28px 30px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* gloss statico superiore — riflesso fisico */
+.eo-ta-gloss {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 52%; pointer-events: none;
+  background: linear-gradient(
+    175deg,
+    rgba(255,255,255,0.07) 0%,
+    rgba(255,255,255,0.02) 38%,
+    transparent 100%
+  );
+  border-radius: 6px 6px 0 0;
+}
+
+/* riflesso mobile (tilt) */
+.eo-ta-shine {
+  position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.55) 0%, transparent 60%);
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+/* scan line materializzazione */
 .eo-ta-scan {
-  position: absolute; left: 0; right: 0; top: -2px; height: 2px;
-  background: linear-gradient(90deg, transparent 5%, rgba(0,210,190,0.95) 50%, transparent 95%);
-  box-shadow: 0 0 12px rgba(0,210,190,0.8);
-  animation: eoTaScanLine 0.9s ease 0.9s forwards;
-  opacity: 0;
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 2%, rgba(0,148,138,0.9) 50%, transparent 98%);
+  box-shadow: 0 0 12px rgba(0,148,138,0.8);
+  pointer-events: none; opacity: 0;
 }
-.eo-ta-id {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
-  letter-spacing: .28em; color: rgba(0,210,190,0.65); text-transform: uppercase;
-  margin-bottom: 8px;
+
+@keyframes eoTaLogoGlow {
+  0%,100% {
+    filter:
+      drop-shadow(0 0 6px rgba(0,148,138,0.6))
+      drop-shadow(0 0 18px rgba(0,148,138,0.3));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 10px rgba(0,168,155,0.9))
+      drop-shadow(0 0 28px rgba(0,148,138,0.5));
+  }
 }
+
+/* blocco contenuto — layout piatto */
+.eo-ta-block { margin-bottom: 2px; }
+
+/* etichette micro — tutte uguali, 11px */
+.eo-ta-section-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .32em; color: rgba(0,210,190,0.55); text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* nome personaggio — 28px, unico elemento grande */
 .eo-ta-char {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--H3); font-weight: 700;
-  color: #fff; letter-spacing: .06em; min-height: 1.2em;
+  font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
+  color: rgba(0,210,190,1); letter-spacing: .03em; line-height: 1.1;
+  min-height: 1.2em;
 }
+
+/* tipo esperienza — 17px, subito sotto il nome */
+.eo-ta-immersione {
+  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 600;
+  color: rgba(0,210,190,0.8); letter-spacing: .12em; text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* epoca — 12px, muta */
 .eo-ta-epoch {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
-  color: rgba(255,255,255,0.38); letter-spacing: .14em; text-transform: uppercase;
-  margin-top: 3px; margin-bottom: 18px;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.32); letter-spacing: .18em; text-transform: uppercase;
+  margin-top: 3px;
 }
-.eo-ta-divider { display: flex; align-items: center; margin-bottom: 14px; }
-.eo-ta-divider span { flex: 1; border-top: 1px dashed rgba(0,210,190,0.28); }
-.eo-ta-bottom { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
-.eo-ta-rows   { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.eo-ta-qr-section {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  margin-top: 18px; padding-top: 16px;
-  border-top: 1px dashed rgba(0,210,190,0.28);
+
+/* intestatario — 17px, stesso peso visivo dell'esperienza */
+.eo-ta-buyer {
+  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 600;
+  letter-spacing: .04em; color: rgba(255,255,255,0.88); line-height: 1.1;
+  margin-top: 2px;
 }
-.eo-ta-qr-label {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
-  letter-spacing: .22em; color: rgba(0,210,190,0.55); text-transform: uppercase;
+
+/* separatore tratteggiato */
+.eo-ta-dash-sep {
+  border-top: 1px dashed rgba(255,255,255,0.09);
+  margin: 12px 0;
 }
-.eo-ta-qr     {
-  display: block; border-radius: 4px;
-  box-shadow: 0 0 18px rgba(0,210,190,0.25), 0 0 40px rgba(0,180,160,0.1);
-}
+
+/* righe dettaglio — tutte 12px */
+.eo-ta-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .eo-ta-row {
-  display: flex; justify-content: space-between;
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
-  letter-spacing: .1em; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  letter-spacing: .12em; text-transform: uppercase;
   opacity: 0;
 }
 .eo-ta-row.eo-ta-row-in { animation: eoTaRowIn 0.4s ease forwards; }
 .eo-ta-row-label { color: rgba(255,255,255,0.28); }
-.eo-ta-row-val   { color: rgba(255,255,255,0.88); }
-.eo-ta-footer {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
-  letter-spacing: .22em; color: rgba(255,255,255,0.18); text-transform: uppercase;
-  text-align: center;
+.eo-ta-row-val   { color: rgba(255,255,255,0.72); max-width: 62%; text-align: right; }
+
+/* id — 10px, accento */
+.eo-ta-id {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: .28em; color: rgba(0,210,190,0.4); text-transform: uppercase;
+  text-align: center; margin-top: 4px;
+}
+
+/* variante rossa Hitler — sfondo più rosso, accenti rossi */
+.eo-ta-card-red {
+  background: linear-gradient(160deg, #120404 0%, #0e0202 100%) !important;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.75), 0 0 60px rgba(180,0,0,0.3) !important;
+  animation: eoTaCardPulseRed 3s ease infinite !important;
+}
+.eo-ta-card-red .eo-ta-char          { color: rgba(230,70,70,1) !important; }
+.eo-ta-card-red .eo-ta-immersione    { color: rgba(200,90,90,0.85) !important; }
+.eo-ta-card-red .eo-ta-section-label { color: rgba(200,70,70,0.6) !important; }
+.eo-ta-card-red .eo-ta-id            { color: rgba(200,60,60,0.5) !important; }
+.eo-ta-card-red .eo-ta-scan { background: linear-gradient(90deg,transparent 2%,rgba(200,40,40,0.9) 50%,transparent 98%) !important; }
+.eo-ta-card-red .eo-ta-sym-p1 { fill: rgba(200,40,40,0.6) !important; }
+.eo-ta-card-red .eo-ta-sym-p2 { fill: rgba(220,40,40,0.9) !important; }
+.eo-ta-card-red .eo-ta-sym-p3 { fill: rgba(180,30,30,0.4) !important; }
+.eo-ta-card-red .eo-ta-brand-sub { color: rgba(200,60,60,0.65) !important; }
+.eo-ta-card-red .eo-ta-vert-sep  { background: rgba(200,40,40,0.15) !important; }
+@keyframes eoTaCardPulseRed {
+  0%,100% { box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(180,0,0,0.25); }
+  50%     { box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 90px rgba(200,0,0,0.4);  }
+}
+
+/* ── VARIANTI PER TIPO DI ESPERIENZA ── */
+
+/* OSSERVATORE — accenti bianchi */
+.eo-ta-imm-osservatore .eo-ta-char          { color: rgba(255,255,255,0.95); }
+.eo-ta-imm-osservatore .eo-ta-immersione    { color: rgba(255,255,255,0.65); }
+.eo-ta-imm-osservatore .eo-ta-section-label { color: rgba(255,255,255,0.38); }
+.eo-ta-imm-osservatore .eo-ta-id            { color: rgba(255,255,255,0.28); }
+.eo-ta-imm-osservatore .eo-ta-brand-sub     { color: rgba(255,255,255,0.4); }
+.eo-ta-imm-osservatore .eo-ta-sym-p1 { fill: rgba(255,255,255,0.55); }
+.eo-ta-imm-osservatore .eo-ta-sym-p2 { fill: rgba(255,255,255,0.9); }
+.eo-ta-imm-osservatore .eo-ta-sym-p3 { fill: rgba(255,255,255,0.3); }
+.eo-ta-imm-osservatore .eo-ta-logo-sym { filter: drop-shadow(0 0 8px rgba(255,255,255,0.25)); animation: none; }
+.eo-ta-imm-osservatore .eo-ta-scan {
+  background: linear-gradient(90deg, transparent 2%, rgba(255,255,255,0.85) 50%, transparent 98%);
+  box-shadow: 0 0 12px rgba(255,255,255,0.6);
+}
+
+/* PARTECIPANTE — teal (default) */
+
+/* TOTALE — accenti oro */
+.eo-ta-imm-totale .eo-ta-char          { color: rgba(215,170,55,1); }
+.eo-ta-imm-totale .eo-ta-immersione    { color: rgba(215,170,55,0.85); }
+.eo-ta-imm-totale .eo-ta-section-label { color: rgba(215,170,55,0.55); }
+.eo-ta-imm-totale .eo-ta-id            { color: rgba(215,170,55,0.42); }
+.eo-ta-imm-totale .eo-ta-brand-sub     { color: rgba(215,170,55,0.65); }
+.eo-ta-imm-totale .eo-ta-sym-p1 { fill: rgba(215,170,55,0.65); }
+.eo-ta-imm-totale .eo-ta-sym-p2 { fill: rgba(215,170,55,1); }
+.eo-ta-imm-totale .eo-ta-sym-p3 { fill: rgba(215,170,55,0.38); }
+.eo-ta-imm-totale .eo-ta-logo-sym {
+  filter: drop-shadow(0 0 8px rgba(215,170,55,0.5)) drop-shadow(0 0 22px rgba(215,170,55,0.22));
+  animation: eoTaLogoGlowGold 3s ease-in-out infinite;
+}
+.eo-ta-imm-totale .eo-ta-vert-sep { background: rgba(215,170,55,0.12); }
+.eo-ta-imm-totale .eo-ta-scan {
+  background: linear-gradient(90deg, transparent 2%, rgba(215,170,55,0.9) 50%, transparent 98%);
+  box-shadow: 0 0 12px rgba(215,170,55,0.75);
+}
+@keyframes eoTaLogoGlowGold {
+  0%,100% {
+    filter:
+      drop-shadow(0 0 8px rgba(215,170,55,0.45))
+      drop-shadow(0 0 22px rgba(215,170,55,0.2))
+      drop-shadow(0 0 50px rgba(215,170,55,0.1));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 12px rgba(230,185,70,0.75))
+      drop-shadow(0 0 32px rgba(215,170,55,0.4))
+      drop-shadow(0 0 70px rgba(215,170,55,0.18));
+  }
 }
 
 /* Flash overlay */
