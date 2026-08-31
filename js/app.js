@@ -918,7 +918,7 @@
   ];
 
   // Nodi alternati: dispari sopra la linea, pari sotto — per non ammassare le date
-  const tlNodeOffsets = [1.6, -1.6, 1.6, -1.6, 1.6];
+  const tlNodeOffsets = [1.6, -2.1, 1.6, -2.1, 1.6];
 
   // Tick verticali ai 5 nodi (WebGL) — si estendono dalla linea verso il nodo
   tlTickObjs = [];
