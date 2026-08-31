@@ -2561,21 +2561,45 @@
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
     tlTickObjs.forEach(t => { t.visible = true; });
     _positionTlNodes2D(); // ricalcola ora che la camera è pronta
+    // Nodi nascosti — si materializzano dopo 2s
     tlNodeEls.forEach((el) => {
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
       el.style.zIndex = '1000';
+      el.classList.remove('tl-node-materializing');
     });
     dnaBackArrow.style.display = 'block';
     document.getElementById('tlIconsHud').style.display = 'flex';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
-    tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
-    tlGuideEl.forEach((el, i) => {
+    // Guide text hidden — appare insieme ai nodi
+    tlGuideEl.forEach((el) => {
       el.style.opacity = '0';
       if (el.parentElement) el.parentElement.style.pointerEvents = 'none';
-      tlGuideTimeouts.push(setTimeout(() => { el.style.opacity = '1'; }, i * 38));
     });
+    // Materializzazione con ritardo 2s + stagger per nodo
+    setTimeout(() => {
+      tlNodeEls.forEach((el, s) => {
+        setTimeout(() => {
+          el.style.opacity = '1';
+          el.classList.add('tl-node-materializing');
+          const onEnd = () => {
+            el.removeEventListener('animationend', onEnd);
+            el.classList.remove('tl-node-materializing');
+            el.style.pointerEvents = 'auto';
+          };
+          el.addEventListener('animationend', onEnd);
+        }, s * 180);
+      });
+      // Guide text appare dopo la materializzazione dell'ultimo nodo
+      const guideDelay = tlNodeEls.length * 180 + 800;
+      tlGuideEl.forEach((el, i) => {
+        tlGuideTimeouts.push(setTimeout(() => {
+          el.style.opacity = '1';
+          if (el.parentElement) el.parentElement.style.pointerEvents = 'auto';
+        }, guideDelay + i * 38));
+      });
+    }, 2000);
     tlDnaGroups.forEach(g => { g.visible = true; });
     
     // --- NASCONDI AMBIENTE ANIMUS E MOSTRA OGGETTI STORICI ---
