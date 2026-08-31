@@ -1083,7 +1083,7 @@
         role: 'Morgan rappresenta un caso di studio particolarmente significativo per comprendere il confine, spesso permeabile, tra stato e pirateria nel Seicento coloniale. Fu corsaro al servizio della Corona britannica, condusse operazioni militari contro le colonie spagnole nei Caraibi — tra cui la presa di Panama nel 1671 — e concluse la propria carriera come Governatore della Giamaica. La sessione analizza il sistema del corsarismo come strumento di politica estera, le dinamiche di potere tra le corti europee e i territori d\'oltremare, e la trasformazione di Morgan da operatore militare a figura istituzionale.' } ],
     [ { name: 'George Washington',      dates: '1732–1799', img: 'assets/characters/george-washington.jpg',
         role: 'L\'esperienza documenta il periodo compreso tra il 1775 e il 1783, gli anni della Guerra d\'Indipendenza americana e del consolidamento delle istituzioni della nuova repubblica. Washington fu comandante in capo dell\'Esercito Continentale e primo presidente degli Stati Uniti: la sua memoria conserva le campagne militari, le deliberazioni del Congresso e il processo di stesura della Costituzione. La sessione offre una lettura diretta di come si costruisce un sistema di governo in condizioni di conflitto aperto, e di quali scelte definirono la struttura istituzionale americana nei suoi primi anni.' },
-      { name: 'Benjamin Franklin',      dates: '1706–1790', img: 'assets/characters/benjamin-franklin.jpg',
+      { name: 'Benjamin Franklin',      dates: '1706–1790', img: 'assets/characters/Franklin-Benjamin 1.jpg',
         role: 'Franklin attraversò il Settecento come scienziato, editore, diplomatico e legislatore. Le sue ricerche sull\'elettricità atmosferica portarono all\'invenzione del parafulmine; il suo ruolo diplomatico a Parigi fu determinante per ottenere l\'alleanza francese che modificò gli equilibri della guerra d\'indipendenza. L\'esperienza esplora la sua prospettiva su scienza e utilità pubblica, il funzionamento della diplomazia settecentesca e la costruzione dell\'identità americana attraverso la stampa e il pensiero illuminista. Una memoria che attraversa laboratori, salotti parigini e assemblee legislative.' },
       { name: 'Thomas Jefferson',       dates: '1743–1826', img: 'assets/characters/thomas-jefferson.jpg',
         role: 'Jefferson è il principale estensore della Dichiarazione d\'Indipendenza del 1776, uno dei testi fondativi del pensiero politico moderno. Fu anche governatore della Virginia, segretario di stato, vicepresidente e terzo presidente degli Stati Uniti. La sua memoria offre accesso al dibattito intellettuale che precedette e accompagnò la fondazione della repubblica: i riferimenti all\'illuminismo europeo, le contraddizioni tra i principi enunciati e la realtà della schiavitù, la concezione jeffersoniana del rapporto tra stato, individuo e proprietà. Un\'esperienza a contatto con le fondamenta filosofiche del mondo contemporaneo.' } ],
@@ -1747,6 +1747,10 @@
       <div class="eo-ta-shine" id="eoTaShine"></div>
       <div class="eo-ta-gloss"></div>
       <div class="eo-ta-scan"></div>
+      <div class="eo-ta-qr-wrap" id="eoTaQrWrap">
+        <canvas id="eoTaQrCanvas"></canvas>
+        <div class="eo-ta-qr-label">BIGLIETTO DIGITALE</div>
+      </div>
 
       <div class="eo-ta-left">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410 370" class="eo-ta-logo-sym">
@@ -1762,7 +1766,6 @@
 
       <div class="eo-ta-right">
         <div class="eo-ta-block">
-          <div class="eo-ta-section-label">PERSONAGGIO STORICO</div>
           <div class="eo-ta-char" id="eoTaChar"></div>
           <div class="eo-ta-immersione" id="eoTaImmersione"></div>
         </div>
@@ -1855,7 +1858,19 @@
       document.getElementById('eoTaId').textContent         = ticket.ticketId;
       document.getElementById('eoTaBuyer').textContent      = ticket.buyer || '—';
       document.getElementById('eoTaChar').textContent       = '';
-      document.getElementById('eoTaImmersione').textContent = ticket.immersion;
+      document.getElementById('eoTaImmersione').textContent = 'ESPERIENZA ' + ticket.immersion.toUpperCase();
+
+      // QR code — punta a ticket.html con i dati in base64
+      const _qrData = btoa(unescape(encodeURIComponent(JSON.stringify({
+        id: ticket.ticketId, character: ticket.character, immersion: ticket.immersion,
+        buyer: ticket.buyer, date: ticket.date, time: ticket.time,
+        duration: ticket.duration, location: ticket.location, epoch: ticket.epoch
+      }))));
+      const _qrUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'ticket.html?d=' + _qrData;
+      const _qrCanvas = document.getElementById('eoTaQrCanvas');
+      if (typeof QRCode !== 'undefined' && _qrCanvas) {
+        QRCode.toCanvas(_qrCanvas, _qrUrl, { width: 72, margin: 1, color: { dark: '#ffffff', light: '#00000000' } });
+      }
 
       const rowsEl = document.getElementById('eoTaRows');
       rowsEl.innerHTML = [
@@ -2034,18 +2049,11 @@
   const _eoCenterEl = document.getElementById('eoCenter');
   const _eoCenterInner = document.getElementById('eoCenterInner');
 
-  _eoCenterEl.addEventListener('mousemove', e => {
-    const rect = _eoCenterEl.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top  + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width  / 2); // -1 to 1
-    const dy = (e.clientY - cy) / (rect.height / 2); // -1 to 1
-    const rotX = -dy * 8;
-    const rotY =  dx * 8;
-    _eoCenterInner.style.transform = `perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  _eoCenterEl.addEventListener('mouseenter', () => {
+    _eoCenterEl.classList.add('eo-center-hover-glitch');
   });
   _eoCenterEl.addEventListener('mouseleave', () => {
-    _eoCenterInner.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg)';
+    _eoCenterEl.classList.remove('eo-center-hover-glitch');
   });
 
   // Periodic glitch

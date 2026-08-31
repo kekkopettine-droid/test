@@ -2,148 +2,189 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Biglietto Animus — Abstergo Industries</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Biglietto Abstergo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    background: #050a0e;
-    color: #fff;
+    background: #050c10;
+    min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center;
     font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 16px;
+    padding: 24px 16px;
   }
-  .logo-row {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 32px;
-  }
-  .logo-hex { font-size: 22px; color: rgba(0,210,190,0.8); }
-  .logo-text {
-    font-size: 14px; font-weight: 700; letter-spacing: .28em;
-    color: rgba(255,255,255,0.55); text-transform: uppercase;
-  }
+
   .ticket {
-    width: 100%; max-width: 420px;
-    border: 1px solid rgba(0,210,190,0.5);
-    background: rgba(8,14,18,0.98);
-    box-shadow: 0 0 40px rgba(0,210,190,0.2), 0 0 100px rgba(0,180,160,0.08);
-    animation: pulse 3s ease infinite;
+    width: 100%; max-width: 400px;
+    background: linear-gradient(160deg, #0d1518 0%, #080e10 100%);
+    border-radius: 10px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 40px rgba(0,148,138,0.08);
+    overflow: hidden;
+    position: relative;
   }
-  @keyframes pulse {
-    0%,100% { box-shadow: 0 0 40px rgba(0,210,190,0.2), 0 0 100px rgba(0,180,160,0.08); }
-    50%      { box-shadow: 0 0 60px rgba(0,210,190,0.4), 0 0 140px rgba(0,180,160,0.18); }
+
+  /* scan line animation */
+  .ticket::after {
+    content: '';
+    position: absolute; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,220,200,0.6) 50%, transparent);
+    animation: scan 3s linear infinite;
+    pointer-events: none;
   }
-  .ticket-top { padding: 24px 24px 18px; }
-  .ticket-id {
-    font-size: 11px; font-weight: 700; letter-spacing: .28em;
-    color: rgba(0,210,190,0.7); text-transform: uppercase; margin-bottom: 8px;
+  @keyframes scan {
+    0%   { top: 0; opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 0.4; }
+    100% { top: 100%; opacity: 0; }
   }
-  .ticket-char {
-    font-size: 26px; font-weight: 700; letter-spacing: .05em; color: #fff;
+
+  .ticket-header {
+    padding: 28px 24px 20px;
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-  .ticket-epoch {
-    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
-    color: rgba(255,255,255,0.4); margin-top: 4px;
-  }
-  .ticket-divider {
-    padding: 0 20px;
-    border-top: 1px dashed rgba(0,210,190,0.3);
-    margin: 4px 0;
-  }
-  .ticket-details { padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 8px; }
-  .ticket-row {
-    display: flex; justify-content: space-between;
-    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
-  }
-  .ticket-row-label { color: rgba(255,255,255,0.3); }
-  .ticket-row-val   { color: rgba(255,255,255,0.85); }
-  .ticket-qr-section {
-    border-top: 1px dashed rgba(0,210,190,0.3);
-    padding: 20px 24px;
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-  }
-  .ticket-qr-label {
-    font-size: 10px; font-weight: 700; letter-spacing: .22em;
-    color: rgba(0,210,190,0.5); text-transform: uppercase;
-  }
-  .ticket-qr-section canvas { display: block; box-shadow: 0 0 20px rgba(0,210,190,0.2); border-radius: 4px; }
-  .ticket-footer {
-    text-align: center; padding: 0 24px 20px;
+
+  .logo-svg { width: 48px; height: 44px; flex-shrink: 0; }
+  .logo-p1 { fill: rgba(0,148,138,0.75); }
+  .logo-p2 { fill: rgba(0,168,155,1); }
+  .logo-p3 { fill: rgba(0,128,118,0.5); }
+
+  .brand { display: flex; flex-direction: column; gap: 1px; }
+  .brand-name { font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.9); letter-spacing: .15em; }
+  .brand-sub  { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.35); letter-spacing: .22em; }
+
+  .valid-badge {
+    margin-left: auto; flex-shrink: 0;
+    background: rgba(0,200,180,0.12); border: 1px solid rgba(0,200,180,0.35);
+    border-radius: 4px; padding: 4px 10px;
     font-size: 10px; font-weight: 700; letter-spacing: .2em;
-    color: rgba(255,255,255,0.2); text-transform: uppercase;
+    color: rgba(0,220,200,0.85);
   }
-  .invalid {
-    text-align: center; padding: 60px 20px;
-    font-size: 14px; letter-spacing: .14em; color: rgba(255,255,255,0.35);
-    text-transform: uppercase;
+
+  .ticket-body { padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .28em;
+    color: rgba(0,210,190,0.45); text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .char-name {
+    font-size: 32px; font-weight: 700; line-height: 1.1;
+    color: rgba(0,210,190,1);
+  }
+  .immersione {
+    font-size: 15px; font-weight: 600; margin-top: 4px;
+    color: rgba(0,210,190,0.75);
+  }
+
+  .buyer-name {
+    font-size: 20px; font-weight: 700;
+    color: rgba(255,255,255,0.88);
+  }
+
+  .divider {
+    height: 1px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px);
+  }
+
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .row-label { font-size: 10px; font-weight: 700; letter-spacing: .22em; color: rgba(255,255,255,0.3); }
+  .row-val   { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.75); text-align: right; }
+
+  .ticket-id {
+    font-size: 10px; font-weight: 600; letter-spacing: .18em;
+    color: rgba(255,255,255,0.2); text-align: center;
+    padding: 14px 24px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* varianti colore per esperienza */
+  .imm-osservatore .char-name { color: rgba(255,255,255,0.95); }
+  .imm-osservatore .immersione { color: rgba(255,255,255,0.6); }
+  .imm-osservatore .logo-p2 { fill: rgba(255,255,255,0.9); }
+  .imm-osservatore .logo-p1 { fill: rgba(255,255,255,0.55); }
+  .imm-osservatore .section-label { color: rgba(255,255,255,0.35); }
+  .imm-osservatore .valid-badge { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
+
+  .imm-totale .char-name  { color: rgba(215,170,55,1); }
+  .imm-totale .immersione { color: rgba(215,170,55,0.75); }
+  .imm-totale .logo-p2 { fill: rgba(215,170,55,1); }
+  .imm-totale .logo-p1 { fill: rgba(215,170,55,0.6); }
+  .imm-totale .section-label { color: rgba(215,170,55,0.4); }
+  .imm-totale .valid-badge { color: rgba(215,170,55,0.9); border-color: rgba(215,170,55,0.4); background: rgba(215,170,55,0.08); }
+
+  .error {
+    text-align: center; padding: 60px 24px;
+    color: rgba(255,255,255,0.4);
+    font-size: 14px; letter-spacing: .1em;
   }
 </style>
 </head>
 <body>
-
-<div class="logo-row">
-  <span class="logo-hex">⬡</span>
-  <span class="logo-text">Abstergo Industries · Animus</span>
-</div>
-
 <div class="ticket" id="ticket">
-  <div class="invalid" id="invalidMsg" style="display:none;">Biglietto non valido o dati mancanti.</div>
-  <div id="ticketContent" style="display:none;">
-    <div class="ticket-top">
-      <div class="ticket-id" id="tId"></div>
-      <div class="ticket-char" id="tChar"></div>
-      <div class="ticket-epoch" id="tEpoch"></div>
-    </div>
-    <div class="ticket-divider"></div>
-    <div class="ticket-details" id="tDetails"></div>
-    <div class="ticket-qr-section">
-      <div class="ticket-qr-label">⬡ Codice di accesso — presentare all'ingresso</div>
-      <canvas id="tQr"></canvas>
-    </div>
-    <div class="ticket-footer">Presentare questo biglietto all'ingresso della struttura Abstergo</div>
-  </div>
+  <div class="error" id="errMsg">Caricamento biglietto...</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
-  const p = new URLSearchParams(location.search);
-  const id    = p.get('id');
-  const char  = p.get('char');
-  const epoch = p.get('epoch');
-  const imm   = p.get('imm');
-  const dur   = p.get('dur');
-  const date  = p.get('date');
-  const time  = p.get('time');
-  const loc   = p.get('loc');
-  const buyer = p.get('buyer');
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('d');
+  if (!raw) { document.getElementById('errMsg').textContent = 'Biglietto non trovato.'; return; }
 
-  if (!id || !char) {
-    document.getElementById('invalidMsg').style.display = '';
-  } else {
-    document.getElementById('ticketContent').style.display = '';
-    document.getElementById('tId').textContent    = id;
-    document.getElementById('tChar').textContent  = char;
-    document.getElementById('tEpoch').textContent = epoch || '';
-    const rows = [
-      ['Immersione', imm],
-      ['Durata',     dur],
-      ['Data',       date + (time ? ' · ' + time : '')],
-      ['Sede',       loc],
-      ['Intestatario', buyer],
-    ].filter(([,v]) => v);
-    document.getElementById('tDetails').innerHTML = rows.map(([k,v]) =>
-      `<div class="ticket-row"><span class="ticket-row-label">${k}</span><span class="ticket-row-val">${v}</span></div>`
-    ).join('');
-    QRCode.toCanvas(document.getElementById('tQr'), location.href, {
-      width: 160, margin: 2,
-      color: { dark: '#00d2be', light: '#050a0e' }
-    });
-  }
+  let t;
+  try { t = JSON.parse(decodeURIComponent(escape(atob(raw)))); }
+  catch (e) { document.getElementById('errMsg').textContent = 'Dati biglietto non validi.'; return; }
+
+  const immClass = t.immersion === 'Osservatore' ? 'imm-osservatore' : t.immersion === 'Totale' ? 'imm-totale' : '';
+  const ticket = document.getElementById('ticket');
+  if (immClass) ticket.classList.add(immClass);
+
+  ticket.innerHTML = `
+    <div class="ticket-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410 370" class="logo-svg">
+        <path class="logo-p1" d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301"/>
+        <path class="logo-p2" d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557"/>
+        <path class="logo-p3" d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006"/>
+      </svg>
+      <div class="brand">
+        <div class="brand-name">ABSTERGO</div>
+        <div class="brand-sub">INDUSTRIES</div>
+      </div>
+      <div class="valid-badge">✓ VALIDO</div>
+    </div>
+
+    <div class="ticket-body">
+      <div>
+        <div class="section-label">PERSONAGGIO STORICO</div>
+        <div class="char-name">${t.character || '—'}</div>
+        <div class="immersione">ESPERIENZA ${(t.immersion || '').toUpperCase()}</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-label">INTESTATARIO</div>
+        <div class="buyer-name">${t.buyer || '—'}</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="rows">
+        <div class="row"><span class="row-label">DURATA</span><span class="row-val">${t.duration || '—'}</span></div>
+        <div class="row"><span class="row-label">DATA</span><span class="row-val">${t.date || '—'} · ${t.time || '—'}</span></div>
+        <div class="row"><span class="row-label">SEDE</span><span class="row-val">${t.location || '—'}</span></div>
+      </div>
+    </div>
+
+    <div class="ticket-id">${t.id || '—'}</div>
+  `;
+  if (immClass) ticket.classList.add(immClass);
+})();
 </script>
 </body>
 </html>

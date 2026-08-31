@@ -2683,6 +2683,57 @@ body {
   animation: eoCenterGlitch 0.38s steps(1) forwards !important;
 }
 
+/* Hover glitch sull'immagine del personaggio */
+.eo-center.eo-center-hover-glitch .eo-center-img {
+  animation: eoCenterImgHoverGlitch 0.45s steps(1) infinite !important;
+}
+@keyframes eoCenterImgHoverGlitch {
+  0%,100% {
+    transform: scale(1.08) translateX(0);
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    clip-path: none;
+  }
+  10% {
+    transform: scale(1.08) translateX(-5px);
+    filter: grayscale(20%) sepia(60%) hue-rotate(140deg) brightness(1.1) contrast(1.4) saturate(2);
+    clip-path: inset(12% 0 62% 0);
+  }
+  20% {
+    transform: scale(1.08) translateX(5px);
+    filter: grayscale(80%) sepia(5%) hue-rotate(200deg) brightness(0.6) contrast(1.5);
+    clip-path: inset(58% 0 8% 0);
+  }
+  30% {
+    transform: scale(1.08) translateX(-3px);
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    clip-path: inset(35% 0 35% 0);
+  }
+  40% {
+    transform: scale(1.08) translateX(4px);
+    filter: grayscale(30%) sepia(50%) hue-rotate(155deg) brightness(1.0) contrast(1.3) saturate(1.8);
+    clip-path: inset(5% 0 75% 0);
+  }
+  55% {
+    transform: scale(1.08) translateX(0);
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    clip-path: none;
+  }
+  70% {
+    transform: scale(1.08) translateX(-6px) skewX(-1deg);
+    filter: grayscale(10%) sepia(70%) hue-rotate(160deg) brightness(1.2) contrast(1.5) saturate(2.5);
+    clip-path: inset(70% 0 2% 0);
+  }
+  80% {
+    transform: scale(1.08) translateX(3px);
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    clip-path: inset(20% 0 50% 0);
+  }
+  90% {
+    transform: scale(1.08) translateX(0);
+    clip-path: none;
+  }
+}
+
 /* Scan line */
 .eo-center-scan {
   position: absolute; left: 0; right: 0; top: -4px; height: 3px;
@@ -3410,6 +3461,26 @@ body {
 }
 
 /* variante rossa Hitler — sfondo più rosso, accenti rossi */
+/* QR biglietto digitale */
+.eo-ta-qr-wrap {
+  position: absolute;
+  top: 14px; right: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  z-index: 10;
+}
+.eo-ta-qr-wrap canvas {
+  display: block;
+  border-radius: 3px;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+.eo-ta-qr-wrap:hover canvas { opacity: 1; }
+.eo-ta-qr-label {
+  font-size: 7px; font-weight: 700;
+  letter-spacing: .18em; color: rgba(255,255,255,0.28);
+  text-align: center; white-space: nowrap;
+}
+
 .eo-ta-card-red {
   background: linear-gradient(160deg, #120404 0%, #0e0202 100%) !important;
   box-shadow: 0 30px 80px rgba(0,0,0,0.75), 0 0 60px rgba(180,0,0,0.3) !important;
