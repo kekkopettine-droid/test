@@ -2637,18 +2637,24 @@
     }
     const _cs = document.getElementById('colonnaSonora');
     if (_cs) {
-      _cs.volume = 0;
+      const _csResuming = !_cs.paused || _cs.currentTime > 0;
+      if (!_csResuming) _cs.volume = 0;
+      const _csDelay = _csResuming ? 0 : 1000;
       setTimeout(() => {
-        _cs.play().catch(e => console.warn('Audio play error', e));
-        // Fade in graduale in 3s
-        const _fadeSteps = 60;
-        let _fadeStep = 0;
-        const _fadeInt = setInterval(() => {
-          _fadeStep++;
-          _cs.volume = Math.min(1, _fadeStep / _fadeSteps);
-          if (_fadeStep >= _fadeSteps) clearInterval(_fadeInt);
-        }, 3000 / _fadeSteps);
-      }, 1000);
+        if (_cs.paused) _cs.play().catch(e => console.warn('Audio play error', e));
+        // Fade in solo se stava a volume basso
+        if (_cs.volume < 1) {
+          const _startVol = _cs.volume;
+          const _fadeSteps = 60;
+          let _fadeStep = 0;
+          const _fadeDur = _csResuming ? 1500 : 3000;
+          const _fadeInt = setInterval(() => {
+            _fadeStep++;
+            _cs.volume = Math.min(1, _startVol + (1 - _startVol) * (_fadeStep / _fadeSteps));
+            if (_fadeStep >= _fadeSteps) clearInterval(_fadeInt);
+          }, _fadeDur / _fadeSteps);
+        }
+      }, _csDelay);
     }
   }
 
