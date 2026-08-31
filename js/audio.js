@@ -92,5 +92,42 @@ window.audioEngine = (function () {
       const t = ac().currentTime;
       tone(400, 'sawtooth', t, 0.25, 0.14, 160);
     },
+
+    // Interferenza glitch — statica + distorsione + sweep per l'easter egg
+    playGlitch() {
+      const c = ac();
+      const t = c.currentTime;
+
+      // Burst di statica irregolari
+      const burstTimes = [0, 0.07, 0.18, 0.31, 0.47, 0.68, 0.9, 1.15, 1.5, 1.9, 2.4];
+      burstTimes.forEach((dt, i) => {
+        const dur   = 0.04 + Math.random() * 0.12;
+        const vol   = 0.18 + Math.random() * 0.22;
+        const band  = 200 + Math.random() * 3000;
+        click_noise(t + dt, dur, vol, band);
+      });
+
+      // Toni distorti che scendono (radio che perde segnale)
+      tone(340, 'sawtooth', t + 0.05, 0.6, 0.12, 60);
+      tone(180, 'square',   t + 0.3,  0.5, 0.09, 40);
+      tone(520, 'sawtooth', t + 0.9,  0.4, 0.10, 80);
+
+      // Rumore bianco lungo come sottofondo d'interferenza
+      const samples = Math.ceil(c.sampleRate * 2.8);
+      const buf = c.createBuffer(1, samples, c.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < samples; i++) data[i] = (Math.random() * 2 - 1) * 0.08;
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      const filt = c.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.value = 600;
+      const amp = c.createGain();
+      src.connect(filt); filt.connect(amp); amp.connect(c.destination);
+      amp.gain.setValueAtTime(0.18, t);
+      amp.gain.setValueAtTime(0.18, t + 2.0);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + 2.8);
+      src.start(t); src.stop(t + 2.85);
+    },
   };
 })();

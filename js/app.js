@@ -2250,6 +2250,9 @@
   function _eoHitlerEgg(left, avantiBtn) {
     const overlay = document.getElementById('epochOverlay');
 
+    // Suoni glitch/interferenza
+    if (window.audioEngine) window.audioEngine.playGlitch();
+
     // Fade out colonna sonora
     const _csEgg = document.getElementById('colonnaSonora');
     if (_csEgg && !_csEgg.paused) {
