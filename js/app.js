@@ -1577,7 +1577,7 @@
     eoUpdateCartIcon();
     document.getElementById('eoDateCartBtn').style.display = 'none';
     document.getElementById('eoDateConfirmMsg').style.display = '';
-    setTimeout(() => { hideEpochOverlay(); showTimelineView(); }, 1400);
+    setTimeout(() => { hideEpochOverlay(); showTimelineView(500); }, 1400);
   });
 
   // Overlay carrello
@@ -2487,10 +2487,10 @@
   document.getElementById('eoBackBtn').addEventListener('click', () => {
     if (window.audioEngine) window.audioEngine.playClick();
     if (_eoEasterEpochIdx !== -1) {
-      _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(); });
+      _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(500); });
     } else {
       hideEpochOverlay();
-      showTimelineView();
+      showTimelineView(500);
     }
   });
 
@@ -2554,7 +2554,7 @@
     });
   });
 
-  function showTimelineView() {
+  function showTimelineView(nodeDelay = 2000) {
     panelL.classList.add('hidden-panel');
     panelR.classList.add('hidden-panel');
     tlArcLine.visible = true;
@@ -2577,7 +2577,7 @@
       el.style.opacity = '0';
       if (el.parentElement) el.parentElement.style.pointerEvents = 'none';
     });
-    // Materializzazione con ritardo 2s + stagger per nodo
+    // Materializzazione con ritardo + stagger per nodo
     setTimeout(() => {
       tlNodeEls.forEach((el, s) => {
         setTimeout(() => {
@@ -2599,7 +2599,7 @@
           if (el.parentElement) el.parentElement.style.pointerEvents = 'auto';
         }, guideDelay + i * 38));
       });
-    }, 2000);
+    }, nodeDelay);
     tlDnaGroups.forEach(g => { g.visible = true; });
     
     // --- NASCONDI AMBIENTE ANIMUS E MOSTRA OGGETTI STORICI ---
@@ -4081,7 +4081,7 @@
     if (cartPreviousState === 'gene') {
       showDNAView();
     } else if (cartPreviousState === 'timeline') {
-      showTimelineView();
+      showTimelineView(500);
     } else if (cartPreviousState === 'dna') {
       showDNAView();
     } else {
