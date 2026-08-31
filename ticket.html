@@ -136,9 +136,22 @@
   const raw = params.get('d');
   if (!raw) { document.getElementById('errMsg').textContent = 'Biglietto non trovato.'; return; }
 
-  let t;
-  try { t = JSON.parse(decodeURIComponent(escape(atob(raw)))); }
+  let r;
+  try { r = JSON.parse(decodeURIComponent(escape(atob(raw)))); }
   catch (e) { document.getElementById('errMsg').textContent = 'Dati biglietto non validi.'; return; }
+
+  // supporta sia chiavi lunghe (vecchio formato) che corte (nuovo)
+  const t = {
+    ticketId:  r.i || r.id,
+    character: r.c || r.character,
+    immersion: r.m || r.immersion,
+    buyer:     r.b || r.buyer,
+    date:      r.d || r.date,
+    time:      r.t || r.time,
+    duration:  r.u || r.duration,
+    location:  r.l || r.location,
+    epoch:     r.e || r.epoch,
+  };
 
   const immClass = t.immersion === 'Osservatore' ? 'imm-osservatore' : t.immersion === 'Totale' ? 'imm-totale' : '';
   const ticket = document.getElementById('ticket');
@@ -181,7 +194,7 @@
       </div>
     </div>
 
-    <div class="ticket-id">${t.id || '—'}</div>
+    <div class="ticket-id">${t.ticketId || '—'}</div>
   `;
   if (immClass) ticket.classList.add(immClass);
 })();

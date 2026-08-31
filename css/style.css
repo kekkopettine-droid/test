@@ -2219,13 +2219,71 @@ body {
   overflow: hidden;
   box-shadow: 0 0 0 rgba(0,210,190,0);
   transition: box-shadow 0.5s ease;
-  perspective: 700px;
 }
 .eo-center-inner {
   position: absolute; inset: 0;
   transform-style: preserve-3d;
-  transition: transform 0.12s ease-out;
+  transition: transform 0.05s ease-out;
   overflow: hidden;
+}
+/* ── CENTER PANEL 3D ── */
+/* Perspective sul genitore dell'overlay body */
+.eo-center.eo-center-3d {
+  animation: centerRock 9s ease-in-out infinite;
+  transform-origin: center center;
+}
+@keyframes centerRock {
+  0%   { transform: translate(-50%, -50%) perspective(900px) rotateY(-4deg) rotateX( 2deg); }
+  25%  { transform: translate(-50%, -50%) perspective(900px) rotateY( 2deg) rotateX(-2deg); }
+  50%  { transform: translate(-50%, -50%) perspective(900px) rotateY( 4deg) rotateX( 1deg); }
+  75%  { transform: translate(-50%, -50%) perspective(900px) rotateY(-1deg) rotateX( 3deg); }
+  100% { transform: translate(-50%, -50%) perspective(900px) rotateY(-4deg) rotateX( 2deg); }
+}
+
+/* Glitch al hover sul pannello */
+.eo-center:hover .eo-center-img.eo-img-loaded {
+  animation: eoCenterHoverGlitch 0.5s steps(1) infinite !important;
+}
+@keyframes eoCenterHoverGlitch {
+  0%,100% {
+    clip-path: none;
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    transform: scale(1.08) translateX(0);
+  }
+  15% {
+    clip-path: inset(18% 0 58% 0);
+    filter: grayscale(20%) sepia(70%) hue-rotate(145deg) brightness(1.2) contrast(1.5) saturate(2);
+    transform: scale(1.08) translateX(-6px);
+  }
+  30% {
+    clip-path: inset(55% 0 10% 0);
+    filter: grayscale(80%) sepia(5%) hue-rotate(200deg) brightness(0.6) contrast(1.4);
+    transform: scale(1.08) translateX(6px);
+  }
+  45% {
+    clip-path: inset(35% 0 35% 0);
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    transform: scale(1.08) translateX(-3px);
+  }
+  60% {
+    clip-path: none;
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    transform: scale(1.08) translateX(0);
+  }
+  75% {
+    clip-path: inset(70% 0 3% 0);
+    filter: grayscale(10%) sepia(80%) hue-rotate(155deg) brightness(1.3) contrast(1.6) saturate(2.5);
+    transform: scale(1.08) translateX(5px) skewX(-1deg);
+  }
+  90% {
+    clip-path: none;
+    filter: grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1);
+    transform: scale(1.08) translateX(0);
+  }
+}
+
+.eo-center-shine {
+  display: none;
 }
 .eo-center.eo-center-lit {
   box-shadow: 0 0 30px rgba(0,210,190,0.55), 0 0 70px rgba(0,180,160,0.25), inset 0 0 20px rgba(0,210,190,0.08);
@@ -2662,7 +2720,6 @@ body {
 }
 .eo-center-img.eo-img-loaded {
   opacity: 1;
-  animation: eoCenterFloat 5s ease-in-out infinite;
 }
 
 @keyframes eoCenterFloat {
@@ -2863,8 +2920,20 @@ body {
 .eo-ticket-info {
   display: flex; flex-direction: column; gap: 4px;
 }
+.eo-ticket-qr-col {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0;
+}
+canvas.eo-ticket-qr {
+  display: block; border-radius: 3px;
+  opacity: 0.8; transition: opacity 0.2s;
+}
+.eo-ticket-card:hover canvas.eo-ticket-qr { opacity: 1; }
+.eo-ticket-qr-hint {
+  font-size: 9px; font-weight: 700; letter-spacing: .18em;
+  color: rgba(0,210,190,0.4); text-transform: uppercase;
+}
 .eo-ticket-logo {
-  width: 64px; height: 64px; flex-shrink: 0; opacity: 0.55;
+  width: 52px; height: 52px; flex-shrink: 0; opacity: 0.55;
   transition: opacity 0.2s;
 }
 .eo-ticket-card:hover .eo-ticket-logo { opacity: 0.85; }
@@ -3465,19 +3534,18 @@ body {
 .eo-ta-qr-wrap {
   position: absolute;
   top: 14px; right: 14px;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
   z-index: 10;
 }
-.eo-ta-qr-wrap canvas {
+.eo-ta-qr-wrap img {
   display: block;
-  border-radius: 3px;
-  opacity: 0.75;
-  transition: opacity 0.2s;
+  width: 100px; height: 100px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
 }
-.eo-ta-qr-wrap:hover canvas { opacity: 1; }
 .eo-ta-qr-label {
   font-size: 7px; font-weight: 700;
-  letter-spacing: .18em; color: rgba(255,255,255,0.28);
+  letter-spacing: .18em; color: rgba(255,255,255,0.35);
   text-align: center; white-space: nowrap;
 }
 

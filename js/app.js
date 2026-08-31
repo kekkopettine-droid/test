@@ -1748,7 +1748,7 @@
       <div class="eo-ta-gloss"></div>
       <div class="eo-ta-scan"></div>
       <div class="eo-ta-qr-wrap" id="eoTaQrWrap">
-        <canvas id="eoTaQrCanvas"></canvas>
+        <img id="eoTaQrImg" src="" alt="QR" width="100" height="100"/>
         <div class="eo-ta-qr-label">BIGLIETTO DIGITALE</div>
       </div>
 
@@ -1860,19 +1860,16 @@
       document.getElementById('eoTaChar').textContent       = '';
       document.getElementById('eoTaImmersione').textContent = 'ESPERIENZA ' + ticket.immersion.toUpperCase();
 
-      // QR code — punta a ticket.html con i dati in base64
+      // QR code — chiavi corte per URL più compatto e facilmente scannerizzabile
       const _qrData = btoa(unescape(encodeURIComponent(JSON.stringify({
-        id: ticket.ticketId, character: ticket.character, immersion: ticket.immersion,
-        buyer: ticket.buyer, date: ticket.date, time: ticket.time,
-        duration: ticket.duration, location: ticket.location, epoch: ticket.epoch
+        i: ticket.ticketId, c: ticket.character, m: ticket.immersion,
+        b: ticket.buyer,    d: ticket.date,      t: ticket.time,
+        u: ticket.duration, l: ticket.location,  e: ticket.epoch
       }))));
-      const _qrBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
-        ? 'https://kekkopettine-droid.github.io/test/'
-        : window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
-      const _qrUrl = _qrBase + 'ticket.html?d=' + _qrData;
-      const _qrCanvas = document.getElementById('eoTaQrCanvas');
-      if (typeof QRCode !== 'undefined' && _qrCanvas) {
-        QRCode.toCanvas(_qrCanvas, _qrUrl, { width: 72, margin: 1, color: { dark: '#ffffff', light: '#00000000' } });
+      const _qrTicketUrl = 'https://kekkopettine-droid.github.io/test/ticket.html?d=' + _qrData;
+      const _qrImg = document.getElementById('eoTaQrImg');
+      if (_qrImg) {
+        _qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=' + encodeURIComponent(_qrTicketUrl);
       }
 
       const rowsEl = document.getElementById('eoTaRows');
@@ -2014,17 +2011,6 @@
     eoTicketsOverlay.classList.remove('hidden');
     requestAnimationFrame(() => {
       eoTicketsOverlay.classList.add('eo-cart-visible');
-      if (window.QRCode) {
-        list.querySelectorAll('.eo-ticket-qr').forEach(img => {
-          const t   = eoTickets[+img.dataset.idx];
-          const isH = t.character === 'Adolf Hitler';
-          const tmpC = document.createElement('canvas');
-          QRCode.toCanvas(tmpC, eoTicketUrl(t), {
-            width: 90, margin: 1,
-            color: { dark: isH ? '#cc2020' : '#00d2be', light: isH ? '#0a0000' : '#080e12' }
-          }, err => { if (!err) img.src = tmpC.toDataURL('image/png'); });
-        });
-      }
     });
   }
 
@@ -2048,16 +2034,9 @@
 
   document.getElementById('eoCartClose').addEventListener('click', eoHideCart);
 
-  // ── CENTER PANEL 3D TILT + GLITCH ──
+  // ── CENTER PANEL — 3D + PARALLAX + GLITCH ──
   const _eoCenterEl = document.getElementById('eoCenter');
-  const _eoCenterInner = document.getElementById('eoCenterInner');
-
-  _eoCenterEl.addEventListener('mouseenter', () => {
-    _eoCenterEl.classList.add('eo-center-hover-glitch');
-  });
-  _eoCenterEl.addEventListener('mouseleave', () => {
-    _eoCenterEl.classList.remove('eo-center-hover-glitch');
-  });
+  _eoCenterEl.classList.add('eo-center-3d');
 
   // Periodic glitch
   let _glitchTimer = null;
