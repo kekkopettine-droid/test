@@ -1674,7 +1674,7 @@ body {
 .skip-btn {
   position: absolute;
   bottom: 70px;
-  right: 140px;
+  right: 100px;
   padding: 13px 32px;
   background: rgba(0,200,180,0.55);
   border: 1.5px solid rgba(0,210,190,0.85);
