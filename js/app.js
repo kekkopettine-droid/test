@@ -2054,7 +2054,14 @@
   }
   _scheduleGlitch();
 
+  function _playSoundEffect() {
+    const _se = new Audio('assets/video/sound effetc.mp4');
+    _se.volume = 1;
+    _se.play().catch(() => {});
+  }
+
   function showEpochOverlay(epochIdx) {
+    _playSoundEffect();
     eoEpochIdx = epochIdx;
     eoSelectedChar = -1;
     charViewEpoch = epochIdx;
@@ -2495,6 +2502,7 @@
   }
 
   function hideEpochOverlay() {
+    _playSoundEffect();
     if (_eoEasterEpochIdx !== -1 && _eoEasterHitlerIdx !== -1) {
       eoChars[_eoEasterEpochIdx].splice(_eoEasterHitlerIdx, 1);
       _eoEasterEpochIdx  = -1;
@@ -3427,6 +3435,7 @@
   let dnaGuideTimeouts = [];
 
   function showDNAView() {
+    _playSoundEffect();
     panelL.classList.add('hidden-panel');
     panelR.classList.add('hidden-panel');
     dnaGroup.visible           = true;
@@ -3443,6 +3452,7 @@
   }
 
   function hideDNAView() {
+    _playSoundEffect();
     dnaGroup.visible           = false;
     dnaBackArrow.style.display = 'none';
     dnaGuideTimeouts.forEach(t => clearTimeout(t));
@@ -4085,6 +4095,7 @@
   let cartPreviousEpoch = -1;
 
   function showCartView() {
+    _playSoundEffect();
     cartViewActive = true;
     
     if (typeof ticketsViewActive !== 'undefined' && ticketsViewActive) {
@@ -4125,6 +4136,7 @@
   }
 
   function hideCartView() {
+    _playSoundEffect();
     cartViewActive = false;
     cartPanelEl.classList.add('hidden');
     
@@ -4159,6 +4171,7 @@
   let ticketsViewActive = false;
 
   window.showTicketsView = function() {
+    _playSoundEffect();
     ticketsViewActive = true;
     if (cartViewActive) hideCartView();
     
@@ -4185,6 +4198,7 @@
   }
 
   window.hideTicketsView = function() {
+    _playSoundEffect();
     ticketsViewActive = false;
     const ticketsPanelEl = document.getElementById('ticketsPanel');
     if (ticketsPanelEl) ticketsPanelEl.classList.add('hidden');
