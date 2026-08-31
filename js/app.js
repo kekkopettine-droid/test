@@ -2620,7 +2620,20 @@
       bgVideo.play().catch(e => console.warn('Bg video play error', e));
     }
     const _cs = document.getElementById('colonnaSonora');
-    if (_cs && _cs.paused) _cs.play().catch(e => console.warn('Audio play error', e));
+    if (_cs) {
+      _cs.volume = 0;
+      setTimeout(() => {
+        _cs.play().catch(e => console.warn('Audio play error', e));
+        // Fade in graduale in 3s
+        const _fadeSteps = 60;
+        let _fadeStep = 0;
+        const _fadeInt = setInterval(() => {
+          _fadeStep++;
+          _cs.volume = Math.min(1, _fadeStep / _fadeSteps);
+          if (_fadeStep >= _fadeSteps) clearInterval(_fadeInt);
+        }, 3000 / _fadeSteps);
+      }, 1000);
+    }
   }
 
   function hideTimelineElements() {
