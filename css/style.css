@@ -1693,6 +1693,49 @@ body {
   height: 100%;
   object-fit: cover;
 }
+
+/* ── EPOCH BARS OVERLAY ── */
+#epochBarsOverlay {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 560;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+#epochBarsOverlay.eb-visible { opacity: 1; }
+
+.epoch-bars-3d {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 36%;
+  height: 240px;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  perspective: 750px;
+  perspective-origin: 50% 100%;
+  transform: rotateX(18deg);
+  transform-origin: center bottom;
+}
+
+.eb {
+  flex: 1;
+  min-width: 2px;
+  max-width: 9px;
+  background: linear-gradient(to top,
+    rgba(0,185,165,1)      0%,
+    rgba(0,225,205,0.88)  40%,
+    rgba(80,245,225,0.55) 75%,
+    rgba(180,255,245,0.18) 100%
+  );
+  box-shadow:
+    0 0 4px  rgba(0,210,190,0.65),
+    0 0 14px rgba(0,185,165,0.28),
+    inset 0 1px 0 rgba(200,255,245,0.45);
+  will-change: height;
+}
+
 .skip-btn {
   position: absolute;
   bottom: 70px;

@@ -980,6 +980,53 @@
   _positionTlNodes2D();
   window.addEventListener('resize', _positionTlNodes2D);
 
+  // ── EPOCH BARS OVERLAY ──
+  const _ebOverlay = document.createElement('div');
+  _ebOverlay.id = 'epochBarsOverlay';
+  document.getElementById('hud-container').appendChild(_ebOverlay);
+  const _eb3d = document.createElement('div');
+  _eb3d.className = 'epoch-bars-3d';
+  _ebOverlay.appendChild(_eb3d);
+
+  const N_EB = 260;
+  const _ebBars = [];
+  for (let i = 0; i < N_EB; i++) {
+    const el = document.createElement('div');
+    el.className = 'eb';
+    _eb3d.appendChild(el);
+    const cx = (i / (N_EB - 1) - 0.5) * 2; // -1..1, 0=centro
+    _ebBars.push({
+      el,
+      phase: Math.random() * Math.PI * 2,
+      freq:  0.3 + Math.random() * 0.9,
+      baseH: 30 + 80 * Math.pow(1 - Math.abs(cx), 1.4) + Math.random() * 25,
+      ampH:  12 + Math.random() * 38,
+    });
+  }
+
+  let _ebRaf = null;
+  let _ebActive = false;
+
+  function _startEbAnimation() {
+    _ebActive = true;
+    _ebOverlay.classList.add('eb-visible');
+    const tick = (t) => {
+      if (!_ebActive) return;
+      _ebBars.forEach(b => {
+        const h = b.baseH + b.ampH * Math.sin(t * 0.001 * b.freq + b.phase);
+        b.el.style.height = Math.max(4, h) + 'px';
+      });
+      _ebRaf = requestAnimationFrame(tick);
+    };
+    _ebRaf = requestAnimationFrame(tick);
+  }
+
+  function _stopEbAnimation() {
+    _ebActive = false;
+    _ebOverlay.classList.remove('eb-visible');
+    if (_ebRaf) { cancelAnimationFrame(_ebRaf); _ebRaf = null; }
+  }
+
   // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
   const guideText  = "";
   const GUIDE_R    = 22, GUIDE_Y = 7.5;
@@ -2601,7 +2648,8 @@
       });
     }, nodeDelay);
     tlDnaGroups.forEach(g => { g.visible = true; });
-    
+    _startEbAnimation();
+
     // --- NASCONDI AMBIENTE ANIMUS E MOSTRA OGGETTI STORICI ---
     // Manteniamo il threeCanvas visibile (essendo ora trasparente)
     const canvas = document.getElementById('threeCanvas');
@@ -2621,6 +2669,7 @@
   }
 
   function hideTimelineElements() {
+    _stopEbAnimation();
     tlArcLine.visible = false;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
     tlTickObjs.forEach(t => { t.visible = false; });
