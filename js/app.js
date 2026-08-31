@@ -4689,13 +4689,13 @@
   }
 
   // --- CINEMATIC TRANSITION LOGIC ---
-  function playCinematicTransition() {
+  function playCinematicTransition(skipIntro) {
     const overlay = document.getElementById('cinematicOverlay');
     const video = document.getElementById('cinematicVideo');
     const skipBtn = document.getElementById('skipCinematicBtn');
     const eyelidTop = document.querySelector('.eyelid-top');
     const eyelidBottom = document.querySelector('.eyelid-bottom');
-    
+
     if (!overlay || !video) {
       doFallbackTransition();
       return;
@@ -4711,6 +4711,12 @@
     const _pR = document.getElementById('panelR');
     if (_pL) { _pL.style.transition = 'opacity 0.35s ease'; _pL.style.opacity = '0'; _pL.style.pointerEvents = 'none'; }
     if (_pR) { _pR.style.transition = 'opacity 0.35s ease'; _pR.style.opacity = '0'; _pR.style.pointerEvents = 'none'; }
+
+    // Se skipIntro, vai direttamente al video senza sync screen né palpebre
+    if (skipIntro) {
+      _startVideo();
+      return;
+    }
 
     // ── FASE 1: mostra la sync screen sul display (la stessa del flusso acquisto) ──
     const syncScreenEl2 = document.getElementById('syncScreen');
@@ -4764,6 +4770,20 @@
       // ── FASE 3: 1550ms chiusura + 2000ms buio → avvia video ──
       setTimeout(() => {
         if (syncScreenEl2) syncScreenEl2.classList.add('hidden-panel');
+        _startVideo();
+      }, 3550); // 1550ms chiusura + 2000ms buio
+    }, 2800); // attesa sync screen completa
+  }
+
+    function _startVideo() {
+    const overlay = document.getElementById('cinematicOverlay');
+    const video = document.getElementById('cinematicVideo');
+    const skipBtn = document.getElementById('skipCinematicBtn');
+    const eyelidTop = document.querySelector('.eyelid-top');
+    const eyelidBottom = document.querySelector('.eyelid-bottom');
+    let fallbackTriggered = false;
+    let fallbackTimeout   = null;
+    let onVideoError      = null;
 
         overlay.style.zIndex = '9999';
         overlay.style.opacity = '1';
@@ -4970,9 +4990,6 @@
         showTimelineView();
       }
     }
-    
-        }, 3550); // 1550ms chiusura + 2000ms buio
-      }, 2800); // attesa sync screen completa
   }
 
 
@@ -4988,7 +5005,7 @@
   if (_introEl) { _introEl.style.opacity = '0'; _introEl.style.pointerEvents = 'none'; }
   panelL.classList.add('hidden-panel');
   panelR.classList.add('hidden-panel');
-  setTimeout(() => { playCinematicTransition(); }, 80);
+  setTimeout(() => { playCinematicTransition(true); }, 80);
   // ── END SKIP ──
 
   animate();
