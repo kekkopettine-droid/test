@@ -2560,6 +2560,7 @@
     tlArcLine.visible = true;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = true;
     tlTickObjs.forEach(t => { t.visible = true; });
+    _positionTlNodes2D(); // ricalcola ora che la camera è pronta
     tlNodeEls.forEach((el) => {
       el.style.opacity = '1';
       el.style.pointerEvents = 'auto';
