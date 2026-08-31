@@ -2220,8 +2220,17 @@
         imgEl.classList.remove('eo-img-loaded');
         imgEl.style.display = ch.img ? '' : 'none';
         if (ch.img) {
+          imgEl.classList.remove('eo-img-materializing');
           imgEl.src = ch.img;
-          imgEl.onload = () => imgEl.classList.add('eo-img-loaded');
+          imgEl.onload = () => {
+            imgEl.classList.add('eo-img-loaded');
+            imgEl.classList.add('eo-img-materializing');
+            const onEnd = () => {
+              imgEl.removeEventListener('animationend', onEnd);
+              imgEl.classList.remove('eo-img-materializing');
+            };
+            imgEl.addEventListener('animationend', onEnd);
+          };
           imgEl.onerror = () => { imgEl.style.display = 'none'; };
         }
         document.getElementById('eoCenterName').style.display = '';

@@ -2749,6 +2749,25 @@ body {
   opacity: 1;
 }
 
+/* Materializzazione glitch immagine personaggio */
+@keyframes eoCenterMaterialize {
+  0%   { opacity:0;   clip-path:inset(0 100% 0 0);    filter:brightness(8) hue-rotate(90deg) saturate(3);  transform:scale(1.08) translateX(0); }
+  8%   { opacity:1;   clip-path:inset(0 0 72% 0);      filter:brightness(10) hue-rotate(60deg);             transform:scale(1.08) translateX(-10px); }
+  16%  { opacity:0;   clip-path:inset(55% 0 12% 0);   filter:brightness(5);                                transform:scale(1.08) translateX(8px); }
+  24%  { opacity:1;   clip-path:inset(12% 0 60% 0);   filter:brightness(12) hue-rotate(200deg) saturate(4); transform:scale(1.08) translateX(-7px); }
+  32%  { opacity:0.2; clip-path:inset(0 38% 0 0);     filter:brightness(6);                                transform:scale(1.08) translateX(5px); }
+  40%  { opacity:1;   clip-path:inset(68% 0 4% 0);    filter:brightness(9) hue-rotate(300deg);             transform:scale(1.08) translateX(-4px); }
+  50%  { opacity:0.6; clip-path:inset(28% 0 28% 0);   filter:brightness(4);                                transform:scale(1.08) translateX(3px); }
+  60%  { opacity:1;   clip-path:inset(8% 0 52% 0);    filter:brightness(3);                                transform:scale(1.08) translateX(-2px); }
+  70%  { opacity:0.85;clip-path:none;                 filter:brightness(2) grayscale(20%);                 transform:scale(1.08) translateX(1px); }
+  82%  { opacity:1;   clip-path:none;                 filter:brightness(1.4) grayscale(40%);               transform:scale(1.08) translateX(0); }
+  92%  { opacity:0.97;clip-path:none;                 filter:brightness(1.1) grayscale(50%);               transform:scale(1.08); }
+  100% { opacity:1;   clip-path:none;                 filter:grayscale(55%) sepia(30%) hue-rotate(175deg) brightness(0.78) contrast(1.1); transform:scale(1.08); }
+}
+.eo-center-img.eo-img-materializing {
+  animation: eoCenterMaterialize 1.2s steps(1) forwards !important;
+}
+
 @keyframes eoCenterFloat {
   0%, 100% { transform: scale(1.08) translateY(0px); }
   50%       { transform: scale(1.08) translateY(-14px); }
