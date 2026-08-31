@@ -1673,23 +1673,26 @@ body {
 }
 .skip-btn {
   position: absolute;
-  bottom: 30px;
-  right: 40px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 255, 255, 0.5);
-  color: rgba(200, 255, 255, 0.9);
-  padding: 8px 16px;
+  bottom: 70px;
+  right: 80px;
+  padding: 13px 32px;
+  background: rgba(0,200,180,0.55);
+  border: 1.5px solid rgba(0,210,190,0.85);
+  color: #fff;
   font-family: 'Rajdhani', sans-serif;
   font-size: var(--C1);
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   cursor: pointer;
   z-index: 10000;
-  transition: opacity 0.5s ease, background 0.2s ease, border-color 0.2s ease;
+  transition: opacity 0.5s ease, background .2s, box-shadow .2s, border-color .2s;
   pointer-events: auto;
 }
 .skip-btn:hover {
-  background: rgba(0, 255, 255, 0.2);
-  border-color: rgba(0, 255, 255, 1);
+  background: rgba(0,210,190,0.75);
+  border-color: rgba(0,220,200,1);
+  box-shadow: 0 0 22px rgba(0,210,190,0.45);
   color: #fff;
 }
 .skip-btn.hidden {
