@@ -1472,7 +1472,7 @@
 
   // Avanti buttons
   document.getElementById('eoAvantiChar').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
+    if (window.audioEngine) window.audioEngine.playCharSelect();
     eoSlideTab('customize');
   });
   document.getElementById('eoAvantiCust').addEventListener('click', () => {

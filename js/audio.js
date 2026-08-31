@@ -87,6 +87,22 @@ window.audioEngine = (function () {
       click_noise(t + 0.7, 0.15, 0.08, 2000);
     },
 
+    // Selezione personaggio storico — conferma solenne
+    playCharSelect() {
+      const c = ac();
+      const t = c.currentTime;
+      // Swoosh iniziale
+      click_noise(t, 0.12, 0.18, 1200);
+      // Accordo discendente profondo
+      tone(880, 'sine',     t + 0.04, 0.55, 0.20, 440);
+      tone(660, 'sine',     t + 0.10, 0.50, 0.16, 330);
+      tone(440, 'sine',     t + 0.18, 0.60, 0.22, 220);
+      // Risonanza finale grave
+      tone(110, 'triangle', t + 0.35, 0.70, 0.18, 90);
+      // Coda di statica soft
+      click_noise(t + 0.55, 0.18, 0.07, 600);
+    },
+
     // Errore — tono discendente
     playError() {
       const t = ac().currentTime;
