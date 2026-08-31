@@ -2619,6 +2619,8 @@
       bgContainer.classList.remove('hidden');
       bgVideo.play().catch(e => console.warn('Bg video play error', e));
     }
+    const _cs = document.getElementById('colonnaSonora');
+    if (_cs && _cs.paused) _cs.play().catch(e => console.warn('Audio play error', e));
   }
 
   function hideTimelineElements() {
@@ -2663,6 +2665,8 @@
     
     if (typeof gridGroup !== 'undefined') gridGroup.visible = true;
     if (typeof bgGroup !== 'undefined') bgGroup.visible = true;
+    const _cs2 = document.getElementById('colonnaSonora');
+    if (_cs2 && !_cs2.paused) _cs2.pause();
   }
 
 
