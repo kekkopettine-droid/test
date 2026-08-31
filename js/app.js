@@ -4822,9 +4822,8 @@
           cleanupDone = true;
           if (rafid) cancelAnimationFrame(rafid);
 
-          // Rimuovi i listener subito
-          document.removeEventListener('click', skipHandler);
-          document.removeEventListener('keydown', skipHandler);
+          // Rimuovi i listener
+          skipBtn.onclick = null;
           video.removeEventListener('error', onVideoError, true);
 
           // ── CHIUDI GLI OCCHI (come la transizione iniziale) ──
@@ -4896,15 +4895,13 @@
           }, 620);
         };
 
-        const skipHandler = (e) => {
-          if (e.type === 'keydown' && e.key !== 'Escape') return;
-          cleanup();
-        };
-        
+        skipBtn._skipCleanup = cleanup;
+        skipBtn.onclick = () => cleanup();
+
         const rafTimeUpdate = () => {
           if (!cleanupDone) {
             // Avviamo la transizione 1 secondo prima della fine, così
-            // c'è tutto il tempo di fare un bellissimo crossfade incrociato 
+            // c'è tutto il tempo di fare un bellissimo crossfade incrociato
             // mentre entrambi i video sono in playback fluido
             if (video.duration && video.currentTime >= video.duration - 1.0) {
               cleanup();
@@ -4914,8 +4911,6 @@
           }
         };
 
-        document.addEventListener('click', skipHandler);
-        document.addEventListener('keydown', skipHandler);
         rafid = requestAnimationFrame(rafTimeUpdate);
         
         // Se il video finisce del tutto (es. lag), assicuriamoci di pulire
