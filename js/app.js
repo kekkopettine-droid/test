@@ -2584,7 +2584,6 @@
     });
     el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
     el.addEventListener('pointerdown', () => {
-      if (window.audioEngine) window.audioEngine.playClick();
       hideTimelineElements();
       showEpochOverlay(s);
     });
