@@ -2579,7 +2579,6 @@
   // Click + hover sui nodi
   tlNodeEls.forEach((el, s) => {
     el.addEventListener('mouseenter', () => {
-      if (window.audioEngine) window.audioEngine.playHover();
       tlDnaHovers[s] = true;
     });
     el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
