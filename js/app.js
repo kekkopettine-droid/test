@@ -2250,6 +2250,19 @@
   function _eoHitlerEgg(left, avantiBtn) {
     const overlay = document.getElementById('epochOverlay');
 
+    // Fade out colonna sonora
+    const _csEgg = document.getElementById('colonnaSonora');
+    if (_csEgg && !_csEgg.paused) {
+      const _volStart = _csEgg.volume;
+      let _volStep = 0;
+      const _volSteps = 30;
+      const _fadeOut = setInterval(() => {
+        _volStep++;
+        _csEgg.volume = Math.max(0, _volStart * (1 - _volStep / _volSteps));
+        if (_volStep >= _volSteps) { clearInterval(_fadeOut); _csEgg.pause(); _csEgg.volume = 0; }
+      }, 800 / _volSteps);
+    }
+
     // Red glitch flash sequence
     const flash = document.createElement('div');
     flash.className = 'eo-easter-flash';
