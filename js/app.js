@@ -4982,8 +4982,7 @@
 
 
 
-  // ── SKIP CURVED DISPLAY: start directly from timeline video ──
-  // Remove this block and restore boot sequence if curved display is needed again.
+  // ── SKIP CURVED DISPLAY: start with cinematic video then show timeline ──
   hasBooted = true;
   window.experiencesRevealed = true;
   gridGroup.visible = false;
@@ -4994,7 +4993,7 @@
   if (_introEl) { _introEl.style.opacity = '0'; _introEl.style.pointerEvents = 'none'; }
   panelL.classList.add('hidden-panel');
   panelR.classList.add('hidden-panel');
-  setTimeout(() => { showTimelineView(); }, 80);
+  setTimeout(() => { playCinematicTransition(); }, 80);
   // ── END SKIP ──
 
   animate();
