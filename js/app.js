@@ -980,51 +980,51 @@
   _positionTlNodes2D();
   window.addEventListener('resize', _positionTlNodes2D);
 
-  // ── EPOCH BARS OVERLAY ──
-  const _ebOverlay = document.createElement('div');
-  _ebOverlay.id = 'epochBarsOverlay';
-  document.getElementById('hud-container').appendChild(_ebOverlay);
-  const _eb3d = document.createElement('div');
-  _eb3d.className = 'epoch-bars-3d';
-  _ebOverlay.appendChild(_eb3d);
+  // ── 3 BAR PER EPOCA ──
+  // Altezze e durate di animazione pre-calcolate per ogni gruppo
+  const _ebGroupDefs = [
+    [{h:55,d:2.8},{h:80,d:3.5},{h:45,d:2.2}],
+    [{h:70,d:3.1},{h:50,d:2.5},{h:90,d:3.8}],
+    [{h:85,d:2.6},{h:65,d:3.3},{h:75,d:2.9}],
+    [{h:60,d:3.6},{h:88,d:2.4},{h:52,d:3.0}],
+    [{h:78,d:2.7},{h:48,d:3.4},{h:68,d:2.1}],
+  ];
+  const _ebGroups = [];
+  for (let s = 0; s < 5; s++) {
+    const grp = document.createElement('div');
+    grp.className = 'eb-group';
+    grp.dataset.idx = s;
+    _ebGroupDefs[s].forEach((def, b) => {
+      const bar = document.createElement('div');
+      bar.className = 'eb-single';
+      bar.style.height = def.h + 'px';
+      bar.style.animationDuration = def.d + 's';
+      bar.style.animationDelay = (b * 0.4) + 's';
+      grp.appendChild(bar);
+    });
+    document.getElementById('hud-container').appendChild(grp);
+    _ebGroups.push(grp);
+  }
 
-  const N_EB = 260;
-  const _ebBars = [];
-  for (let i = 0; i < N_EB; i++) {
-    const el = document.createElement('div');
-    el.className = 'eb';
-    _eb3d.appendChild(el);
-    const cx = (i / (N_EB - 1) - 0.5) * 2; // -1..1, 0=centro
-    _ebBars.push({
-      el,
-      phase: Math.random() * Math.PI * 2,
-      freq:  0.3 + Math.random() * 0.9,
-      baseH: 30 + 80 * Math.pow(1 - Math.abs(cx), 1.4) + Math.random() * 25,
-      ampH:  12 + Math.random() * 38,
+  // Posiziona i gruppi bar alla X dell'epoca, Y fissa alla banda video
+  const EB_BAND_Y = 0.56; // 56% dall'alto — dove si trova la banda del video
+  function _positionEbGroups() {
+    const v = new THREE.Vector3();
+    _tlNodeWorldPos.forEach((wp, s) => {
+      v.copy(wp).project(camera);
+      const x = ((v.x + 1) / 2) * window.innerWidth;
+      _ebGroups[s].style.left = x + 'px';
+      _ebGroups[s].style.top  = (EB_BAND_Y * window.innerHeight) + 'px';
     });
   }
+  window.addEventListener('resize', _positionEbGroups);
 
-  let _ebRaf = null;
-  let _ebActive = false;
-
-  function _startEbAnimation() {
-    _ebActive = true;
-    _ebOverlay.classList.add('eb-visible');
-    const tick = (t) => {
-      if (!_ebActive) return;
-      _ebBars.forEach(b => {
-        const h = b.baseH + b.ampH * Math.sin(t * 0.001 * b.freq + b.phase);
-        b.el.style.height = Math.max(4, h) + 'px';
-      });
-      _ebRaf = requestAnimationFrame(tick);
-    };
-    _ebRaf = requestAnimationFrame(tick);
+  function _showEbGroups() {
+    _positionEbGroups();
+    _ebGroups.forEach(g => g.classList.add('eb-visible'));
   }
-
-  function _stopEbAnimation() {
-    _ebActive = false;
-    _ebOverlay.classList.remove('eb-visible');
-    if (_ebRaf) { cancelAnimationFrame(_ebRaf); _ebRaf = null; }
+  function _hideEbGroups() {
+    _ebGroups.forEach(g => { g.classList.remove('eb-visible'); g.classList.remove('eb-hover'); });
   }
 
   // Testo guida curvo — un CSS3DObject per carattere, disposti ad arco lungo il vetro
@@ -2592,8 +2592,12 @@
     el.addEventListener('mouseenter', () => {
       if (window.audioEngine) window.audioEngine.playHover();
       tlDnaHovers[s] = true;
+      _ebGroups[s].classList.add('eb-hover');
     });
-    el.addEventListener('mouseleave', () => { tlDnaHovers[s] = false; });
+    el.addEventListener('mouseleave', () => {
+      tlDnaHovers[s] = false;
+      _ebGroups[s].classList.remove('eb-hover');
+    });
     el.addEventListener('pointerdown', () => {
       if (window.audioEngine) window.audioEngine.playClick();
       hideTimelineElements();
@@ -2648,7 +2652,7 @@
       });
     }, nodeDelay);
     tlDnaGroups.forEach(g => { g.visible = true; });
-    _startEbAnimation();
+    _showEbGroups();
 
     // --- NASCONDI AMBIENTE ANIMUS E MOSTRA OGGETTI STORICI ---
     // Manteniamo il threeCanvas visibile (essendo ora trasparente)
@@ -2669,7 +2673,7 @@
   }
 
   function hideTimelineElements() {
-    _stopEbAnimation();
+    _hideEbGroups();
     tlArcLine.visible = false;
     if (tlArcLine.userData.glow) tlArcLine.userData.glow.visible = false;
     tlTickObjs.forEach(t => { t.visible = false; });
