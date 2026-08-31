@@ -1472,7 +1472,7 @@
 
   // Avanti buttons
   document.getElementById('eoAvantiChar').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playCharSelect();
+    if (window.audioEngine) window.audioEngine.playClick();
     eoSlideTab('customize');
   });
   document.getElementById('eoAvantiCust').addEventListener('click', () => {
@@ -2209,7 +2209,9 @@
         </div>`;
       card.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
       card.addEventListener('click', () => {
-        if (window.audioEngine) window.audioEngine.playClick();
+        const _selAudio = new Audio('assets/video/selezione personaggio.mp4');
+        _selAudio.volume = 1;
+        _selAudio.play().catch(() => {});
         eoSelectedChar = i;
         left.querySelectorAll('.eo-char-card').forEach(c => c.classList.remove('eo-selected'));
         card.classList.add('eo-selected');
