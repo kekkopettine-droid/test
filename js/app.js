@@ -1866,7 +1866,10 @@
         buyer: ticket.buyer, date: ticket.date, time: ticket.time,
         duration: ticket.duration, location: ticket.location, epoch: ticket.epoch
       }))));
-      const _qrUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'ticket.html?d=' + _qrData;
+      const _qrBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+        ? 'https://kekkopettine-droid.github.io/test/'
+        : window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+      const _qrUrl = _qrBase + 'ticket.html?d=' + _qrData;
       const _qrCanvas = document.getElementById('eoTaQrCanvas');
       if (typeof QRCode !== 'undefined' && _qrCanvas) {
         QRCode.toCanvas(_qrCanvas, _qrUrl, { width: 72, margin: 1, color: { dark: '#ffffff', light: '#00000000' } });
