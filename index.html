@@ -6,7 +6,7 @@
 <title>ANIMUS INTERFACE</title>
 
 <!-- IMPORT DEI FILE CSS -->
-<link rel="stylesheet" href="css/style.css?v=143">
+<link rel="stylesheet" href="css/style.css?v=178">
 
 </head>
 <body>
@@ -27,7 +27,21 @@
 <div id="hud-container">
   
   <div class="abstergo-container" id="abstergoLogo">
+    <svg class="welcome-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="700" height="185" style="margin-bottom:0;">
+      <g transform="translate(14, 9) scale(0.20)">
+        <path d="M214.902 47.301 C 198.522 73.203,184.322 95.656,183.347 97.197 C 182.372 98.739,180.634 101.490,179.484 103.312 C 178.334 105.134,176.483 108.057,175.370 109.809 C 174.258 111.561,164.284 127.325,153.206 144.841 C 142.129 162.357,126.214 187.521,117.839 200.761 C 109.465 214.001,102.557 224.979,102.489 225.157 C 102.390 225.416,112.043 225.466,151.966 225.415 L 201.566 225.350 215.386 203.822 C 222.986 191.981,238.989 167.045,250.946 148.408 C 262.904 129.771,273.057 113.949,273.510 113.248 C 273.962 112.548,275.725 109.813,277.429 107.171 L 280.525 102.367 262.832 51.884 C 253.100 24.119,245.036 1.133,244.911 0.805 C 244.713 0.282,241.005 6.027,214.902 47.301" fill="rgba(255,255,255,0.75)" />
+        <path d="M247.575 176.557 L 222.687 218.317 241.172 248.075 C 251.338 264.443,270.849 295.863,284.530 317.898 L 309.402 357.962 354.707 357.962 L 400.012 357.962 399.647 357.389 C 399.446 357.073,370.769 306.885,335.919 245.860 C 301.070 184.834,272.536 134.880,272.510 134.851 C 272.484 134.822,261.263 153.589,247.575 176.557" fill="rgba(255,255,255,0.95)" />
+        <path d="M34.749 257.006 C 28.069 268.181,17.575 285.714,11.429 295.968 C 5.283 306.221,0.255 314.677,0.255 314.758 C 0.255 314.838,60.503 314.904,134.140 314.904 C 207.777 314.904,268.025 314.840,268.025 314.761 C 268.025 314.681,261.213 303.417,252.886 289.729 C 244.559 276.040,233.915 258.535,229.232 250.828 L 220.718 236.815 133.807 236.751 L 46.896 236.687 34.749 257.006" fill="rgba(255,255,255,0.55)" />
+      </g>
+      <line x1="102" y1="15" x2="102" y2="80" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+      <text x="116" y="52" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="700" letter-spacing="1" fill="#ffffff">Abstergo</text>
+      <text x="117" y="74" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="2" fill="rgba(255,255,255,0.75)">Industries</text>
+    </svg>
   </div>
+
+  <div class="animus-title-container" id="animusTitle">ANIMUS</div>
+
+  <button class="animus-enter-btn" id="animusSyncBtn" style="opacity:0; pointer-events:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10000;">SINCRONIZZATI</button>
 
   <!-- PANNELLO 1: SINISTRA -->
   <div class="panel" id="panelL" style="display: none !important;">
@@ -97,17 +111,13 @@
     <div class="welcome-title">BENVENUTO NELL'ANIMUS</div>
   </div>
 
-  <!-- PANNELLO INTRODUTTIVO (Mostrato dopo il boot) -->
-  <div class="panel" id="introTextPanel" style="width: 700px; text-align: center; pointer-events: none; opacity: 0;">
-    <div class="panel-header" style="justify-content: center; margin-bottom: 20px;">
-      <span class="header-text" style="font-size: 26px;">PROGETTO ANIMUS</span>
-    </div>
-    <div class="panel-text" style="font-size: 18px; line-height: 1.8; margin-bottom: 30px;">
-      Abstergo Industries ti dà il benvenuto in una nuova era della scoperta. Ti offriamo l'opportunità esclusiva di provare l'Animus, un macchinario rivoluzionario in grado di decodificare il DNA e farti rivivere i ricordi del passato in prima persona.<br><br>
-      Scegli l'esperienza immersiva, prenota il tuo biglietto e sarai invitato presso le nostre strutture per iniziare il tuo viaggio nel tempo.
-    </div>
-    <button id="btnExploreExperiences" class="btn-back" style="align-self: center; font-size: 18px; padding: 14px 40px; margin: 0 auto; display: block;">ESPLORA L'ESPERIENZA</button>
+  <!-- Stub per btnExploreExperiences (usato dal codice JS) -->
+  <div id="introTextPanel" style="display:none;pointer-events:none;opacity:0;">
+    <button id="btnExploreExperiences" style="display:none;"></button>
   </div>
+
+  <!-- BOTTONE AVVIA ESPERIENZA -->
+  <button id="btnStartExperience" class="skip-btn" style="opacity:0; pointer-events:none;">SALTA</button>
 
   <!-- FLOATING TIMELINE -->
   <div id="floatingTimeline" class="hidden-panel" style="width: 2500px; text-align: center; font-family: 'Rajdhani', sans-serif;">
@@ -186,10 +196,10 @@
 <script src="js/transition.js?v=5"></script>
 
 <!-- AUDIO ENGINE -->
-<script src="js/audio.js?v=3"></script>
+<script src="js/audio.js?v=8"></script>
 
 <!-- APP PRINCIPALE -->
-<script src="js/app.js?v=175"></script>
+<script src="js/app.js?v=278"></script>
 
 </body>
 </html>

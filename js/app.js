@@ -97,7 +97,7 @@
     if (renderer) {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setClearColor(0x1a1a1a, 1);
+      renderer.setClearColor(0x000000, 1);
     }
   });
 
@@ -118,7 +118,9 @@
         e.target.closest('.cart-panel') || e.target.closest('.payment-panel') ||
         e.target.closest('.cart-btn') || e.target.closest('.tl-node-item') ||
         e.target.closest('.dna-back-arrow') ||
-        e.target.closest('.timeline-node') || e.target.closest('.btn-return-animus')) {
+        e.target.closest('.timeline-node') || e.target.closest('.btn-return-animus') ||
+        e.target.closest('.skip-btn') || e.target.closest('.curved-avanti-btn') ||
+        e.target.closest('.animus-enter-btn')) {
       return;
     }
     
@@ -164,6 +166,7 @@
   ══════════════════════════════════════════════ */
   const bgGroup = new THREE.Group();
   scene.add(bgGroup);
+  bgGroup.visible = false;
 
   // Materiali (roughness alta per eliminare i riflessi circolari/ovali della luce sul muro)
   const metalMat = new THREE.MeshStandardMaterial({ color: 0x0f0f0f, metalness: 0.2, roughness: 1.0 });
@@ -269,7 +272,7 @@
   const gridRadius = 25;
   const gridGroup = new THREE.Group();
   gridGroup.position.set(0, 0, 5); // Spostato un po' più vicino
-  gridGroup.rotation.y = Math.PI; // Parte da sinistra completamente fuori campo
+  gridGroup.rotation.y = 0; // Display già frontale, nessuna rotazione
   scene.add(gridGroup);
 
   // IL VETRO (Arco molto ampio per coprire i lati vuoti)
@@ -305,9 +308,10 @@
   });
   gridGroup.add(new THREE.Mesh(screenGlassGeo, screenGlassMat));
 
+
   // Overlay luminoso ciano: parte spento, si attiva dopo il boot per simulare l'accensione
   const glassActivatedMat = new THREE.MeshBasicMaterial({
-    color: 0x004466,
+    color: 0x334433,
     transparent: true,
     opacity: 0,
     side: THREE.BackSide,
@@ -336,16 +340,16 @@
   gridGroup.add(bottomBezel);
 
   // STRISCE LUMINOSE CIANO (Alla base e in cima al vetro)
-  const bottomGlowMat = new THREE.MeshBasicMaterial({ 
-    color: 0x00ffff, 
+  const bottomGlowMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
     transparent: true, 
     opacity: 0,
     side: THREE.DoubleSide,
     depthTest: false,
     blending: THREE.AdditiveBlending
   });
-  const topGlowMat = new THREE.MeshBasicMaterial({ 
-    color: 0x00ffff, 
+  const topGlowMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
     transparent: true, 
     opacity: 0,
     side: THREE.DoubleSide,
@@ -370,8 +374,8 @@
   gridGroup.add(topGlowLine);
 
   // GRIGLIA SOTTILE SUL VETRO (Tracciata solo sull'arco)
-  const gridMatHoriz = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
-  const gridMatVert = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending });
+  const gridMatHoriz = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
+  const gridMatVert = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending });
 
   const thetaCenter = Math.PI * 1.5;
   const panelArcStart = thetaCenter - (arcLength / 2);
@@ -451,7 +455,7 @@
 
   /* ── ONDA DI SCANSIONE OLOGRAFICA ── */
   const scanMat = new THREE.MeshBasicMaterial({
-    color: 0x00ffff, transparent: true, opacity: 0,
+    color: 0xffffff, transparent: true, opacity: 0,
     side: THREE.DoubleSide, depthTest: false,
     blending: THREE.AdditiveBlending
   });
@@ -467,15 +471,199 @@
   const spread = 0.42;
   const panelRadiusCSS = 24.8; // Appena dentro il vetro
 
-  // 1) LOGO - centrato sopra le due schede
+  // 1) LOGO - CSS3DObject sulla superficie curva del display
   const logoEl = document.getElementById('abstergoLogo');
+  const thetaLogo = thetaCenter;
   const cssLogo = new THREE.CSS3DObject(logoEl);
-  // Usa thetaCenter per stare esattamente al centro del display
-  const thetaLogo = thetaCenter - 0.7;
-  cssLogo.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 8.0, Math.sin(thetaLogo) * panelRadiusCSS);
-  cssLogo.scale.set(0.013, 0.013, 0.013);
-  cssLogo.lookAt(0, 8.0, 0);
+  cssLogo.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 1.2, Math.sin(thetaLogo) * panelRadiusCSS);
+  cssLogo.scale.set(0.030, 0.030, 0.030);
+  cssLogo.lookAt(0, 1.2, 0);
   gridGroup.add(cssLogo);
+
+  // 1b) SCRITTA ANIMUS - appare dopo il logo
+  const animusTitleEl = document.getElementById('animusTitle');
+  animusTitleEl.style.opacity = '0';
+  const cssAnimusTitle = new THREE.CSS3DObject(animusTitleEl);
+  cssAnimusTitle.position.set(Math.cos(thetaLogo) * panelRadiusCSS, 1.2, Math.sin(thetaLogo) * panelRadiusCSS);
+  cssAnimusTitle.scale.set(0.030, 0.030, 0.030);
+  cssAnimusTitle.lookAt(0, 1.2, 0);
+  gridGroup.add(cssAnimusTitle);
+
+  // BOTTONE "SINCRONIZZATI" — CSS3DObject al centro del display
+  const _animusSyncBtn = document.getElementById('animusSyncBtn');
+  if (_animusSyncBtn) {
+    _animusSyncBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _animusSyncBtn.style.opacity = '0';
+      _animusSyncBtn.style.pointerEvents = 'none';
+      const _saltaBtn = document.getElementById('btnStartExperience');
+      if (_saltaBtn) { _saltaBtn.style.transition = 'opacity 0.3s ease'; _saltaBtn.style.opacity = '0'; _saltaBtn.style.pointerEvents = 'none'; }
+      // Audio "selezione personaggio" subito al click
+      setTimeout(() => {
+        const _syncClickAudio = new Audio('assets/video/selezione personaggio.mp4');
+        _syncClickAudio.volume = 1.0;
+        _syncClickAudio.play().catch(() => {});
+      }, 400);
+      playCinematicTransition(false);
+    });
+  }
+
+  // DATI STORICI sul display — compaiono con il logo
+  const _histData = [
+    { text: '1191  ·  TERZA CROCIATA',                tOff: -0.55, y:  9.2 },
+    { text: 'φ  1.618033  ·  SEZIONE AUREA',          tOff:  0.55, y:  8.8 },
+    { text: '43°46′N  11°15′E  ·  FIRENZE',           tOff: -0.62, y:  8.0 },
+    { text: 'XIV  ·  SECOLO  ·  ORDINE  TEMPLARE',    tOff:  0.60, y:  7.5 },
+    { text: 'ATCG  AAGTCCTAGCTA  GCCT  TAAG',         tOff: -0.50, y:  6.5 },
+    { text: '1099  ·  CADUTA  GERUSALEMME',            tOff:  0.58, y:  6.0 },
+    { text: 'Δ  0.00312  //  ANOMALIA  RILEVATA',     tOff: -0.57, y:  5.0 },
+    { text: '51°30′N  0°7′W  ·  LONDRA  1868',        tOff:  0.54, y:  4.5 },
+    { text: '1476  ·  RINASCIMENTO  ·  ITALIA',       tOff: -0.50, y:  3.5 },
+    { text: '∑  SYNC  97.8%  ·  CALIBRAZIONE',        tOff:  0.52, y:  3.0 },
+    { text: 'MMXII  //  ACCESS  GRANTED  ✦',          tOff: -0.58, y:  2.0 },
+    { text: '48°51′N  2°21′E  ·  PARIGI  1789',       tOff:  0.60, y:  1.5 },
+    { text: '1776  ·  RIVOLUZIONE  AMERICANA',        tOff: -0.53, y:  0.5 },
+    { text: 'Ω  PROTOCOLLO  SIGMA  7  ·  ATTIVO',     tOff:  0.56, y: -0.2 },
+    { text: 'SEQUENZA  EDEN  —  FRAMMENTO  4',        tOff: -0.55, y: -1.2 },
+    { text: '40°51′N  14°16′E  ·  NAPOLI  1503',      tOff:  0.58, y: -2.0 },
+    { text: '1943  ·  OPERAZIONE  SPITFIRE',           tOff: -0.50, y: -3.0 },
+    { text: '⊕  ANIMUS  3.28  ·  ONLINE',             tOff:  0.55, y: -3.5 },
+    { text: '31°46′N  35°13′E  ·  GERUSALEMME',      tOff: -0.62, y: -4.5 },
+    { text: 'MMCXCI  ·  CRUX  ANSATA  ·  Ψ',         tOff:  0.60, y: -5.0 },
+    { text: '1511  ·  GUERRA  DELLA  LEGA',           tOff: -0.53, y: -6.0 },
+    { text: 'Π  3.14159  ·  RATIO  STELLARE',         tOff:  0.54, y: -6.5 },
+    { text: 'ACCESS  LVL  ★★★★☆  //  ABSTERGO',      tOff: -0.57, y: -7.5 },
+    { text: '1307  ·  VENERDÌ  13  ·  ☩',             tOff:  0.52, y: -8.0 },
+    { text: 'FIBONACCI  1 1 2 3 5 8 13 21 34',        tOff: -0.55, y: -9.0 },
+    { text: '⚜  GRAND  MASTER  ·  REF  0x4A2F',      tOff:  0.56, y: -9.5 },
+  ];
+
+  const _histEls = [];
+  _histData.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'hist-data';
+    el.textContent = d.text;
+    document.body.appendChild(el);
+    const theta = thetaCenter + d.tOff;
+    const obj = new THREE.CSS3DObject(el);
+    obj.position.set(Math.cos(theta) * panelRadiusCSS, d.y, Math.sin(theta) * panelRadiusCSS);
+    obj.scale.set(0.028, 0.028, 0.028);
+    obj.lookAt(0, d.y, 0);
+    gridGroup.add(obj);
+    _histEls.push(el);
+  });
+
+  // DATI GENETICI — compaiono con la scritta ANIMUS
+  const _dnaData = [
+    { text: 'CROMOSOMA  1  ·  247.249.719 bp',           tOff: -0.55, y:  9.2 },
+    { text: 'ATGCTTACGGATCCA  TGCAATCGGATTAC',           tOff:  0.58, y:  8.8 },
+    { text: 'GENE  HLA-DRB1  ·  APLOTIPO  08:01',        tOff: -0.50, y:  8.0 },
+    { text: 'GCATTGCAATCGGATC  CAATGCTTACGGA',           tOff:  0.55, y:  7.5 },
+    { text: 'EDEN  FRAGMENT  //  Ω-7712  ·  LOCKED',     tOff: -0.58, y:  6.5 },
+    { text: 'CCTTGGATCAATGCTA  GCATTAGCCA',              tOff:  0.52, y:  6.0 },
+    { text: 'ALLELE  rs4988235  ·  T/T  ·  MATCH',       tOff: -0.53, y:  5.0 },
+    { text: 'AGTCGATCGATCGAT  CGTAGCTATGCC',             tOff:  0.60, y:  4.5 },
+    { text: 'CROMOSOMA  6  ·  170.805.979 bp',           tOff: -0.56, y:  3.5 },
+    { text: 'TAGGCATGCAATCGGA  TCCAATGCTTAG',            tOff:  0.54, y:  3.0 },
+    { text: 'SINCRONIZZAZIONE  GENETICA  ██████░',        tOff: -0.55, y:  2.0 },
+    { text: 'CGATTAGCCATGCATG  CGGATTCAATG',             tOff:  0.57, y:  1.5 },
+    { text: 'INDICE  PIEÇA  EDEN  ·  0.0042%',           tOff: -0.50, y:  0.5 },
+    { text: 'ATCGATCGGCATTAGC  CAATGCTTAGCA',            tOff:  0.53, y: -0.2 },
+    { text: 'GENE  MC1R  ·  rs1805007  ·  C/T',          tOff: -0.58, y: -1.2 },
+    { text: 'GCTTACGGATCCAATG  CTTACGGAT',               tOff:  0.60, y: -2.0 },
+    { text: 'ANIMUS  CORE  v3.28  ·  SYNC  ████░',       tOff: -0.53, y: -3.0 },
+    { text: 'TGCAATCGGATTACCG  ATGCTTACGG',              tOff:  0.55, y: -3.5 },
+    { text: 'PROFILO  GENETICO  ·  ID  AX-44291',        tOff: -0.62, y: -4.5 },
+    { text: 'CCAATGCTTACGGAT  CCAATGCTTAG',              tOff:  0.58, y: -5.0 },
+    { text: 'INTRONE  EDEN  ·  SEQUENZA  ATTIVA',        tOff: -0.50, y: -6.0 },
+    { text: 'ATGCTTAGCAATCGGA  TCCATGCTTAC',             tOff:  0.54, y: -6.5 },
+    { text: 'CROMOSOMA  23  ·  X/Y  ·  GENOTIPO',        tOff: -0.57, y: -7.5 },
+    { text: 'GCAATCGGATCCAATG  CTTACGGATC',              tOff:  0.52, y: -8.0 },
+    { text: 'DNA  ANCESTRALE  ·  MATCH  99.7%',          tOff: -0.55, y: -9.0 },
+    { text: 'TAGCAATCGGATCCAT  GCTTACGGAT',              tOff:  0.56, y: -9.5 },
+  ];
+
+  const _dnaEls = [];
+  _dnaData.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'hist-data';
+    el.textContent = d.text;
+    document.body.appendChild(el);
+    const theta = thetaCenter + d.tOff;
+    const obj = new THREE.CSS3DObject(el);
+    obj.position.set(Math.cos(theta) * panelRadiusCSS, d.y, Math.sin(theta) * panelRadiusCSS);
+    obj.scale.set(0.028, 0.028, 0.028);
+    obj.lookAt(0, d.y, 0);
+    gridGroup.add(obj);
+    _dnaEls.push(el);
+  });
+
+  // PERSONAGGI STORICI — fila unica al centro del display
+  const _charImgs = [
+    { src: 'assets/characters/leonardo-da-vinci.jpg',  name: 'LEONARDO  DA  VINCI',  tOff: -0.875, y: 0 },
+    { src: 'assets/characters/napoleone.jpg',           name: 'NAPOLEONE  BONAPARTE', tOff: -0.625, y: 0 },
+    { src: 'assets/characters/benjamin-franklin.jpg',   name: 'BENJAMIN  FRANKLIN',   tOff: -0.375, y: 0 },
+    { src: 'assets/characters/marie-antoinette.jpg',    name: 'MARIE  ANTOINETTE',    tOff: -0.125, y: 0 },
+    { src: 'assets/characters/lorenzo-de-medici.jpg',   name: 'LORENZO  DE′  MEDICI', tOff:  0.125, y: 0 },
+    { src: 'assets/characters/barbanera.jpg',           name: 'EDWARD  TEACH',        tOff:  0.375, y: 0 },
+    { src: 'assets/characters/charles-darwin-new.jpg',  name: 'CHARLES  DARWIN',      tOff:  0.625, y: 0 },
+    { src: 'assets/characters/nikola-tesla.jpg',        name: 'NIKOLA  TESLA',        tOff:  0.875, y: 0 },
+  ];
+
+  const _charEls = [];
+  _charImgs.forEach(c => {
+    const wrap = document.createElement('div');
+    wrap.className = 'hist-char-card';
+    const _delay = (Math.random() * 3.2).toFixed(2);
+    wrap.innerHTML = `<img src="${c.src}" class="hist-char-img" style="animation-delay:${_delay}s"><div class="hist-char-name">${c.name}</div>`;
+    document.body.appendChild(wrap);
+    const theta = thetaCenter + c.tOff;
+    const obj = new THREE.CSS3DObject(wrap);
+    obj.position.set(Math.cos(theta) * panelRadiusCSS, c.y, Math.sin(theta) * panelRadiusCSS);
+    obj.scale.set(0.038, 0.038, 0.038);
+    obj.lookAt(0, c.y, 0);
+    gridGroup.add(obj);
+    _charEls.push(wrap);
+  });
+
+  // EPOCHE — sopra (y=7.5) e sotto (y=-7.5) le immagini, più sparse
+  const _epochData = [
+    // SOPRA
+    { text: 'RINASCIMENTO',          tOff: -1.00,  y:  7.5 },
+    { text: 'ERA  NAPOLEONICA',      tOff: -0.72,  y:  7.5 },
+    { text: 'RIVOLUZIONE  AMERICANA',tOff: -0.42,  y:  7.5 },
+    { text: 'RIVOLUZIONE  FRANCESE', tOff: -0.14,  y:  7.5 },
+    { text: 'RINASCIMENTO  ITALIANO',tOff:  0.14,  y:  7.5 },
+    { text: 'ERA  D′ORO  DEI  PIRATI',tOff: 0.42,  y:  7.5 },
+    { text: 'ERA  VITTORIANA',       tOff:  0.72,  y:  7.5 },
+    { text: 'BELLE  ÉPOQUE',         tOff:  1.00,  y:  7.5 },
+    // SOTTO
+    { text: '1400 — 1600  d.C.',     tOff: -1.00,  y: -7.5 },
+    { text: '1799 — 1815  d.C.',     tOff: -0.72,  y: -7.5 },
+    { text: '1765 — 1783  d.C.',     tOff: -0.42,  y: -7.5 },
+    { text: '1789 — 1799  d.C.',     tOff: -0.14,  y: -7.5 },
+    { text: '1469 — 1492  d.C.',     tOff:  0.14,  y: -7.5 },
+    { text: '1650 — 1730  d.C.',     tOff:  0.42,  y: -7.5 },
+    { text: '1837 — 1901  d.C.',     tOff:  0.72,  y: -7.5 },
+    { text: '1871 — 1914  d.C.',     tOff:  1.00,  y: -7.5 },
+  ];
+
+  const _epochEls = [];
+  _epochData.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'hist-data epoch-label';
+    el.style.textAlign = 'center';
+    el.textContent = d.text;
+    document.body.appendChild(el);
+    const theta = thetaCenter + d.tOff;
+    const obj = new THREE.CSS3DObject(el);
+    obj.position.set(Math.cos(theta) * panelRadiusCSS, d.y, Math.sin(theta) * panelRadiusCSS);
+    obj.scale.set(0.028, 0.028, 0.028);
+    obj.lookAt(0, d.y, 0);
+    gridGroup.add(obj);
+    _epochEls.push(el);
+  });
+
 
   // SCHERMATA DI BENVENUTO (Centro)
   const welcomeEl = document.getElementById('welcomeScreen');
@@ -490,8 +678,8 @@
   // 1b) TECH HALO DIETRO IL LOGO (Cerchi concentrici rotanti in stile Animus)
   const haloGroup = new THREE.Group();
   const haloRadius = panelRadiusCSS + 0.05;
-  haloGroup.position.set(Math.cos(thetaLogo) * haloRadius, 8.0, Math.sin(thetaLogo) * haloRadius);
-  haloGroup.lookAt(0, 8.0, 0);
+  haloGroup.position.set(Math.cos(thetaLogo) * haloRadius, 3.5, Math.sin(thetaLogo) * haloRadius);
+  haloGroup.lookAt(0, 3.5, 0);
   gridGroup.add(haloGroup);
 
   const ringMat = new THREE.LineBasicMaterial({
@@ -528,7 +716,7 @@
   innerRing = new THREE.LineSegments(innerRingGeo, ringMat);
   haloGroup.add(innerRing);
 
-  const crossMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.25 });
+  const crossMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
   const crossGeo = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-0.2, 0, 0), new THREE.Vector3(0.2, 0, 0),
     new THREE.Vector3(0, -0.2, 0), new THREE.Vector3(0, 0.2, 0)
@@ -608,8 +796,7 @@
 
   document.getElementById('btnExploreExperiences').addEventListener('click', (e) => {
     e.stopPropagation();
-    if (window.audioEngine) window.audioEngine.playClick();
-    
+        
     // Fade out intro
     introTextEl.style.transition = "opacity 0.5s ease";
     introTextEl.style.opacity = '0';
@@ -640,12 +827,31 @@
     }, 500);
   });
 
+  // Bottone SALTA sul display curvo — centro-basso
+  const _startExpBtn = document.getElementById('btnStartExperience');
+  const cssStartExp = new THREE.CSS3DObject(_startExpBtn);
+  const _thetaStartExp = thetaCenter + 0.87;
+  cssStartExp.position.set(Math.cos(_thetaStartExp) * panelRadiusCSS, -9, Math.sin(_thetaStartExp) * panelRadiusCSS);
+  cssStartExp.scale.set(0.030, 0.030, 0.030);
+  cssStartExp.lookAt(0, -9, 0);
+  gridGroup.add(cssStartExp);
+
+  if (_startExpBtn) {
+    _startExpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _stopIntro();
+      _startExpBtn.style.transition = 'opacity 0.3s ease';
+      _startExpBtn.style.opacity = '0';
+      _startExpBtn.style.pointerEvents = 'none';
+      playCinematicTransition(true);
+    });
+  }
+
   const exBackBtn = document.getElementById('experiencesBackArrow');
   if (exBackBtn) {
     exBackBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      
+            
       const panelL = document.getElementById('panelL');
       const panelR = document.getElementById('panelR');
       const cartBtnEl = document.getElementById('cartButton');
@@ -1259,6 +1465,8 @@
           <div class="eo-date-summary-row"><span>DATA</span><span id="eoSumDate">—</span></div>
           <div class="eo-date-summary-row"><span>ORARIO</span><span id="eoSumTime">—</span></div>
           <div class="eo-date-summary-row"><span>SEDE</span><span id="eoSumLoc">—</span></div>
+          <div class="eo-date-summary-row eo-sum-price-sub" style="display:none;"><span>Tipo immersione</span><span id="eoSumPriceImm">—</span></div>
+          <div class="eo-date-summary-row eo-sum-price-sub" style="display:none;"><span>Durata</span><span id="eoSumPriceDur">—</span></div>
           <div class="eo-date-summary-row eo-sum-price-row" style="display:none;"><span>TOTALE</span><span id="eoSumPrice">—</span></div>
         </div>
         <button class="eo-date-cart-btn" id="eoDateCartBtn" disabled>&#43; AGGIUNGI AL CARRELLO</button>
@@ -1398,8 +1606,8 @@
       <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
     </button>`;
   document.body.appendChild(tlIconsHud);
-  document.getElementById('tlTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowTickets(); });
-  document.getElementById('tlCartBtn').addEventListener('click',   () => { if (window.audioEngine) window.audioEngine.playClick(); eoShowCart(); });
+  document.getElementById('tlTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playHover(); eoShowTickets(); });
+  document.getElementById('tlCartBtn').addEventListener('click',   () => { if (window.audioEngine) window.audioEngine.playHover(); eoShowCart(); });
 
   function eoUpdateDateSummary() {
     const date = document.getElementById('eoDate').value;
@@ -1422,7 +1630,12 @@
       document.getElementById('eoSumDate').textContent  = date;
       document.getElementById('eoSumTime').textContent  = time;
       document.getElementById('eoSumLoc').textContent   = loc.split('—')[0].trim();
-      document.getElementById('eoSumPrice').textContent = '€ ' + eoComputePrice();
+      const _priceImm = eoPriceImm[imm] || 0;
+      const _priceDur = eoPriceDur[dur] || 0;
+      document.getElementById('eoSumPriceImm').textContent = '€ ' + _priceImm;
+      document.getElementById('eoSumPriceDur').textContent = '€ ' + _priceDur;
+      document.getElementById('eoSumPrice').textContent    = '€ ' + (_priceImm + _priceDur);
+      document.querySelectorAll('.eo-sum-price-sub, .eo-sum-price-row').forEach(r => r.style.display = '');
     } else {
       document.getElementById('eoDateSummary').style.display = 'none';
     }
@@ -1449,8 +1662,8 @@
     if (!group) return;
     group.querySelectorAll('.eo-cust-opt').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (window.audioEngine) window.audioEngine.playClick();
-        group.querySelectorAll('.eo-cust-opt').forEach(b => b.classList.remove('eo-cust-selected'));
+        if (window.audioEngine) window.audioEngine.playHover();
+                group.querySelectorAll('.eo-cust-opt').forEach(b => b.classList.remove('eo-cust-selected'));
         btn.classList.add('eo-cust-selected');
         const immOk = document.querySelector('#eoCustImmersion .eo-cust-selected');
         const durOk = document.querySelector('#eoCustDuration .eo-cust-selected');
@@ -1466,17 +1679,22 @@
           requestAnimationFrame(() => detailEl.classList.add('eo-imm-detail-visible'));
         }
       });
-      btn.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
     });
   });
 
   // Avanti buttons
+  function _playSwipeSound() {
+    const _sw = new Audio('assets/video/sound tra le sezioni.mp4');
+    _sw.volume = 1;
+    _sw.play().catch(() => {});
+  }
+
   document.getElementById('eoAvantiChar').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
+    _playSwipeSound();
     eoSlideTab('customize');
   });
   document.getElementById('eoAvantiCust').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
+    _playSwipeSound();
     eoSlideTab('date');
   });
 
@@ -1496,7 +1714,7 @@
   eoEl.querySelectorAll('.eo-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.classList.contains('eo-tab-locked')) return;
-      if (window.audioEngine) window.audioEngine.playClick();
+      _playSwipeSound();
       eoSlideTab(btn.dataset.tab);
     });
   });
@@ -1525,8 +1743,8 @@
   eoEl.addEventListener('click', e => {
     const chip = e.target.closest('.eo-pick-chip, .eo-pick-loc');
     if (!chip) return;
-    if (window.audioEngine) window.audioEngine.playClick();
-    const inputId = chip.dataset.for;
+    if (window.audioEngine) window.audioEngine.playHover();
+        const inputId = chip.dataset.for;
     const inp = document.getElementById(inputId);
     if (!inp) return;
     chip.closest('.eo-pick-chips, .eo-pick-locs')
@@ -1535,11 +1753,6 @@
     chip.classList.add('eo-picked');
     inp.value = chip.dataset.val;
     inp.dispatchEvent(new Event('change'));
-  });
-  eoEl.addEventListener('mouseover', e => {
-    if (e.target.closest('.eo-pick-chip, .eo-pick-loc')) {
-      if (window.audioEngine) window.audioEngine.playHover();
-    }
   });
 
   // Hidden input change → update summary + btn state
@@ -1557,7 +1770,7 @@
 
   // Cart button — save item and update icon
   document.getElementById('eoDateCartBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playCart();
+    if (window.audioEngine) window.audioEngine.playHover();
     const ch   = eoChars[eoEpochIdx][eoSelectedChar];
     const imm  = document.querySelector('#eoCustImmersion .eo-cust-selected')?.dataset.val || 'osservatore';
     const dur  = document.querySelector('#eoCustDuration .eo-cust-selected')?.dataset.val || '1h';
@@ -1573,6 +1786,8 @@
       language:  eoLangLabel[lang],
       date, time,
       location:  loc.split('—')[0].trim(),
+      priceImm:  eoPriceImm[imm] || 0,
+      priceDur:  eoPriceDur[dur] || 0,
       price:     eoComputePrice()
     });
     eoUpdateCartIcon();
@@ -1613,9 +1828,10 @@
               <span class="eo-cart-item-price">€ ${item.price}</span>
             </div>
             <div class="eo-cart-item-details">
-              <span>${item.epoch}</span>
-              <span>${item.immersion} · ${item.duration} · ${item.language}</span>
-              <span>${item.date} ${item.time} — ${item.location}</span>
+              <span class="eo-cart-detail-row"><span>${item.epoch}</span></span>
+              <span class="eo-cart-detail-row"><span>${item.immersion}</span><span class="eo-cart-sub-price">€ ${item.priceImm}</span></span>
+              <span class="eo-cart-detail-row"><span>${item.duration} · ${item.language}</span><span class="eo-cart-sub-price">€ ${item.priceDur}</span></span>
+              <span class="eo-cart-detail-row"><span>${item.date} ${item.time} — ${item.location}</span></span>
             </div>
             <button class="eo-cart-remove" data-idx="${i}">Rimuovi</button>
           </div>`).join('');
@@ -1713,8 +1929,7 @@
   });
 
   document.getElementById('eoCkSubmit').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    const name  = document.getElementById('eoCkName').value.trim();
+        const name  = document.getElementById('eoCkName').value.trim();
     const email = document.getElementById('eoCkEmail').value.trim();
     const phone = document.getElementById('eoCkPhone').value.trim();
     const card  = document.getElementById('eoCkCard').value.replace(/\s/g,'');
@@ -1889,6 +2104,7 @@
         el.classList.remove('hidden');
         requestAnimationFrame(() => {
           el.classList.add('eo-ta-visible');
+          _playSoundEffect();
           _taGlitch(9, _gc);
           el.classList.add('eo-ta-glitch-burst');
           setTimeout(() => el.classList.remove('eo-ta-glitch-burst'), 600);
@@ -1950,6 +2166,7 @@
           setTimeout(() => _showOne(list[idx], false), 350);
         } else {
           // tutti mostrati — chiudi
+          _playSoundEffect();
           el.classList.remove('eo-ta-visible');
           setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 700);
         }
@@ -1964,8 +2181,7 @@
   eoCartOverlay.addEventListener('click', e => {
     if (e.target.id === 'eoCartCheckout') {
       if (eoCart.length === 0) return;
-      if (window.audioEngine) window.audioEngine.playClick();
-      eoHideCart();
+            eoHideCart();
       setTimeout(eoShowCheckout, 320);
     }
   });
@@ -2024,8 +2240,7 @@
   document.getElementById('eoTicketsList').addEventListener('click', e => {
     const card = e.target.closest('.eo-ticket-card[data-idx]');
     if (!card) return;
-    if (window.audioEngine) window.audioEngine.playClick();
-    const ticket = eoTickets[+card.dataset.idx];
+        const ticket = eoTickets[+card.dataset.idx];
     if (!ticket) return;
     eoHideTickets();
     setTimeout(() => eoShowTicketAnim(ticket), 350);
@@ -2039,20 +2254,6 @@
   const _eoCenterEl = document.getElementById('eoCenter');
   _eoCenterEl.classList.add('eo-center-3d');
 
-  // Periodic glitch
-  let _glitchTimer = null;
-  function _scheduleGlitch() {
-    _glitchTimer = setTimeout(() => {
-      const img = document.getElementById('eoCenterImg');
-      if (img && img.classList.contains('eo-img-loaded')) {
-        img.classList.add('eo-img-glitch');
-        setTimeout(() => { img.classList.remove('eo-img-glitch'); _scheduleGlitch(); }, 400);
-      } else {
-        _scheduleGlitch();
-      }
-    }, 3500 + Math.random() * 4000);
-  }
-  _scheduleGlitch();
 
   function _playSoundEffect() {
     const _se = new Audio('assets/video/sound effetc.mp4');
@@ -2214,7 +2415,6 @@
           <div class="eo-card-name">${ch.name}</div>
           <div class="eo-card-dates">${ch.dates}</div>
         </div>`;
-      card.addEventListener('mouseenter', () => { if (window.audioEngine) window.audioEngine.playHover(); });
       card.addEventListener('click', () => {
         const _selAudio = new Audio('assets/video/selezione personaggio.mp4');
         _selAudio.volume = 1;
@@ -2258,7 +2458,6 @@
 
     eoEl.classList.remove('hidden', 'eo-dematerialize');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
-    if (window.audioEngine) window.audioEngine.playEpoch();
     dnaBackArrow.style.display = 'none';
     document.getElementById('tlIconsHud').style.display = 'flex';
     _eoMatScan(true);
@@ -2268,20 +2467,26 @@
   function _eoHitlerEgg(left, avantiBtn) {
     const overlay = document.getElementById('epochOverlay');
 
-    // Suoni glitch/interferenza
-    if (window.audioEngine) window.audioEngine.playGlitch();
+    // Selezione personaggio distorta (slow motion) — amplificata via Web Audio
+    const _selEgg = new Audio('assets/video/selezione personaggio.mp4');
+    _selEgg.playbackRate = 0.35;
+    _selEgg.volume = 1;
+    try {
+      const _selCtx  = new (window.AudioContext || window.webkitAudioContext)();
+      const _selSrc  = _selCtx.createMediaElementSource(_selEgg);
+      const _selGain = _selCtx.createGain();
+      _selGain.gain.value = 3;
+      _selSrc.connect(_selGain);
+      _selGain.connect(_selCtx.destination);
+    } catch(e) {}
+    _selEgg.play().catch(() => {});
 
-    // Fade out colonna sonora
+    // Colonna sonora: parte (o continua) in slow motion con toni bassi
     const _csEgg = document.getElementById('colonnaSonora');
-    if (_csEgg && !_csEgg.paused) {
-      const _volStart = _csEgg.volume;
-      let _volStep = 0;
-      const _volSteps = 30;
-      const _fadeOut = setInterval(() => {
-        _volStep++;
-        _csEgg.volume = Math.max(0, _volStart * (1 - _volStep / _volSteps));
-        if (_volStep >= _volSteps) { clearInterval(_fadeOut); _csEgg.pause(); _csEgg.volume = 0; }
-      }, 800 / _volSteps);
+    if (_csEgg) {
+      _csEgg.playbackRate = 0.35;
+      _csEgg.volume = 1;
+      if (_csEgg.paused) _csEgg.play().catch(() => {});
     }
 
     // Red glitch flash sequence
@@ -2411,9 +2616,7 @@
 
     // Rebuild left panel after glitch settles
     setTimeout(() => {
-      const rotWrap = left.querySelector('.eo-rotation-wrap');
       left.innerHTML = '';
-      if (rotWrap) left.appendChild(rotWrap);
 
       // Warning banner
       const warn = document.createElement('div');
@@ -2503,6 +2706,8 @@
 
   function hideEpochOverlay() {
     _playSoundEffect();
+    const _csHide = document.getElementById('colonnaSonora');
+    if (_csHide) _csHide.playbackRate = 1;
     if (_eoEasterEpochIdx !== -1 && _eoEasterHitlerIdx !== -1) {
       eoChars[_eoEasterEpochIdx].splice(_eoEasterHitlerIdx, 1);
       _eoEasterEpochIdx  = -1;
@@ -2521,8 +2726,7 @@
   }
 
   document.getElementById('eoBackBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    if (_eoEasterEpochIdx !== -1) {
+        if (_eoEasterEpochIdx !== -1) {
       _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(500); });
     } else {
       hideEpochOverlay();
@@ -2571,8 +2775,7 @@
   }
 
   document.getElementById('eoConfirmBtn').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    hideEpochOverlay();
+        hideEpochOverlay();
     playCinematicTransition();
   });
 
@@ -2613,6 +2816,9 @@
     });
     // Materializzazione con ritardo + stagger per nodo
     setTimeout(() => {
+      const _selAudioTL = new Audio('assets/video/selezione personaggio.mp4');
+      _selAudioTL.volume = 1;
+      _selAudioTL.play().catch(() => {});
       tlNodeEls.forEach((el, s) => {
         setTimeout(() => {
           el.style.opacity = '1';
@@ -3546,8 +3752,7 @@
         if (cartClicked) {
           e.stopPropagation();
           e.preventDefault();
-          if (window.audioEngine) window.audioEngine.playClick();
-          showCartView();
+                    showCartView();
           return;
         }
 
@@ -3568,8 +3773,7 @@
           if (tBtn && tBtn.classList.contains('has-ticket')) {
             e.stopPropagation();
             e.preventDefault();
-            if (window.audioEngine) window.audioEngine.playClick();
-            if (typeof showTicketsView === 'function') showTicketsView();
+                        if (typeof showTicketsView === 'function') showTicketsView();
             return;
           }
         }
@@ -3578,13 +3782,11 @@
       /* Pannelli principali: raycasting su hitPlane invisibili */
       if (window.experiencesRevealed && !panelL.classList.contains('hidden-panel')) {
         if (panelRaycaster.intersectObject(hitPlaneL).length > 0) { 
-          if (window.audioEngine) window.audioEngine.playClick();
-          showDNAView(); 
+                    showDNAView(); 
           return; 
         }
         if (panelRaycaster.intersectObject(hitPlaneR).length > 0) { 
-          if (window.audioEngine) window.audioEngine.playClick();
-          playCinematicTransition(); 
+                    playCinematicTransition(); 
           return; 
         }
       }
@@ -3601,8 +3803,7 @@
           if (specialGenes[s].includes(hitParent)) {
             e.stopPropagation();
             e.preventDefault();
-            if (window.audioEngine) window.audioEngine.playClick();
-            return;
+                        return;
           }
         }
       }
@@ -3629,16 +3830,14 @@
       if (closestGene !== -1) {
         e.stopPropagation();
         e.preventDefault();
-        if (window.audioEngine) window.audioEngine.playClick();
-        return;
+                return;
       }
     }
   }, true); // USE CAPTURE PHASE! Supera qualsiasi stopPropagation dei figli.
 
   // Freccia indietro: gestisce showcase, DNA, timeline e carrello
   dnaBackArrow.addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    if (tlArcLine && tlArcLine.visible) {
+        if (tlArcLine && tlArcLine.visible) {
       hideTimelineView();
     } else if (cartViewActive) {
       hideCartView();
@@ -3662,10 +3861,65 @@
   /* ══════════════════════════════════════════
      ANIMATION LOOP E BOOT SEQUENCE
   ══════════════════════════════════════════ */
-  let bootProgress = 0;
-  let hasBooted = false;
+  let bootProgress = 1;
+  let hasBooted = true;
   let isWelcoming = false;
   let welcomeStartTime = 0;
+  let _displayPower = 0;
+
+  // Nascondi pannelli durante il power-on, riappaiono dopo
+  panelL.classList.add('hidden-panel');
+  panelR.classList.add('hidden-panel');
+  const _introTextEl = document.getElementById('introTextPanel');
+  if (_introTextEl) { _introTextEl.style.opacity = '0'; _introTextEl.style.pointerEvents = 'none'; }
+  const _welcomeBootEl = document.getElementById('welcomeScreen');
+  if (_welcomeBootEl) _welcomeBootEl.style.display = 'none';
+
+  // ── ANIMAZIONE POWER-ON ──
+  // Materiali spenti all'avvio
+  screenGlassMat.opacity = 0;
+  bezelMat.opacity = 0;
+  gridMatHoriz.opacity = 0;
+  gridMatVert.opacity = 0;
+
+  function _applyDisplayPower(p) {
+    screenGlassMat.opacity = Math.min(1, p);
+    bezelMat.opacity       = Math.min(1, p);
+    gridMatHoriz.opacity   = 0.15 * Math.min(1, p);
+    gridMatVert.opacity    = 0.08 * Math.min(1, p);
+    _displayPower = Math.min(1, p);
+  }
+
+  // Fase 1 (0-700ms): completamente spento
+  // Fase 2 (700-1100ms): flicker rapido
+  // Fase 3 (1100ms): flash luminoso
+  // Fase 4 (1100-2500ms): settle al livello normale
+  const _flickerTimes = [700, 800, 850, 950, 1000, 1050];
+  const _flickerVals  = [0.4,  0,  0.7,  0,  0.9,   0 ];
+  _flickerTimes.forEach((ms, i) => {
+    setTimeout(() => _applyDisplayPower(_flickerVals[i]), ms);
+  });
+
+  // Flash pieno
+  setTimeout(() => {
+    _applyDisplayPower(2.5); // spike luminoso (additivo)
+    // Poi dissolvenza lenta verso 1.0
+    let _settle = 2.5;
+    const _settleIv = setInterval(() => {
+      _settle = Math.max(1, _settle - 0.025);
+      _applyDisplayPower(_settle);
+      if (_settle <= 1) {
+        clearInterval(_settleIv);
+        // Display acceso: mostra bottone avvia esperienza
+        const _startBtn = document.getElementById('btnStartExperience');
+        if (_startBtn) {
+          _startBtn.style.transition = 'opacity 0.8s ease';
+          _startBtn.style.pointerEvents = 'all';
+          requestAnimationFrame(() => { _startBtn.style.opacity = '1'; });
+        }
+      }
+    }, 16);
+  }, 1100);
 
   // Espone una funzione globale per resettare il boot al termine dell'intro
   // intro.js chiama window._resetBoot() prima di rivelare il progetto
@@ -3739,11 +3993,11 @@
       // Rotazione: il display parte da sinistra (fuori campo) verso il centro
       gridGroup.rotation.y = Math.PI * (1 - ease);
 
-      // I materiali 3D sono visibili per tutta la rotazione
-      screenGlassMat.opacity = 1;
-      bezelMat.opacity = 1;
-      gridMatHoriz.opacity = 0.15;
-      gridMatVert.opacity = 0.08;
+      // I materiali 3D si accendono dopo 1s (display power)
+      screenGlassMat.opacity = _displayPower;
+      bezelMat.opacity = _displayPower;
+      gridMatHoriz.opacity = 0.15 * _displayPower;
+      gridMatVert.opacity = 0.08 * _displayPower;
       // Logo e schede restano invisibili durante la rotazione
       logoEl.style.opacity = 0;
       panelL.style.opacity = 0;
@@ -3876,11 +4130,10 @@
       scanRing.position.y = Math.sin(now * 0.35) * (glassHeight / 2 - 0.5);
       scanMat.opacity = 0.18 + 0.1 * Math.cos(now * 0.7);
 
-      // Schede e logo: compaiono dopo che i LED sono completamente accesi
+      // Schede: compaiono dopo che i LED sono completamente accesi (logo gestito da timeout 4s)
       if (ledProgress >= 1 && panelProgress < 1) {
         panelProgress = Math.min(1, panelProgress + 0.06); // Più veloce
         const pe = 1 - Math.pow(1 - panelProgress, 3);
-        logoEl.style.opacity = pe;
         
         if (!window.experiencesRevealed) {
           introTextEl.style.opacity = pe;
@@ -4081,8 +4334,7 @@
 
 
   document.getElementById('btn-back').addEventListener('click', () => {
-    if (window.audioEngine) window.audioEngine.playClick();
-    showCardsView();
+        showCardsView();
   });
 
   /* ── CART LOGIC ── */
@@ -4239,15 +4491,13 @@
       if (!cartViewActive) {
         showCartView();
       }
-      if (window.audioEngine) window.audioEngine.playClick();
-    });
+          });
     cartCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (cartViewActive) {
         hideCartView();
       }
-      if (window.audioEngine) window.audioEngine.playClick();
-    });
+          });
     // Evita che cliccando nel carrello si chiuda o interagisca col 3D
     cartPanel.addEventListener('click', e => e.stopPropagation());
   }
@@ -4258,8 +4508,7 @@
       if (ticketsViewActive) {
         hideTicketsView();
       }
-      if (window.audioEngine) window.audioEngine.playClick();
-    });
+          });
   }
   
   if (ticketsPanelEl) {
@@ -4271,8 +4520,7 @@
   htmlTimelineNodes.forEach((node, idx) => {
     node.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-    });
+          });
     // store original year text on label
     const lbl = node.querySelector('.node-label');
     if (lbl) lbl.dataset.year = lbl.textContent.trim();
@@ -4332,8 +4580,7 @@
       btn.addEventListener('click', (e) => {
         const idx = parseInt(e.target.getAttribute('data-index'), 10);
         cartItems.splice(idx, 1);
-        if (window.audioEngine) window.audioEngine.playClick();
-        window.updateCartUI();
+                window.updateCartUI();
       });
     });
   };
@@ -4374,8 +4621,7 @@
       `;
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.audioEngine) window.audioEngine.playClick();
-        
+                
         // Chiudi il pannello dei biglietti
         if (typeof hideTicketsView === 'function') hideTicketsView();
         
@@ -4572,8 +4818,7 @@
       e.stopPropagation();
       e.preventDefault();
     }
-    if (window.audioEngine) window.audioEngine.playClick();
-    const animusTicketEl = document.getElementById('animusTicket');
+        const animusTicketEl = document.getElementById('animusTicket');
     if (animusTicketEl) animusTicketEl.classList.add('hidden-panel');
     
     // Ripristina i bottoni HUD
@@ -4618,7 +4863,7 @@
     }
 
     // Ripristina sfondo e nebbia originali
-    if (renderer) renderer.setClearColor(0x1a1a1a, 1);
+    if (renderer) renderer.setClearColor(0x000000, 1);
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.025);
 
     // Ripristina gruppi della stanza
@@ -4740,8 +4985,7 @@
   if (btnReturnAnimus) {
     btnReturnAnimus.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (window.audioEngine) window.audioEngine.playClick();
-      
+            
       const eyelidTop = document.querySelector('.eyelid-top');
       const eyelidBottom = document.querySelector('.eyelid-bottom');
       
@@ -4805,14 +5049,18 @@
       return;
     }
 
-    // ── FASE 1: mostra la sync screen sul display (la stessa del flusso acquisto) ──
+    // ── FASE 1: mostra la sync screen sul display ──
     const syncScreenEl2 = document.getElementById('syncScreen');
     const syncBarFill2  = document.getElementById('syncBarFill');
     const syncPctText2  = document.getElementById('syncPctText');
     const syncDnaTicker = document.getElementById('syncDnaTicker');
 
-    if (syncBarFill2) syncBarFill2.style.width = '0%';
-    if (syncPctText2) syncPctText2.textContent  = '0%';
+    if (syncBarFill2) {
+      const _al = syncBarFill2.getTotalLength ? syncBarFill2.getTotalLength() : 560;
+      syncBarFill2.style.strokeDasharray  = _al;
+      syncBarFill2.style.strokeDashoffset = _al;
+    }
+    if (syncPctText2) syncPctText2.textContent = '0%';
     if (syncScreenEl2) syncScreenEl2.classList.remove('hidden-panel');
 
     // Ticker DNA
@@ -4823,42 +5071,120 @@
       if (syncDnaTicker) syncDnaTicker.textContent = tickerStr;
     }, 80);
 
-    // Avvia la barra dopo due frame (necessario per attivare la CSS transition)
+    // Avvia la barra dopo due frame
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (syncBarFill2) syncBarFill2.style.width = '100%';
-      // Contatore percentuale (2.5s = 50 step × 50ms)
+      if (syncBarFill2) syncBarFill2.style.strokeDashoffset = '0';
       let pct = 0;
       const pctTick = setInterval(() => {
         pct = Math.min(100, pct + 2);
         if (syncPctText2) syncPctText2.textContent = pct + '%';
-        if (pct >= 100) clearInterval(pctTick);
+        if (pct >= 100) {
+          clearInterval(pctTick);
+          const _sndSezioni = new Audio('assets/video/sound tra le sezioni.mp4');
+          _sndSezioni.volume = 1.0;
+          _sndSezioni.play().catch(() => {});
+        }
       }, 50);
     }));
+
+    // ── PARTICELLE DISPLAY: numeri, DNA, calcoli su tutto il display curvo ──
+    const _syncParticles = [];
+    const _syncPIntervals = [];
+    const _pContent = [
+      () => Array.from({length: Math.floor(Math.random()*10)+4}, () => 'ATCG'[Math.floor(Math.random()*4)]).join(''),
+      () => '0x' + Math.floor(Math.random()*0xFFFFFF).toString(16).toUpperCase().padStart(6,'0'),
+      () => Array.from({length: Math.floor(Math.random()*10)+6}, () => Math.floor(Math.random()*2)).join(''),
+      () => (Math.random()*9999).toFixed(Math.floor(Math.random()*3)),
+      () => (Math.random()*100).toFixed(2) + '%',
+      () => Math.floor(Math.random()*999) + '.' + Math.floor(Math.random()*999) + 'N',
+      () => ['CHR','LOC','SEQ','GEN','SYN','MEM','EXT'][Math.floor(Math.random()*7)] + ':' + Math.floor(Math.random()*9999).toString(16).toUpperCase(),
+      () => (Math.random()*3.14159).toFixed(6),
+    ];
+    const arcSpan = 2.6;
+    const arcStart = thetaCenter - arcSpan / 2;
+    for (let i = 0; i < 65; i++) {
+      const pEl = document.createElement('div');
+      const alpha = (Math.random() * 0.35 + 0.08).toFixed(2);
+      const fs = Math.floor(Math.random() * 9) + 7;
+      pEl.style.cssText = `font-family:'Courier New',monospace;font-size:${fs}px;color:rgba(255,255,255,${alpha});white-space:nowrap;pointer-events:none;opacity:0;transition:opacity ${(Math.random()*0.6+0.3).toFixed(1)}s ease;user-select:none;`;
+      const typeIdx = Math.floor(Math.random() * _pContent.length);
+      pEl.textContent = _pContent[typeIdx]();
+      document.body.appendChild(pEl);
+      const theta = arcStart + Math.random() * arcSpan;
+      const y = (Math.random() - 0.5) * 20;
+      const css3dP = new THREE.CSS3DObject(pEl);
+      css3dP.position.set(Math.cos(theta) * panelRadiusCSS, y, Math.sin(theta) * panelRadiusCSS);
+      css3dP.scale.set(0.030, 0.030, 0.030);
+      css3dP.lookAt(0, y, 0);
+      gridGroup.add(css3dP);
+      _syncParticles.push({ el: pEl, css3d: css3dP });
+      // Comparsa graduale casuale
+      const showDelay = Math.random() * 2200;
+      setTimeout(() => { pEl.style.opacity = '1'; }, showDelay);
+      // Contenuto che si aggiorna periodicamente
+      const iv = setInterval(() => { pEl.textContent = _pContent[Math.floor(Math.random()*_pContent.length)](); }, Math.floor(Math.random()*600)+200);
+      _syncPIntervals.push(iv);
+    }
+    const _removeSyncParticles = () => {
+      _syncPIntervals.forEach(clearInterval);
+      _syncParticles.forEach(({ el, css3d }) => {
+        el.style.transition = 'opacity 0.4s ease';
+        el.style.opacity = '0';
+        setTimeout(() => { gridGroup.remove(css3d); if (el.parentNode) el.parentNode.removeChild(el); }, 500);
+      });
+    };
 
     // ── FASE 2: dopo 2.8s (sync completa) → chiudi gli occhi ──
     setTimeout(() => {
       clearInterval(tickerInterval);
+      _removeSyncParticles();
 
       if (eyelidTop && eyelidBottom) {
+        // Sbattito 1 — veloce
+        eyelidTop.style.transition    = 'height 0.12s ease-in';
+        eyelidBottom.style.transition = 'height 0.12s ease-in';
+        eyelidTop.style.height    = '50%';
+        eyelidBottom.style.height = '50%';
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 0.10s ease-out';
+          eyelidBottom.style.transition = 'height 0.10s ease-out';
+          eyelidTop.style.height    = '0%';
+          eyelidBottom.style.height = '0%';
+        }, 140);
+        // Sbattito 2 — leggermente più pesante
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 0.16s ease-in';
+          eyelidBottom.style.transition = 'height 0.16s ease-in';
+          eyelidTop.style.height    = '50%';
+          eyelidBottom.style.height = '50%';
+        }, 480);
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 0.18s ease-out';
+          eyelidBottom.style.transition = 'height 0.20s ease-out';
+          eyelidTop.style.height    = '0%';
+          eyelidBottom.style.height = '0%';
+        }, 680);
         // Sedazione fase 1: occhi pesanti, lotta contro il sonno
-        eyelidTop.style.transition    = 'height 1.3s cubic-bezier(0.15, 0, 0.45, 0.6)';
-        eyelidBottom.style.transition = 'height 1.6s cubic-bezier(0.05, 0, 0.25, 0.5)';
-        eyelidTop.style.height    = '27%';
-        eyelidBottom.style.height = '9%';
+        setTimeout(() => {
+          eyelidTop.style.transition    = 'height 1.3s cubic-bezier(0.15, 0, 0.45, 0.6)';
+          eyelidBottom.style.transition = 'height 1.6s cubic-bezier(0.05, 0, 0.25, 0.5)';
+          eyelidTop.style.height    = '27%';
+          eyelidBottom.style.height = '9%';
+        }, 1050);
         // Sedazione fase 2: resa, caduta rapida
         setTimeout(() => {
           eyelidTop.style.transition    = 'height 0.65s cubic-bezier(0.4, 0, 1, 0.9)';
           eyelidBottom.style.transition = 'height 0.8s cubic-bezier(0.25, 0, 0.9, 0.9)';
           eyelidTop.style.height    = '60%';
           eyelidBottom.style.height = '40%';
-        }, 1100);
+        }, 2350);
       }
 
-      // ── FASE 3: 1550ms chiusura + 2000ms buio → avvia video ──
+      // ── FASE 3: chiusura + buio → avvia video ──
       setTimeout(() => {
         if (syncScreenEl2) syncScreenEl2.classList.add('hidden-panel');
         _startVideo();
-      }, 3550); // 1550ms chiusura + 2000ms buio
+      }, 4600);
     }, 2800); // attesa sync screen completa
   }
 
@@ -4951,6 +5277,12 @@
             }
 
             showTimelineView();
+
+            setTimeout(() => {
+              const _v2 = new Audio('assets/video/voce 2.mp4');
+              _v2.volume = 1;
+              _v2.play().catch(() => {});
+            }, 1000);
 
             const bgVideo = document.getElementById('timelineBgVideo');
             let hideOverlayCalled = false;
@@ -5081,19 +5413,101 @@
 
 
 
-  // ── SKIP CURVED DISPLAY: start with cinematic video then show timeline ──
-  hasBooted = true;
-  window.experiencesRevealed = true;
-  gridGroup.visible = false;
-  bgGroup.visible = false;
-  const _welcomeEl = document.getElementById('welcomeScreen');
-  if (_welcomeEl) _welcomeEl.style.display = 'none';
-  const _introEl = document.getElementById('introTextPanel');
-  if (_introEl) { _introEl.style.opacity = '0'; _introEl.style.pointerEvents = 'none'; }
-  panelL.classList.add('hidden-panel');
-  panelR.classList.add('hidden-panel');
-  setTimeout(() => { playCinematicTransition(true); }, 80);
-  // ── END SKIP ──
 
   animate();
+
+  const _introTimers = [];
+  let _selPersAudio = null;
+  let _voce1Audio = null;
+
+  _introTimers.push(setTimeout(() => {
+    _selPersAudio = new Audio('assets/video/selezione personaggio.mp4');
+    _selPersAudio.volume = 1;
+    const _actx = new (window.AudioContext || window.webkitAudioContext)();
+    const _src  = _actx.createMediaElementSource(_selPersAudio);
+    const _gain = _actx.createGain();
+    _gain.gain.value = 4;
+    _src.connect(_gain);
+    _gain.connect(_actx.destination);
+    _selPersAudio.play().catch(() => {});
+  }, 500));
+
+  _introTimers.push(setTimeout(() => {
+    _voce1Audio = new Audio('assets/video/voce 1.mp4');
+    _voce1Audio.volume = 1;
+    _voce1Audio.play().catch(() => {});
+  }, 2000));
+
+  // Logo Abstergo: materializza dopo 3 secondi
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    logoEl.style.transition = 'opacity 0.8s ease';
+    logoEl.style.opacity = '1';
+    _histEls.forEach((el, i) => {
+      _introTimers.push(setTimeout(() => { el.style.opacity = '0.45'; }, 300 + i * 120));
+    });
+  }, 3000));
+
+  // Logo scompare dopo 8 secondi
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    logoEl.style.transition = 'opacity 0.4s ease';
+    logoEl.style.opacity = '0';
+    _histEls.forEach(el => { el.style.opacity = '0'; });
+  }, 8000));
+
+  // Scritta ANIMUS + dati genetici appaiono a 8.5s
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    animusTitleEl.style.transition = 'opacity 0.6s ease';
+    animusTitleEl.style.opacity = '1';
+    _introTimers.push(setTimeout(() => {
+      animusTitleEl.style.transition = '';
+      animusTitleEl.classList.add('active');
+    }, 700));
+    _dnaEls.forEach((el, i) => {
+      _introTimers.push(setTimeout(() => { el.style.opacity = '0.45'; }, 300 + i * 120));
+    });
+  }, 8500));
+
+  // Scritta ANIMUS + dati genetici scompaiono a 13s
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    _introTimers.push(setTimeout(() => {
+      animusTitleEl.classList.remove('active');
+      animusTitleEl.style.transition = 'opacity 0.4s ease';
+      animusTitleEl.style.opacity = '0';
+      _dnaEls.forEach(el => { el.style.opacity = '0'; });
+    }, 200));
+  }, 13000));
+
+  // Personaggi storici + epoche compaiono a 14s, spariscono a 17s
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    _charEls.forEach((el, i) => { _introTimers.push(setTimeout(() => { el.style.opacity = '1'; }, i * 150)); });
+    _epochEls.forEach(el => { el.style.opacity = '1'; });
+  }, 14000));
+
+  _introTimers.push(setTimeout(() => {
+    _playSoundEffect();
+    [..._charEls, ..._epochEls].forEach(el => { el.style.opacity = '0'; });
+  }, 16000));
+
+  // Pannello "Entra nell'Animus" a 17.5s
+  const _syncBtnEl = document.getElementById('animusSyncBtn');
+  _introTimers.push(setTimeout(() => {
+    if (_syncBtnEl) { _syncBtnEl.style.opacity = '1'; _syncBtnEl.style.pointerEvents = 'all'; }
+  }, 17500));
+
+  function _stopIntro() {
+    _introTimers.forEach(id => clearTimeout(id));
+    if (_selPersAudio) { _selPersAudio.pause(); _selPersAudio.currentTime = 0; }
+    if (_voce1Audio)   { _voce1Audio.pause();   _voce1Audio.currentTime = 0; }
+    logoEl.style.transition = 'opacity 0.3s ease';
+    logoEl.style.opacity = '0';
+    animusTitleEl.classList.remove('active');
+    animusTitleEl.style.opacity = '0';
+    [..._histEls, ..._dnaEls, ..._charEls, ..._epochEls].forEach(el => { el.style.opacity = '0'; });
+    if (_syncBtnEl) { _syncBtnEl.style.opacity = '0'; _syncBtnEl.style.pointerEvents = 'none'; }
+  }
 })();

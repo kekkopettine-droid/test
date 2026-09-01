@@ -43,6 +43,55 @@ window.audioEngine = (function () {
 
   return {
 
+    // Swipe leggero e serio — soffio d'aria controllato
+    playSwipe() {
+      const c   = ac();
+      const t   = c.currentTime;
+      const dur = 0.28;
+
+      // Rumore pink sottile
+      const samples = Math.ceil(c.sampleRate * dur);
+      const buf  = c.createBuffer(1, samples, c.sampleRate);
+      const data = buf.getChannelData(0);
+      let b0=0,b1=0,b2=0,b3=0;
+      for (let i = 0; i < samples; i++) {
+        const w = Math.random() * 2 - 1;
+        b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+        b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+        data[i] = (b0+b1+b2+b3)*0.12;
+      }
+      const src = c.createBufferSource();
+      src.buffer = buf;
+
+      // Bandpass stretto — taglia i bassi pesanti e gli acuti giocosi
+      const bp = c.createBiquadFilter();
+      bp.type = 'bandpass'; bp.Q.value = 0.6;
+      bp.frequency.setValueAtTime(500,  t);
+      bp.frequency.exponentialRampToValueAtTime(1600, t + dur * 0.45);
+      bp.frequency.exponentialRampToValueAtTime(700,  t + dur);
+
+      // Inviluppo rapido e discreto
+      const amp = c.createGain();
+      amp.gain.setValueAtTime(0.0001, t);
+      amp.gain.exponentialRampToValueAtTime(0.13,   t + dur * 0.20);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+      src.connect(bp); bp.connect(amp); amp.connect(c.destination);
+      src.start(t); src.stop(t + dur + 0.02);
+
+      // Leggero tono grave che svanisce subito — dà serietà senza peso
+      const sub = c.createOscillator();
+      const subAmp = c.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(80, t);
+      sub.frequency.exponentialRampToValueAtTime(45, t + dur * 0.6);
+      subAmp.gain.setValueAtTime(0.0001, t);
+      subAmp.gain.exponentialRampToValueAtTime(0.04, t + dur * 0.1);
+      subAmp.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.55);
+      sub.connect(subAmp); subAmp.connect(c.destination);
+      sub.start(t); sub.stop(t + dur);
+    },
+
     // Sottile ping al passaggio del cursore
     playHover() {
       const t = ac().currentTime;
