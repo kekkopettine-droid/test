@@ -1317,7 +1317,6 @@
   const _eoDefaultDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().split('T')[0]; })();
   eoEl.innerHTML = `
     <div class="eo-topbar">
-      <button class="eo-back-btn" id="eoBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="eo-tabs">
         <button class="eo-tab eo-active" data-tab="character">PERSONAGGIO</button>
         <button class="eo-tab" data-tab="customize">PERSONALIZZAZIONE</button>
@@ -1585,6 +1584,13 @@
     const btn = document.getElementById('tlCartBtn');
     if (!btn) return;
     btn.classList.toggle('eo-cart-has-items', eoCart.length > 0);
+    let badge = btn.querySelector('.eo-cart-badge');
+    if (eoCart.length > 0) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'eo-cart-badge'; btn.appendChild(badge); }
+      badge.textContent = eoCart.length;
+    } else {
+      if (badge) badge.remove();
+    }
   }
 
   function eoUpdateTicketsIcon() {
@@ -1599,6 +1605,10 @@
   tlIconsHud.className = 'tl-icons-hud';
   tlIconsHud.style.display = 'none';
   tlIconsHud.innerHTML = `
+    <button class="eo-icon-btn tl-audio-btn" id="tlAudioBtn" title="Muto/Riprendi colonna sonora">
+      <svg class="tl-audio-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      <svg class="tl-audio-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    </button>
     <button class="eo-icon-btn" id="tlTicketsBtn">
       <svg viewBox="0 0 24 24"><path d="M2 9a1 1 0 011-1h18a1 1 0 011 1v2a2 2 0 000 4v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a2 2 0 000-4V9z"/><line x1="9" y1="8" x2="9" y2="16" stroke-dasharray="2 2"/></svg>
     </button>
@@ -1606,8 +1616,47 @@
       <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
     </button>`;
   document.body.appendChild(tlIconsHud);
+
+  const tlLeftHud = document.createElement('div');
+  tlLeftHud.id = 'tlLeftHud';
+  tlLeftHud.className = 'tl-left-hud';
+  tlLeftHud.style.display = 'none';
+  tlLeftHud.innerHTML = `
+    <button class="eo-icon-btn tl-back-btn" id="tlBackBtn" title="Torna alla timeline">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>`;
+  document.body.appendChild(tlLeftHud);
+
   document.getElementById('tlTicketsBtn').addEventListener('click', () => { if (window.audioEngine) window.audioEngine.playHover(); eoShowTickets(); });
   document.getElementById('tlCartBtn').addEventListener('click',   () => { if (window.audioEngine) window.audioEngine.playHover(); eoShowCart(); });
+  document.getElementById('tlBackBtn').addEventListener('click', () => {
+    const _eoEl = document.getElementById('epochOverlay');
+    if (_eoEl && !_eoEl.classList.contains('hidden')) {
+      if (_eoEasterEpochIdx !== -1) {
+        _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(500); });
+      } else {
+        hideEpochOverlay();
+        showTimelineView(500);
+      }
+    } else {
+      showTimelineView(400);
+    }
+  });
+  document.getElementById('tlAudioBtn').addEventListener('click', () => {
+    const _cs = document.getElementById('colonnaSonora');
+    if (!_cs) return;
+    const _btn = document.getElementById('tlAudioBtn');
+    if (_cs.paused || _cs.muted) {
+      _cs.muted = false;
+      _cs.play().catch(() => {});
+      _btn.querySelector('.tl-audio-on').style.display = '';
+      _btn.querySelector('.tl-audio-off').style.display = 'none';
+    } else {
+      _cs.muted = true;
+      _btn.querySelector('.tl-audio-on').style.display = 'none';
+      _btn.querySelector('.tl-audio-off').style.display = '';
+    }
+  });
 
   function eoUpdateDateSummary() {
     const date = document.getElementById('eoDate').value;
@@ -1959,6 +2008,7 @@
   eoTicketAnimEl.id = 'eoTicketAnim';
   eoTicketAnimEl.className = 'eo-ticket-anim hidden';
   eoTicketAnimEl.innerHTML = `
+    <button class="eo-ta-close-btn" id="eoTaCloseBtn" aria-label="Chiudi">✕</button>
     <div class="eo-ta-card" id="eoTaCard">
       <div class="eo-ta-shine" id="eoTaShine"></div>
       <div class="eo-ta-gloss"></div>
@@ -2041,6 +2091,8 @@
     });
   })();
 
+  let _ticketAnimPlayedOnce = false;
+
   function eoShowTicketAnim(tickets) {
     const list = Array.isArray(tickets) ? tickets : [tickets];
     let idx = 0;
@@ -2108,6 +2160,14 @@
           _taGlitch(9, _gc);
           el.classList.add('eo-ta-glitch-burst');
           setTimeout(() => el.classList.remove('eo-ta-glitch-burst'), 600);
+          if (!_ticketAnimPlayedOnce) {
+            _ticketAnimPlayedOnce = true;
+            setTimeout(() => {
+              const _v3 = new Audio('assets/video/voce 3.mp4');
+              _v3.volume = 1.0;
+              _v3.play().catch(() => {});
+            }, 1000);
+          }
         });
         setTimeout(() => { _taGlitch(6, _gc2); card.classList.add('eo-ta-mat-active'); }, 320);
       } else {
@@ -2157,6 +2217,18 @@
         setTimeout(() => r.classList.add('eo-ta-row-in'), (isFirst ? 3000 : 2200) + i * 160)
       );
 
+      function _closeAnim() {
+        el.removeEventListener('click', _onClick);
+        const _cb = document.getElementById('eoTaCloseBtn');
+        if (_cb) _cb.removeEventListener('click', _onCloseBtnClick);
+        _playSoundEffect();
+        el.classList.remove('eo-ta-visible');
+        setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 700);
+      }
+      function _onCloseBtnClick(e) {
+        e.stopPropagation();
+        _closeAnim();
+      }
       function _onClick() {
         el.removeEventListener('click', _onClick);
         idx++;
@@ -2165,13 +2237,16 @@
           card.classList.remove('eo-ta-mat-active');
           setTimeout(() => _showOne(list[idx], false), 350);
         } else {
-          // tutti mostrati — chiudi
-          _playSoundEffect();
-          el.classList.remove('eo-ta-visible');
-          setTimeout(() => { el.classList.add('hidden'); eoShowTickets(); }, 700);
+          _closeAnim();
         }
       }
       el.addEventListener('click', _onClick);
+      const _closeBtn = document.getElementById('eoTaCloseBtn');
+      if (_closeBtn) {
+        _closeBtn.removeEventListener('click', _closeBtn._handler || (() => {}));
+        _closeBtn._handler = _onCloseBtnClick;
+        _closeBtn.addEventListener('click', _onCloseBtnClick);
+      }
     }
 
     _showOne(list[0], true);
@@ -2459,7 +2534,7 @@
     eoEl.classList.remove('hidden', 'eo-dematerialize');
     requestAnimationFrame(() => eoEl.classList.add('eo-visible'));
     dnaBackArrow.style.display = 'none';
-    document.getElementById('tlIconsHud').style.display = 'flex';
+    document.getElementById('tlIconsHud').style.display = 'flex'; document.getElementById('tlLeftHud').style.display = 'flex';
     _eoMatScan(true);
   }
 
@@ -2722,17 +2797,8 @@
     eoEpochIdx = -1;
     _eoMatScan(false);
     setTimeout(() => { eoEl.classList.add('hidden'); eoEl.classList.remove('eo-dematerialize'); }, 920);
-    document.getElementById('tlIconsHud').style.display = 'none';
   }
 
-  document.getElementById('eoBackBtn').addEventListener('click', () => {
-        if (_eoEasterEpochIdx !== -1) {
-      _eoDeglitch(() => { hideEpochOverlay(); showTimelineView(500); });
-    } else {
-      hideEpochOverlay();
-      showTimelineView(500);
-    }
-  });
 
   function _eoDeglitch(onDone) {
     const overlay = document.getElementById('epochOverlay');
@@ -2806,7 +2872,7 @@
       el.classList.remove('tl-node-materializing');
     });
     dnaBackArrow.style.display = 'block';
-    document.getElementById('tlIconsHud').style.display = 'flex';
+    document.getElementById('tlIconsHud').style.display = 'flex'; document.getElementById('tlLeftHud').style.display = 'flex';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     // Guide text hidden — appare insieme ai nodi
@@ -2891,7 +2957,7 @@
       el.classList.remove('active');
     });
     dnaBackArrow.style.display = 'none';
-    document.getElementById('tlIconsHud').style.display = 'none';
+    document.getElementById('tlIconsHud').style.display = 'none'; document.getElementById('tlLeftHud').style.display = 'none';
     tlGuideTimeouts.forEach(t => clearTimeout(t));
     tlGuideTimeouts = [];
     tlGuideEl.forEach(el => { el.style.opacity = '0'; });
@@ -5055,11 +5121,6 @@
     const syncPctText2  = document.getElementById('syncPctText');
     const syncDnaTicker = document.getElementById('syncDnaTicker');
 
-    if (syncBarFill2) {
-      const _al = syncBarFill2.getTotalLength ? syncBarFill2.getTotalLength() : 560;
-      syncBarFill2.style.strokeDasharray  = _al;
-      syncBarFill2.style.strokeDashoffset = _al;
-    }
     if (syncPctText2) syncPctText2.textContent = '0%';
     if (syncScreenEl2) syncScreenEl2.classList.remove('hidden-panel');
 
@@ -5071,9 +5132,14 @@
       if (syncDnaTicker) syncDnaTicker.textContent = tickerStr;
     }, 80);
 
-    // Avvia la barra dopo due frame
+    // Inizializza la barra dopo che il display è visibile, poi anima
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (syncBarFill2) syncBarFill2.style.strokeDashoffset = '0';
+      if (syncBarFill2) {
+        syncBarFill2.style.width = '0%';
+      }
+      requestAnimationFrame(() => {
+        if (syncBarFill2) syncBarFill2.style.width = '100%';
+      });
       let pct = 0;
       const pctTick = setInterval(() => {
         pct = Math.min(100, pct + 2);
@@ -5430,15 +5496,15 @@
     _src.connect(_gain);
     _gain.connect(_actx.destination);
     _selPersAudio.play().catch(() => {});
-  }, 500));
+  }, 2500));
 
   _introTimers.push(setTimeout(() => {
     _voce1Audio = new Audio('assets/video/voce 1.mp4');
     _voce1Audio.volume = 1;
     _voce1Audio.play().catch(() => {});
-  }, 2000));
+  }, 4000));
 
-  // Logo Abstergo: materializza dopo 3 secondi
+  // Logo Abstergo: materializza dopo 5 secondi
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     logoEl.style.transition = 'opacity 0.8s ease';
@@ -5446,17 +5512,17 @@
     _histEls.forEach((el, i) => {
       _introTimers.push(setTimeout(() => { el.style.opacity = '0.45'; }, 300 + i * 120));
     });
-  }, 3000));
+  }, 5000));
 
-  // Logo scompare dopo 8 secondi
+  // Logo scompare dopo 10 secondi
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     logoEl.style.transition = 'opacity 0.4s ease';
     logoEl.style.opacity = '0';
     _histEls.forEach(el => { el.style.opacity = '0'; });
-  }, 8000));
+  }, 10000));
 
-  // Scritta ANIMUS + dati genetici appaiono a 8.5s
+  // Scritta ANIMUS + dati genetici appaiono a 10.5s
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     animusTitleEl.style.transition = 'opacity 0.6s ease';
@@ -5468,9 +5534,9 @@
     _dnaEls.forEach((el, i) => {
       _introTimers.push(setTimeout(() => { el.style.opacity = '0.45'; }, 300 + i * 120));
     });
-  }, 8500));
+  }, 10500));
 
-  // Scritta ANIMUS + dati genetici scompaiono a 13s
+  // Scritta ANIMUS + dati genetici scompaiono a 15s
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     _introTimers.push(setTimeout(() => {
@@ -5479,25 +5545,25 @@
       animusTitleEl.style.opacity = '0';
       _dnaEls.forEach(el => { el.style.opacity = '0'; });
     }, 200));
-  }, 13000));
+  }, 15000));
 
-  // Personaggi storici + epoche compaiono a 14s, spariscono a 17s
+  // Personaggi storici + epoche compaiono a 16s, spariscono a 18s
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     _charEls.forEach((el, i) => { _introTimers.push(setTimeout(() => { el.style.opacity = '1'; }, i * 150)); });
     _epochEls.forEach(el => { el.style.opacity = '1'; });
-  }, 14000));
+  }, 16000));
 
   _introTimers.push(setTimeout(() => {
     _playSoundEffect();
     [..._charEls, ..._epochEls].forEach(el => { el.style.opacity = '0'; });
-  }, 16000));
+  }, 18000));
 
-  // Pannello "Entra nell'Animus" a 17.5s
+  // Pannello "Entra nell'Animus" a 19.5s
   const _syncBtnEl = document.getElementById('animusSyncBtn');
   _introTimers.push(setTimeout(() => {
     if (_syncBtnEl) { _syncBtnEl.style.opacity = '1'; _syncBtnEl.style.pointerEvents = 'all'; }
-  }, 17500));
+  }, 19500));
 
   function _stopIntro() {
     _introTimers.forEach(id => clearTimeout(id));
