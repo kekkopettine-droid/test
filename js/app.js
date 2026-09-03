@@ -2000,15 +2000,84 @@
     eoUpdateTicketsIcon();
     eoHideCheckout();
     eoHideCart();
-    eoShowTicketAnim(newTickets);
+
+    // Se è il primo acquisto in assoluto, avvia la sequenza cinematica
+    if (_prevCount === 0) {
+      playFirstPurchaseCinematic(newTickets);
+    } else {
+      eoShowTicketAnim(newTickets);
+    }
   });
+
+  // ── FIRST PURCHASE CINEMATIC ──
+  function playFirstPurchaseCinematic(tickets) {
+    // 1. Sospendi l'interazione per evitare bug
+    document.body.style.pointerEvents = 'none';
+
+    // 2. Audio "Access Granted" / Effetto suono profondo
+    const _effAudio = new Audio('assets/video/sound effetc.mp4');
+    _effAudio.volume = 1.0;
+    _effAudio.play().catch(() => {});
+
+    // Abbassa il volume della colonna sonora temporaneamente (ducking)
+    const bgAudio = document.getElementById('colonnaSonora');
+    const originalVol = bgAudio ? bgAudio.volume : 0;
+    if (bgAudio) bgAudio.volume = originalVol * 0.2;
+
+    // 3. Modifica velocità particelle per creare l'esplosione 3D
+    if (typeof animusSpeeds !== 'undefined') {
+      animusSpeeds.forEach(s => {
+        s.y *= 10;
+        s.angleSpeed *= 15;
+      });
+    }
+
+    // 4. Mostra il testo cinematico
+    const cinematicText = document.getElementById('animus-cinematic-text');
+    if (cinematicText) {
+      cinematicText.classList.remove('hidden');
+    }
+
+    // 5. Flash bianco e comparsa del biglietto
+    setTimeout(() => {
+      const flash = document.getElementById('animus-white-flash');
+      if (flash) {
+        flash.style.opacity = '1';
+        setTimeout(() => flash.style.opacity = '0', 300); // 300ms di flash massimo
+
+        // Sotto il flash nascondiamo il testo e lanciamo l'animazione base
+        setTimeout(() => {
+          if (cinematicText) cinematicText.classList.add('hidden');
+          document.body.style.pointerEvents = 'auto';
+          
+          if (typeof animusSpeeds !== 'undefined') {
+            animusSpeeds.forEach(s => {
+              s.y /= 10;
+              s.angleSpeed /= 15;
+            });
+          }
+
+          if (bgAudio) {
+            let restoreVol = setInterval(() => {
+              if (bgAudio.volume < originalVol) {
+                bgAudio.volume = Math.min(originalVol, bgAudio.volume + 0.05);
+              } else {
+                clearInterval(restoreVol);
+              }
+            }, 100);
+          }
+
+          eoShowTicketAnim(tickets);
+        }, 150);
+      }
+    }, 2800); // Il testo rimane visibile 2.8 secondi
+  }
 
   // ── TICKET CONFIRMATION ANIMATION ──
   const eoTicketAnimEl = document.createElement('div');
   eoTicketAnimEl.id = 'eoTicketAnim';
   eoTicketAnimEl.className = 'eo-ticket-anim hidden';
   eoTicketAnimEl.innerHTML = `
-    <button class="eo-ta-close-btn" id="eoTaCloseBtn" aria-label="Chiudi">✕</button>
     <div class="eo-ta-card" id="eoTaCard">
       <div class="eo-ta-shine" id="eoTaShine"></div>
       <div class="eo-ta-gloss"></div>
@@ -2044,7 +2113,8 @@
         <div class="eo-ta-rows" id="eoTaRows"></div>
         <div class="eo-ta-id" id="eoTaId"></div>
       </div>
-    </div>`;
+    </div>
+    <button class="eo-ta-close-btn" id="eoTaCloseBtn" aria-label="Chiudi">✕</button>`;
   document.body.appendChild(eoTicketAnimEl);
 
   // 3D TILT
@@ -5496,7 +5566,7 @@
     _src.connect(_gain);
     _gain.connect(_actx.destination);
     _selPersAudio.play().catch(() => {});
-  }, 2500));
+  }, 500));
 
   _introTimers.push(setTimeout(() => {
     _voce1Audio = new Audio('assets/video/voce 1.mp4');

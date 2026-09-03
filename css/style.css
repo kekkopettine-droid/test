@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
 
 :root {
   /* ── Typography scale ──────────────────────────
@@ -10,12 +10,9 @@
      C2  Testo secondario / metadati
      L1  Label, tag, micro HUD
   ─────────────────────────────────────────────── */
-  --H1: 56px;
   --H2: 38px;
-  --H3: 26px;
   --H4: 20px;
   --C1: 16px;
-  --C2: 13px;
   --L1: 11px;
 }
 
@@ -24,7 +21,7 @@
 body {
   background:#000000;
   overflow:hidden;
-  font-family:'Segoe UI', 'Arial', sans-serif;
+  font-family:'Rajdhani', sans-serif;
   cursor:crosshair;
   user-select:none;
 }
@@ -123,7 +120,7 @@ body {
 }
 .panel-header svg { filter:drop-shadow(0 0 8px #00ffff); flex-shrink:0; margin-top:2px; transform: scale(1.2); transform-origin: top left; }
 .header-text {
-  color:#ccffff; font-size:var(--H4); font-weight:600;
+  color:#ccffff; font-size:var(--H4); font-weight:700;
   line-height:1.4;
   letter-spacing:.08em; text-transform:uppercase;
   text-shadow:0 0 10px rgba(0,255,255,0.6);
@@ -184,8 +181,8 @@ body {
 }
 
 .hist-char-name {
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: var(--L1);
   font-weight: 400;
   letter-spacing: 1.8px;
   color: rgba(255,255,255,0.55);
@@ -196,8 +193,8 @@ body {
 }
 
 .epoch-label {
-  font-size: 14px !important;
-  letter-spacing: 2px !important;
+  font-size: var(--C1) !important;
+  letter-spacing: .14em !important;
   color: rgba(255,255,255,0.6) !important;
   line-height: 1.7 !important;
   text-shadow: 0 0 12px rgba(255,255,255,0.35) !important;
@@ -209,9 +206,9 @@ body {
 .hist-data {
   pointer-events: none;
   opacity: 0;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', sans-serif;
   color: rgba(255, 255, 255, 0.45);
-  font-size: 13px;
+  font-size: var(--L1);
   font-weight: 400;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -246,10 +243,10 @@ body {
 .animus-title-container {
   pointer-events: none;
   opacity: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 96px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 72px;
   font-weight: 700;
-  letter-spacing: 28px;
+  letter-spacing: .18em;
   color: #ffffff;
   text-transform: uppercase;
   filter: drop-shadow(0 0 18px rgba(0,210,255,0.8)) drop-shadow(0 0 40px rgba(255,255,255,0.4));
@@ -297,7 +294,7 @@ body {
 
 .dna-inst-body {
   color: rgba(255, 255, 255, 0.85);
-  font-size: var(--C2);
+  font-size: var(--L1);
   line-height: 1.5;
   text-shadow: 0 0 3px rgba(0, 255, 255, 0.2);
 }
@@ -370,7 +367,7 @@ body {
 /* anno */
 .tl-ng-year {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 34px; font-weight: 700;
+  font-size: var(--H2); font-weight: 700;
   color: rgba(255,255,255,0.85);
   letter-spacing: .08em;
   line-height: 1;
@@ -388,7 +385,7 @@ body {
   position: absolute;
   top: 0; left: 0;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 34px; font-weight: 700; letter-spacing: .08em;
+  font-size: var(--H2); font-weight: 700; letter-spacing: .08em;
   line-height: 1;
   pointer-events: none; user-select: none;
   z-index: 1; opacity: 0;
@@ -553,13 +550,13 @@ body {
 .dna-label-tag {
   color: rgba(255, 255, 255, 0.6);
   font-size: var(--L1);
-  font-family: monospace;
+  font-family: 'Rajdhani', sans-serif;
   letter-spacing: 0.1em;
 }
 
 .dna-label-year {
   color: #ffffff;
-  font-size: var(--H3);
+  font-size: var(--H4);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-shadow: 0 0 10px rgba(255,255,255,0.7);
@@ -569,7 +566,7 @@ body {
 .dna-label-name {
   color: rgba(0, 255, 255, 0.95);
   font-size: var(--L1);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
@@ -579,7 +576,7 @@ body {
 .dna-label-status {
   color: rgba(255, 255, 255, 0.4);
   font-size: var(--L1);
-  font-family: monospace;
+  font-family: 'Rajdhani', sans-serif;
   letter-spacing: 0.08em;
 }
 
@@ -797,7 +794,7 @@ body {
 /* anno principale */
 .ng-year {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 40px; font-weight: 700;
+  font-size: var(--H2); font-weight: 700;
   color: rgba(0, 255, 255, 0.82);
   letter-spacing: .08em;
   position: relative; z-index: 2;
@@ -810,7 +807,7 @@ body {
 .ng-ghost {
   position: absolute;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 40px; font-weight: 700;
+  font-size: var(--H2); font-weight: 700;
   letter-spacing: .08em;
   pointer-events: none; user-select: none;
   z-index: 1; opacity: 0;
@@ -923,7 +920,7 @@ body {
   border: 1px solid rgba(0, 255, 255, 0.38);
   box-shadow: 0 0 50px rgba(0,255,255,0.15), inset 0 0 30px rgba(0,255,255,0.04);
   padding: 14px 20px 12px;
-  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
   color: #fff;
   position: relative;
 }
@@ -948,14 +945,14 @@ body {
 }
 .sc-divider { height:1px; background:rgba(0,255,255,.18); margin:7px 0; }
 .sc-instruction {
-  font-size:var(--L1); font-weight:600; letter-spacing:.03em;
+  font-size:var(--L1); font-weight:700; letter-spacing:.03em;
   color:rgba(255,255,255,.7); line-height:1.3; margin-bottom:6px;
 }
 .sc-field { display:flex; flex-direction:column; gap:3px; margin-bottom:6px; }
 .sc-label { font-size:var(--L1); font-weight:700; letter-spacing:.26em; color:rgba(0,255,255,.6); }
 .sc-input {
   background:rgba(0,255,255,.05); border:1px solid rgba(0,255,255,.28);
-  color:#fff; font-family:'Rajdhani',monospace; font-size:var(--C2); font-weight:600;
+  color:#fff; font-family:'Rajdhani',sans-serif; font-size:var(--L1); font-weight:700;
   padding:5px 8px; outline:none; cursor:pointer; width:100%;
   -webkit-appearance:none; appearance:none; color-scheme:dark;
   transition:border-color .2s, box-shadow .2s;
@@ -986,7 +983,7 @@ body {
 .sc-btn-cancel {
   background:transparent; border:1px solid rgba(255,255,255,.18);
   color:rgba(255,255,255,.4); font-family:'Rajdhani',sans-serif;
-  font-size:var(--L1); font-weight:600; letter-spacing:.20em;
+  font-size:var(--L1); font-weight:700; letter-spacing:.20em;
   padding:8px 10px; cursor:pointer; text-transform:uppercase; flex:0 0 auto;
   transition:border-color .2s, color .2s;
 }
@@ -1005,7 +1002,7 @@ body {
   border: 1px solid rgba(0, 255, 255, 0.4);
   box-shadow: 0 0 50px rgba(0,255,255,0.18), inset 0 0 40px rgba(0,255,255,0.05);
   padding: 28px 30px 24px;
-  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
   color: #fff;
   position: relative;
   pointer-events: auto;
@@ -1037,10 +1034,11 @@ body {
 }
 .b3d-gene-id {
   font-size: var(--L1); letter-spacing: 0.18em; color: rgba(255,255,255,0.35);
-  font-family: monospace; margin-bottom: 18px;
+  font-family: 'Rajdhani', sans-serif;
+  margin-bottom: 18px;
 }
 .b3d-instruction {
-  font-size: var(--C1); font-weight: 600; letter-spacing: 0.04em;
+  font-size: var(--C1); font-weight: 700; letter-spacing: 0.04em;
   color: rgba(255,255,255,0.9); line-height: 1.45; margin-bottom: 20px;
   text-align: center;
   border-bottom: 1px solid rgba(0,255,255,0.15); padding-bottom: 16px;
@@ -1055,8 +1053,8 @@ body {
   background: rgba(0,255,255,0.05);
   border: 1px solid rgba(0,255,255,0.28);
   color: #fff;
-  font-family: 'Rajdhani', monospace;
-  font-size: var(--C1); font-weight: 600; letter-spacing: 0.04em;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: var(--C1); font-weight: 700; letter-spacing: 0.04em;
   padding: 8px 10px; outline: none; cursor: pointer; width: 100%;
   -webkit-appearance: none; appearance: none; color-scheme: dark;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -1092,7 +1090,7 @@ body {
 .b3d-btn-cancel {
   background: transparent; border: 1px solid rgba(255,255,255,0.15);
   color: rgba(255,255,255,0.4); font-family: 'Rajdhani', sans-serif;
-  font-size: var(--L1); font-weight: 600; letter-spacing: 0.22em;
+  font-size: var(--L1); font-weight: 700; letter-spacing: 0.22em;
   padding: 8px; cursor: pointer; text-transform: uppercase;
   transition: border-color 0.2s, color 0.2s;
 }
@@ -1214,7 +1212,7 @@ body {
   right: -5px;
   background: #ffffff;
   color: #000000;
-  font-size: var(--C2);
+  font-size: var(--L1);
   font-weight: bold;
   width: 22px;
   height: 22px;
@@ -1272,7 +1270,7 @@ body {
   background: none;
   border: none;
   color: rgba(0, 255, 255, 0.6);
-  font-size: var(--H3);
+  font-size: var(--H4);
   cursor: pointer;
   line-height: 1;
   transition: all 0.2s;
@@ -1339,7 +1337,7 @@ body {
   border: none;
   color: #ffffff;
   cursor: pointer;
-  font-size: var(--C2);
+  font-size: var(--L1);
   font-weight: bold;
   opacity: 0.5;
 }
@@ -1348,7 +1346,7 @@ body {
 }
 .cart-item-details {
   color: rgba(200, 240, 255, 0.8);
-  font-size: var(--C2);
+  font-size: var(--L1);
   display: flex;
   justify-content: space-between;
 }
@@ -1449,7 +1447,7 @@ body {
   background: none;
   border: none;
   color: rgba(0, 255, 255, 0.6);
-  font-size: var(--H3);
+  font-size: var(--H4);
   cursor: pointer;
   line-height: 1;
   transition: all 0.2s;
@@ -1493,9 +1491,9 @@ body {
   border: 1px solid rgba(0, 255, 255, 0.25);
   color: #ffffff;
   padding: 10px 12px;
-  font-family: 'Rajdhani', monospace;
+  font-family: 'Rajdhani', sans-serif;
   font-size: var(--C1);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.1em;
   outline: none;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -1568,7 +1566,7 @@ body {
 .sync-inner {
   width: 680px;
   text-align: center;
-  font-family: Consolas, "Lucida Console", monospace;
+  font-family: 'Rajdhani', sans-serif;
   color: rgba(255,255,255,0.9);
 }
 .sync-header {
@@ -1578,7 +1576,7 @@ body {
   margin-bottom: 10px;
 }
 .sync-title {
-  font-size: var(--H3);
+  font-size: var(--H4);
   letter-spacing: 8px;
   font-weight: bold;
   text-shadow: 0 0 20px rgba(255,255,255,0.9), 0 0 40px rgba(255,255,255,0.5);
@@ -1605,7 +1603,7 @@ body {
   transition: width 2.5s cubic-bezier(0.1,0.9,0.2,1);
 }
 .sync-pct-text {
-  font-size: var(--C2);
+  font-size: var(--L1);
   letter-spacing: 2px;
   min-width: 42px;
   text-align: right;
@@ -1756,21 +1754,21 @@ body {
 }
 .ticket-value {
   color: #ffffff;
-  font-size: var(--H3);
-  font-weight: 600;
+  font-size: var(--H4);
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 .ticket-value.experience-name {
   color: #00ffff;
-  font-size: var(--H3);
+  font-size: var(--H4);
   font-weight: 700;
   text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
 }
 .ticket-barcode {
-  font-family: monospace;
+  font-family: 'Rajdhani', sans-serif;
   color: rgba(0, 255, 255, 0.5);
-  font-size: var(--H3);
+  font-size: var(--H4);
   letter-spacing: 5px;
   text-align: center;
   border-top: 1px dashed rgba(0, 255, 255, 0.3);
@@ -1922,7 +1920,7 @@ body {
   z-index: 9000;
   display: flex;
   flex-direction: column;
-  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
   pointer-events: none;
   opacity: 0;
   clip-path: inset(50% 0 50% 0);
@@ -2017,7 +2015,7 @@ body {
   color: rgba(255,255,255,0.4);
   font-family: 'Rajdhani', sans-serif;
   font-size: var(--H4);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
   cursor: pointer;
@@ -2076,7 +2074,7 @@ body {
   background: rgba(0,210,190,1);
   color: #000;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 11px; font-weight: 700;
+  font-size: var(--L1); font-weight: 700;
   letter-spacing: 0;
   border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
@@ -2120,7 +2118,7 @@ body {
 .eo-cart-close:hover { color: #fff; }
 .eo-cart-items { flex: 1; overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 16px; }
 .eo-cart-empty {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); letter-spacing: .14em;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); letter-spacing: .14em;
   color: rgba(255,255,255,0.35); text-transform: uppercase; margin: auto; text-align: center;
 }
 .eo-cart-item {
@@ -2247,7 +2245,7 @@ body {
   background: rgba(0,0,0,0.88);
   border: 1px solid rgba(0,210,190,0.22);
   cursor: pointer;
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
   color: rgba(0,210,190,0.6);
   transition: border-color .2s, color .2s;
@@ -2376,7 +2374,7 @@ body {
   background: transparent;
   border: 1px solid rgba(0,210,190,0.45);
   color: rgba(0,210,190,0.8); cursor: pointer;
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
   transition: background .2s, border-color .2s, color .2s;
 }
@@ -2386,7 +2384,7 @@ body {
   color: rgba(0,210,190,1);
 }
 .eo-rp-counter {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1);
   color: rgba(255,255,255,0.2); letter-spacing: .1em;
   margin-left: auto;
 }
@@ -2439,17 +2437,17 @@ body {
   text-shadow: 0 0 14px rgba(0,210,190,0.5);
 }
 .eo-card-num {
-  font-size: var(--C2); font-weight: 700; letter-spacing: .14em;
+  font-size: var(--L1); font-weight: 700; letter-spacing: .14em;
   color: rgba(255,255,255,0.35);
   flex-shrink: 0; width: 28px;
 }
 .eo-card-info { flex: 1; min-width: 0; }
 .eo-card-name {
-  font-size: var(--H3); font-weight: 700; letter-spacing: .04em;
+  font-size: var(--H4); font-weight: 700; letter-spacing: .04em;
   color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .eo-card-dates {
-  font-size: var(--C2); letter-spacing: .12em; color: rgba(255,255,255,0.4);
+  font-size: var(--L1); letter-spacing: .12em; color: rgba(255,255,255,0.4);
   margin-top: 4px;
 }
 
@@ -2556,7 +2554,7 @@ body {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  font-size: var(--C2); font-weight: 600; letter-spacing: .2em; color: rgba(0,0,0,0.55);
+  font-size: var(--L1); font-weight: 700; letter-spacing: .2em; color: rgba(0,0,0,0.55);
   text-transform: uppercase; white-space: nowrap;
 }
 
@@ -2611,7 +2609,7 @@ body {
   margin-top: 10px; flex: 1; overflow-y: auto;
 }
 .eo-right-placeholder {
-  font-size: var(--C2); font-weight: 600; letter-spacing: .18em; color: rgba(255,255,255,0.55);
+  font-size: var(--L1); font-weight: 700; letter-spacing: .18em; color: rgba(255,255,255,0.55);
   text-transform: uppercase; margin: auto 0; text-align: center;
 }
 .eo-right-btn {
@@ -2733,7 +2731,7 @@ body {
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.04);
   color: rgba(255,255,255,0.6);
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .08em; padding: 6px 14px; cursor: pointer;
   transition: border-color .18s, color .18s, background .18s;
   user-select: none;
@@ -2761,7 +2759,7 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.03);
   color: rgba(255,255,255,0.55);
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 600;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .06em; padding: 9px 14px; cursor: pointer;
   transition: border-color .18s, color .18s, background .18s;
   user-select: none;
@@ -2787,7 +2785,7 @@ body {
   color: rgba(255,255,255,0.35); text-transform: uppercase;
 }
 .eo-date-summary-row span:last-child {
-  font-size: var(--C2); font-weight: 600; letter-spacing: .04em; color: #fff;
+  font-size: var(--L1); font-weight: 700; letter-spacing: .04em; color: #fff;
   text-align: right; max-width: 60%;
 }
 
@@ -2797,7 +2795,7 @@ body {
   border: 1px solid rgba(255,255,255,0.55);
   color: #fff;
   font-family: 'Rajdhani', sans-serif;
-  font-size: var(--C2); font-weight: 700; letter-spacing: .24em;
+  font-size: var(--L1); font-weight: 700; letter-spacing: .24em;
   padding: 14px 0; text-align: center; cursor: pointer;
   text-transform: uppercase;
   transition: background .2s, border-color .2s, box-shadow .2s;
@@ -2870,7 +2868,7 @@ body {
   gap: 6px;
 }
 .eo-cust-band-num {
-  font-size: var(--C2); font-weight: 700; letter-spacing: .22em;
+  font-size: var(--L1); font-weight: 700; letter-spacing: .22em;
   color: rgba(0,210,190,0.6);
 }
 .eo-cust-band-title {
@@ -2952,7 +2950,7 @@ body {
   text-transform: uppercase;
 }
 .eo-cust-opt-desc {
-  font-size: var(--C2); color: rgba(255,255,255,0.5);
+  font-size: var(--L1); color: rgba(255,255,255,0.5);
   line-height: 1.4; font-weight: 400; letter-spacing: .02em;
 }
 
@@ -3151,7 +3149,7 @@ body {
   margin-top: 8px;
 }
 .eo-checkout-error {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); letter-spacing: .08em;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); letter-spacing: .08em;
   color: rgba(255,100,100,0.9); padding: 10px 0;
 }
 
@@ -3201,7 +3199,7 @@ canvas.eo-ticket-qr {
 }
 .eo-ticket-card:hover canvas.eo-ticket-qr { opacity: 1; }
 .eo-ticket-qr-hint {
-  font-size: 9px; font-weight: 700; letter-spacing: .18em;
+  font-size: var(--L1); font-weight: 700; letter-spacing: .18em;
   color: rgba(0,210,190,0.4); text-transform: uppercase;
 }
 .eo-ticket-logo {
@@ -3230,17 +3228,17 @@ canvas.eo-ticket-qr {
   color: #fff; letter-spacing: .05em;
 }
 .eo-ticket-epoch {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1);
   color: rgba(255,255,255,0.38); letter-spacing: .12em; text-transform: uppercase;
 }
 .eo-ticket-imm {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .18em; text-transform: uppercase;
   color: rgba(0,210,190,0.85);
   margin-top: 3px;
 }
 .eo-ticket-buyer {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2);
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1);
   color: rgba(255,255,255,0.42); letter-spacing: .12em; text-transform: uppercase;
   margin-top: 6px;
 }
@@ -3420,7 +3418,7 @@ canvas.eo-ticket-qr {
   background: rgba(2,6,8,0.55);
   backdrop-filter: blur(3px) brightness(0.6);
   -webkit-backdrop-filter: blur(3px) brightness(0.6);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px;
   perspective: 900px;
   opacity: 0; transition: opacity 0.4s ease;
   pointer-events: none; overflow: hidden;
@@ -3429,19 +3427,18 @@ canvas.eo-ticket-qr {
 .eo-ticket-anim.hidden { display: none; }
 
 .eo-ta-close-btn {
-  position: fixed;
-  top: 28px;
-  right: 32px;
+  position: relative;
   z-index: 10001;
   background: transparent;
-  border: 1.5px solid rgba(255,255,255,0.35);
+  border: 1.5px solid rgba(255,255,255,0.45);
+  border-radius: 50%;
   color: rgba(255,255,255,0.75);
   font-family: 'Rajdhani', sans-serif;
-  font-size: 18px;
+  font-size: var(--H4);
   font-weight: 700;
   line-height: 1;
-  width: 38px;
-  height: 38px;
+  width: 54px;
+  height: 54px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -3557,7 +3554,7 @@ canvas.eo-ticket-qr {
 .eo-ta-hline-2 { animation: eoTaHLineSweep 2s ease-in-out infinite 1s; }
 
 .eo-ta-scan-label {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--C2); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .36em; color: rgba(0,210,190,0.75);
   text-transform: uppercase; margin-top: 210px;
   animation: eoTaBlink 1.2s ease infinite;
@@ -3584,7 +3581,7 @@ canvas.eo-ticket-qr {
 }
 .eo-ta-access.eo-ta-phase-active .eo-ta-access-line { transform: scaleX(1); }
 .eo-ta-access-text {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--H1); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--H2); font-weight: 700;
   letter-spacing: .25em; color: rgba(0,225,205,1);
   text-transform: uppercase;
   text-shadow: 0 0 50px rgba(0,210,190,1), 0 0 120px rgba(0,180,160,0.6);
@@ -3643,7 +3640,7 @@ canvas.eo-ticket-qr {
   animation: eoTaBlink 2.5s ease infinite;
 }
 .eo-ta-status {
-  font-family: 'Rajdhani', sans-serif; font-size: var(--H3); font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--H4); font-weight: 700;
   letter-spacing: .2em; color: rgba(0,225,205,1); text-transform: uppercase;
   text-shadow: 0 0 28px rgba(0,210,190,0.75);
 }
@@ -3700,11 +3697,11 @@ canvas.eo-ticket-qr {
 .eo-ta-sym-p2 { fill: rgba(0,168,155,1); }
 .eo-ta-sym-p3 { fill: rgba(0,128,118,0.5); }
 .eo-ta-brand-name {
-  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .3em; color: rgba(255,255,255,0.85); text-transform: uppercase;
 }
 .eo-ta-brand-sub {
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 600;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .35em; color: rgba(0,210,190,0.65); text-transform: uppercase;
   margin-top: -4px;
 }
@@ -3770,35 +3767,35 @@ canvas.eo-ticket-qr {
 
 /* etichette micro — tutte uguali, 11px */
 .eo-ta-section-label {
-  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .32em; color: rgba(0,210,190,0.55); text-transform: uppercase;
   margin-bottom: 2px;
 }
 
 /* nome personaggio — 28px, unico elemento grande */
 .eo-ta-char {
-  font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--H4); font-weight: 700;
   color: rgba(0,210,190,1); letter-spacing: .03em; line-height: 1.1;
   min-height: 1.2em;
 }
 
 /* tipo esperienza — 17px, subito sotto il nome */
 .eo-ta-immersione {
-  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 600;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C1); font-weight: 700;
   color: rgba(0,210,190,0.8); letter-spacing: .12em; text-transform: uppercase;
   margin-top: 4px;
 }
 
 /* epoca — 12px, muta */
 .eo-ta-epoch {
-  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1);
   color: rgba(255,255,255,0.32); letter-spacing: .18em; text-transform: uppercase;
   margin-top: 3px;
 }
 
 /* intestatario — 17px, stesso peso visivo dell'esperienza */
 .eo-ta-buyer {
-  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 600;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--C1); font-weight: 700;
   letter-spacing: .04em; color: rgba(255,255,255,0.88); line-height: 1.1;
   margin-top: 2px;
 }
@@ -3813,7 +3810,7 @@ canvas.eo-ticket-qr {
 .eo-ta-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .eo-ta-row {
   display: flex; justify-content: space-between; align-items: baseline;
-  font-family: 'Rajdhani', sans-serif; font-size: 12px;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1);
   letter-spacing: .12em; text-transform: uppercase;
   opacity: 0;
 }
@@ -3823,7 +3820,7 @@ canvas.eo-ticket-qr {
 
 /* id — 10px, accento */
 .eo-ta-id {
-  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  font-family: 'Rajdhani', sans-serif; font-size: var(--L1); font-weight: 700;
   letter-spacing: .28em; color: rgba(0,210,190,0.4); text-transform: uppercase;
   text-align: center; margin-top: 4px;
 }
@@ -3843,7 +3840,7 @@ canvas.eo-ticket-qr {
   border: 1px solid rgba(255,255,255,0.15);
 }
 .eo-ta-qr-label {
-  font-size: 7px; font-weight: 700;
+  font-size: var(--L1); font-weight: 700;
   letter-spacing: .18em; color: rgba(255,255,255,0.35);
   text-align: center; white-space: nowrap;
 }
@@ -3965,4 +3962,71 @@ canvas.eo-ticket-qr {
 @keyframes eoTaRowIn {
   from { opacity: 0; transform: translateX(-12px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── ANIMUS CINEMATIC TESTO ACQUISTO 1 ── */
+.animus-cinematic-text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10005;
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85); /* Sfondo scuro per oscurare dietro */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.animus-cinematic-text.hidden {
+  display: none !important;
+}
+
+.act-main {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.6);
+  opacity: 0;
+  animation: actMaterialize 0.8s ease-out forwards, actGlitch 3s infinite 0.8s;
+}
+
+.act-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  animation: actSubMaterialize 0.8s ease-out 0.4s forwards;
+}
+
+@keyframes actMaterialize {
+  0% { opacity: 0; transform: scale(1.5); filter: blur(10px) brightness(3); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0px) brightness(1); }
+}
+
+@keyframes actSubMaterialize {
+  0% { opacity: 0; transform: translateY(20px); letter-spacing: 0.1em; }
+  100% { opacity: 1; transform: translateY(0); letter-spacing: 0.4em; }
+}
+
+@keyframes actGlitch {
+  0%, 94%, 100% { transform: translate(0) scale(1); filter: none; clip-path: none; }
+  95% { transform: translate(-4px, 2px) scale(1.02); filter: drop-shadow(4px 0 0 rgba(255,0,0,0.8)); clip-path: inset(20% 0 60% 0); }
+  96% { transform: translate(4px, -2px) scale(0.98); filter: drop-shadow(-4px 0 0 rgba(0,255,255,0.8)); clip-path: inset(60% 0 20% 0); }
+  97% { transform: translate(0); filter: none; clip-path: none; }
+}
+
+.animus-white-flash {
+  z-index: 10002;
 }

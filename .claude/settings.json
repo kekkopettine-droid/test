@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(grep -n \"animate\\(\\);\\\\|animate\\(\\)$\" /Users/kekkopettine/Desktop/abstergo/js/app.js)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)"
     ]
   }
 }
