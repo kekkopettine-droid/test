@@ -1978,18 +1978,13 @@
   });
 
   document.getElementById('eoCkSubmit').addEventListener('click', () => {
-        const name  = document.getElementById('eoCkName').value.trim();
-    const email = document.getElementById('eoCkEmail').value.trim();
-    const phone = document.getElementById('eoCkPhone').value.trim();
-    const card  = document.getElementById('eoCkCard').value.replace(/\s/g,'');
-    const exp   = document.getElementById('eoCkExp').value.trim();
-    const cvv   = document.getElementById('eoCkCvv').value.trim();
-    const errEl = document.getElementById('eoCkError');
-    if (!name || !email || !phone || card.length < 16 || exp.length < 5 || cvv.length < 3) {
-      errEl.textContent = '⚠ Compila tutti i campi correttamente.';
-      errEl.style.display = '';
-      return;
-    }
+    let name  = document.getElementById('eoCkName').value.trim();
+    let email = document.getElementById('eoCkEmail').value.trim();
+    
+    // Bypass validation entirely for guest purchase
+    if (!name) name = 'Ospite Anonimo';
+    if (!email) email = 'ospite@animus.abstergo';
+
     // Purchase: move cart → tickets
     const purchasedAt = new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
     const _prevCount = eoTickets.length;
@@ -2222,6 +2217,13 @@
       const _accentMap = { 'Osservatore': ['rgba(255,255,255,0.75)', 'rgba(255,255,255,0.4)'], 'Totale': ['rgba(215,170,55,0.88)', 'rgba(215,170,55,0.5)'] };
       const [_gc, _gc2] = isHitler ? ['rgba(200,40,40,0.88)', 'rgba(200,40,40,0.5)'] : (_accentMap[ticket.immersion] || ['rgba(0,210,190,0.85)', 'rgba(0,210,190,0.5)']);
 
+      let allowClose = true;
+      const _closeBtn = document.getElementById('eoTaCloseBtn');
+      if (_closeBtn) {
+        _closeBtn.style.opacity = '1';
+        _closeBtn.style.pointerEvents = 'auto';
+      }
+
       if (isFirst) {
         el.classList.remove('hidden');
         requestAnimationFrame(() => {
@@ -2232,10 +2234,28 @@
           setTimeout(() => el.classList.remove('eo-ta-glitch-burst'), 600);
           if (!_ticketAnimPlayedOnce) {
             _ticketAnimPlayedOnce = true;
+            allowClose = false;
+            if (_closeBtn) {
+              _closeBtn.style.opacity = '0';
+              _closeBtn.style.pointerEvents = 'none';
+            }
             setTimeout(() => {
               const _v3 = new Audio('assets/video/voce 3.mp4');
               _v3.volume = 1.0;
-              _v3.play().catch(() => {});
+              
+              const _enableClose = () => {
+                allowClose = true;
+                if (_closeBtn) {
+                  _closeBtn.style.transition = 'opacity 0.5s ease';
+                  _closeBtn.style.opacity = '1';
+                  _closeBtn.style.pointerEvents = 'auto';
+                }
+              };
+              
+              _v3.addEventListener('ended', _enableClose);
+              _v3.addEventListener('error', _enableClose);
+              
+              _v3.play().catch(_enableClose);
             }, 1000);
           }
         });
@@ -2297,9 +2317,11 @@
       }
       function _onCloseBtnClick(e) {
         e.stopPropagation();
+        if (!allowClose) return;
         _closeAnim();
       }
       function _onClick() {
+        if (!allowClose) return;
         el.removeEventListener('click', _onClick);
         idx++;
         if (idx < list.length) {
@@ -2311,7 +2333,6 @@
         }
       }
       el.addEventListener('click', _onClick);
-      const _closeBtn = document.getElementById('eoTaCloseBtn');
       if (_closeBtn) {
         _closeBtn.removeEventListener('click', _closeBtn._handler || (() => {}));
         _closeBtn._handler = _onCloseBtnClick;
